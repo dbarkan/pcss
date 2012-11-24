@@ -1,0 +1,172 @@
+import sys
+import os
+import re
+import subprocess
+
+from Bio import PDB
+
+def readDrpCode(drpCode):
+    """Return PDB Id and Chain ID from DRP code (current format of DRP code is concatenation of those two elements)"""
+    pdbId = drpCode[0:4]
+    chainId = drpCode[4]
+    return [pdbId, chainId]
+
+def makeDrpCode(pdbId, chainId):
+    """Return DRP code by concatentating PDB ID and Chain ID"""
+    return "%s%s" % (pdbId, chainId)
+
+
+class PtpRunner:
+
+    """Class for running 'Protagonist Programs'. Handles directory structure and some file conventions, among other tools"""
+
+    def __init__(self, parameterFileName):
+        """Create new PTP runner
+
+        Construction does the following:
+        1. Reads parameters from parameterFileName for access by programs using this PtpRunner instance.
+        2. Creates the 'run directory' which is where all output for this program goes. Run directory is created as $output_directory/$run_name
+        where each variable specified in the parameter file. Thus if the user wants to run a program twice with different input, simply change
+        the run_name parameter and nothing from previous runs will be overwritten
+        3. Create a subdirectory in the run directory called 'structures' which is where all PDB output files are written
+        """
+        self.parameterFileName = parameterFileName
+        self.parameters = self.readParameters(parameterFileName)
+        
+        outputDir = self.getParam("output_directory")
+        runName = self.getParam("run_name")
+        
+        structureOutputDir = os.path.join(outputDir, runName, "structures")
+        mkdirProcess = subprocess.Popen(['mkdir', '-p', structureOutputDir], shell=False, stderr=subprocess.PIPE)
+        self.outputDir =  os.path.join(outputDir, runName)
+        self.structureOutputDir = structureOutputDir
+
+    def getStructureOutputDirectory(self):
+        return self.structureOutputDir
+    
+    def getParam(self, paramName):
+        return self.parameters[paramName]
+
+    def getFullOutputFile(self, fileName):
+        """Easy way to get the full path of fileName where the path is the full run directory for this run"""
+        return os.path.join(self.outputDir, fileName)
+    
+    def readParameters(self, parameterFileName):
+        """Create paramName to paramValue dictionary by reading tab-separated parameter file (one column each for names and values)"""
+        parameters = {}
+        parameterFh = open(parameterFileName)
+        blankRe = re.compile('^\s*$')
+        skipRe = re.compile('^\#')
+        for line in parameterFh:
+
+            blankLine = blankRe.search(line)
+            if blankLine:
+                continue
+            skipLine = skipRe.search(line)
+            if skipLine:
+                continue
+
+            line = line.rstrip("\n\r")
+            [paramName, paramValue] = line.split('\t')
+            #print "parameter %s:\t%s" % (paramName, paramValue)                                                                                                                     
+            parameters[paramName] = paramValue
+
+        parameterFh.close()
+        return parameters
+
+class DrpFileHandler:
+    
+    """Class for reading and writing PDB files, retrieving from the cloud if necessary"""
+
+    def __init__(self, fullPdbDirectory):
+        self.fullPdbDirectory = fullPdbDirectory
+        self.pdbList = PDB.PDBList(pdb=fullPdbDirectory)
+        self.writer = PDB.PDBIO()
+
+    def getFullPdbFile(self, drpCode):
+        """Get full pdb file for input drpCode; download from PDB to local cache if not already there"""
+        [pdbId, chainId] = readDrpCode(drpCode)
+        fullDrpFile = os.path.join(self.fullPdbDirectory, "%s.pdb" % pdbId)
+        if (os.path.exists(fullDrpFile) == False):
+
+            self.pdbList.retrieve_pdb_file(pdbId)
+            twoLetter = pdbId[1:3]
+            pdbLandingFile = os.path.join(self.fullPdbDirectory, twoLetter, "pdb%s.ent" % pdbId)
+            if (os.path.exists(pdbLandingFile) == False):
+                print "Error: did not download pdb %s" % pdbId
+                return None
+            pdbFinalFile = os.path.join(self.fullPdbDirectory, "%s.pdb" % pdbId)
+            mvProcess = subprocess.Popen(['mv',  pdbLandingFile, pdbFinalFile], shell=False, stderr=subprocess.PIPE)
+        return fullDrpFile
+
+    def getSingleChainDrpFile(self, drpCode):
+        """Get PDB file containing only the coordinates for the chain in drpCode (and no header information)"""
+        fullDrpFile = os.path.join(self.drpDirectory, "%s.pdb" % drpCode)
+        if (os.path.exists(fullDrpFile) == False):
+            print "DrpFileHandler error: could not load full drp file %s" % fullDrpFile
+            return None
+            #sys.exit()
+        return fullDrpFile
+
+    def copyDrpFile(self, drpCode, destinationDirectory):
+        """Copy pdb file for drpCode from local cache to destinationDirectory. Assumes file is in local cache already"""
+        fullDrpFile = os.path.join(self.drpDirectory, "%s.pdb" % drpCode)
+        cpProcess = subprocess.Popen(['cp',  fullDrpFile, destinationDirectory], shell=False, stderr=subprocess.PIPE)
+      
+    def writePdb(self, destinationFile, drp):
+        """Write PDB file for drp object to destination file"""
+        self.writer.set_structure(drp.getBioStructure())
+        self.writer.save(destinationFile, select=SelectChains(drp.getChainId(), 0))
+
+
+class SelectChains(PDB.Select):
+
+    """ Only accept the specified chains when saving. """
+
+    def __init__(self, chain_letter, model_number):
+        self.chain_letter = chain_letter
+        self.model_number = model_number
+    def accept_chain(self, chain):
+
+        return self.chain_letter == chain.get_id()
+
+    def accept_model(self, model):
+
+        return self.model_number == model.get_id()
+
+
+class PtFileReader:
+
+    """Essentially python file object that provides commonly used processing functionality"""
+
+    def __init__(self, fileName, skipBlanks=True, skipHash=True):
+        """Read input file and save all lines after processing
+
+        Similar to python File object, except we commonly will want to skip blank lines in the file
+        (programs often break when getting an unexpected blank line) and also skip lines beginning with
+        '#' as these are often comments as oposed to data.
+
+        @param fileName full path file name to be processed
+        @param skipBlanks set to true to ignore blank lines
+        @param skipHash set to true to ignore lines beginning with '#'
+        """
+        fileHandle = open(fileName, 'r')
+        lines = fileHandle.readlines()
+        finalLines = []
+        blankRe = re.compile('^\s*$')
+        hashRe = re.compile('^\#')
+
+        for line in lines:
+            line = line.rstrip('\r\n')
+            blankLine = blankRe.search(line)
+            if (blankLine and skipBlanks):
+                continue
+            hashLine = hashRe.search(line)
+            if (hashLine and skipHash):
+                continue
+            finalLines.append(line)
+        self.finalLines = finalLines
+        self.fileName = fileName
+
+    def getLines(self):
+        return self.finalLines

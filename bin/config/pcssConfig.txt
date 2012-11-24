@@ -1,0 +1,3 @@
+run_directory = /trombone1/home/dbarkan/pcss/runs/
+run_name = develop
+fasta_file = /trombone1/home/dbarkan/pcss/data/testFastaFile.txt

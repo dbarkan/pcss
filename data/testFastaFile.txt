@@ -1,0 +1,2 @@
+>P10000|xyz123|test string
+THEREISASTRING
