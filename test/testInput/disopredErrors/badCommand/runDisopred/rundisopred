@@ -1,0 +1,53 @@
+#!/bin/tcsh
+
+# This is a simple script which will carry out all of the basic steps
+# required to make a DISOPRED V2 prediction. Note that it assumes that the
+# following programs are in the appropriate directories:
+# blastpgp - PSIBLAST executable (from NCBI toolkit)
+# makemat - IMPALA utility (from NCBI toolkit)
+# disopred - DISOPRED V2 program
+
+# NOTE: Script modified to be more cluster friendly (DTJ April 2008)
+
+# The name of the BLAST data bank
+set dbname = /badNr
+
+# Where the NCBI programs have been installed
+set ncbidir = /salilab/diva1/programs/x86_64linux/blast-2.2.13/bin
+
+# Where the DISOPRED V2 programs have been installed
+set execdir = runDisopred/bin
+
+# Where the DISOPRED V2 data files have been installed
+set datadir = runDisopred/data
+
+set basename = $1:r
+set rootname = $basename:t
+
+# Generate a "unique" temporary filename root
+set hostid = `hostid`
+set tmproot = distmp$$$hostid
+
+\cp -f $1 $tmproot.fasta
+
+echo "Running PSI-BLAST with sequence" $1 "..."
+
+$ncbidir/blastpgp -b 0 -j 3 -h 0.001 -d $dbname -i $tmproot.fasta -C $tmproot.chk -o $rootname.blast
+
+echo "Predicting Protein Disorder..."
+
+echo $tmproot.chk > $tmproot.pn
+echo $tmproot.fasta > $tmproot.sn
+$ncbidir/makemat -P $tmproot
+
+echo Pass1 ...
+echo Pass2 ...
+$execdir/disopred $rootname $tmproot.mtx $datadir/ $2
+
+# Remove temporary files
+
+echo Cleaning up ...
+\rm -f $tmproot.* error.log
+
+echo "Final output files:" $rootname.diso $rootname.horiz_d
+echo "Finished."
