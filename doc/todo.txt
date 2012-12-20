@@ -82,6 +82,7 @@ training overall:
 
 
 ANNOTATION
+* make sure can handle feature error when reading (found bug where 'peptide_no_source_model' is not read correctly)
 line-by-line big comparison for input and ouptut
 have test with annotaiton defined, one peptide that is different lengths than others
 consider error for annotationFileReader if file doesn't have any data. also make sure that the file exists

@@ -1,7 +1,8 @@
+pcss_directory = /Users/dbarkan/Documents/UCSF/PCSS/pcss/
 application_set_file_name = svm_application_set
 test_set_file_name = svm_test_set
 feature_order = peptide_sequence,disopred_score_feature,psipred_score_feature,dssp_structure,dssp_accessibility 
-svm_classify_command = /trombone1/home/dbarkan/pcss/bin/svm_classify_x64
+svm_classify_command = %(pcss_directory)s/bin/svm_classify_mac
 application_set_output_file_name = svmApplicationResults
 error_output_file = errors.out
 keyword_pcss_error = pcssError

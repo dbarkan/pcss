@@ -32,8 +32,8 @@ class TestModels(unittest.TestCase):
         spi = pcssIO.ScanPeptideImporter(self.runner)
         self.proteins = spi.readInputFile(self.runner.pcssConfig['fasta_file'])
         currentModelFile = self.runner.pdh.getFullModelFileFromId("741bc8ce184702f143409644b7a6f690")
-        if (os.path.exists(currentModelFile)):
-            os.remove(currentModelFile)
+        #if (os.path.exists(currentModelFile)):
+        #    os.remove(currentModelFile)
 
 
     def getProtein(self, proteinId):

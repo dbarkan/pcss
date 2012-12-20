@@ -1,5 +1,4 @@
 Git stuff
-move data to sub-directories
 move test model-directory to data
 disable or hack tests that retrieve from modbase or run disopred/psipred
 change testPcssConfig to have variables for pcss_directory

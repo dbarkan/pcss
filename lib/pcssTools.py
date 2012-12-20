@@ -38,10 +38,9 @@ class PcssRunner:
 
     def __init__(self, pcssConfig):
         """Create new PTP runner. Initialization creates PCSS Directory Handler"""
-
+        
         self.pcssConfig = pcssConfig
         self.validateConfig(pcssConfig)
-
         self.internalConfig = configobj.ConfigObj(pcssConfig["internal_config_file"], configspec=pcssConfig["internal_config_spec_file"])
         self.validateConfig(self.internalConfig)
 
@@ -83,6 +82,7 @@ class PcssRunner:
         raise Exception(msg)
 
     def addPeptideFeatures(self):
+        
         modelColumns = pcssModels.PcssModelTableColumns(self.pcssConfig)
         modelTable = pcssModels.PcssModelTable(self, modelColumns)
         
@@ -208,7 +208,9 @@ class PcssModelHandler:
     def getLocalModelFileName(self, pcssModel):
         """Get model file name as stored where PCSS expects; if not present, search on modbase file server"""
         fullModelFileName = self.pdh.getFullModelFile(pcssModel)
+        log.debug("Checking for existence model file %s" %  fullModelFileName)
         if (not os.path.exists(fullModelFileName)):
+            log.debug("Model file %s doesn't exist; retrieving from source directory" % fullModelFileName)
             self.retrieveModelFile(pcssModel)
         return fullModelFileName
 
@@ -351,6 +353,7 @@ class PcssDirectoryHandler:
 
     def copyFile(self, sourceDir, sourceFile, destinationDir):
         """Copy source file from sourceDir to destinationDir; don't return until copy is done"""
+        
         self.tryShutil(shutil.copy, os.path.join(sourceDir, sourceFile), destinationDir)
         destinationFile = os.path.join(destinationDir, sourceFile)
 

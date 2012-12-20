@@ -16,11 +16,10 @@ class TestPcssInfrastructure(unittest.TestCase):
 
         self.pcssRunner = pcssTools.PcssRunner(pcssConfig)
 
-
     def test_copy_file(self):
         sourceDir = "testFileOutput/infrastructure/sourceDir/"
         sourceFile = "testCopy"
-        destinationDir = "testFileOutput/infrastructure/destinationDir"
+        destinationDir = "testFileOutput/infrastructure/destinationDir/"
         self.pcssRunner.pdh.copyFile(sourceDir, sourceFile, destinationDir)
         self.assertTrue(os.path.exists(os.path.join(destinationDir, sourceFile)))
         
@@ -32,7 +31,7 @@ class TestPcssInfrastructure(unittest.TestCase):
 
         sourceDir = "testFileOutput/infrastructure/sourceDir/"
         sourceFile = "testMove"
-        destinationDir = "testFileOutput/infrastructure/destinationDir"
+        destinationDir = "testFileOutput/infrastructure/destinationDir/"
         self.pcssRunner.pdh.moveFile(sourceDir, sourceFile, destinationDir)
         self.assertTrue(os.path.exists(os.path.join(destinationDir, sourceFile)))
         
