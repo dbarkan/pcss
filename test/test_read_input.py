@@ -29,7 +29,8 @@ class TestReadInput(unittest.TestCase):
         print "SETUP RUNNER"
         print "file: %s" % pcssTools.__file__
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
-
+        print "set up test"
+        print "set up test 2"
         self.spi = pcssIO.ScanPeptideImporter(self.runner)
 
           
