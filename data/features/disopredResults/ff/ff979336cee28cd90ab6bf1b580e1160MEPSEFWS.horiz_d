@@ -1,0 +1,101 @@
+DISOPRED predictions for a false positive rate threshold of: 5%
+
+conf: 999912498887899999999999999999999999999999999998876421000000
+pred: ****...********************************************.........
+  AA: MEPSRALLGCLASAAAAAPPGEDGAGAGAEEEEEEEEEAAAAVGPGELGCDAPLPYWTAV
+              10        20        30        40        50        60
+
+conf: 000000000000000000000000000000000001320023433001344567889999
+pred: ...................................................*********
+  AA: FEYEAAGEDELTLRLGDVVEVLSKDSQVSGDEGWWTGQLNQRVGIFPSNYVTPRSAFSSR
+              70        80        90       100       110       120
+
+conf: 999999999988765200000000000000000000000000000000000000000023
+pred: ***************.............................................
+  AA: CQPGGEDPSCYPPIQLLEIDFAELTLEEIIGIGGFGKVYRAFWIGDEVAVKAARHDPDED
+             130       140       150       160       170       180
+
+conf: 432101000000000000000000000000000000000000000000000000000000
+pred: ............................................................
+  AA: ISQTIENVRQEAKLFAMLKHPNIIALRGVCLKEPNLCLVMEFARGGPLNRVLSGKRIPPD
+             190       200       210       220       230       240
+
+conf: 000000000000000000000000000000000000000000000000000000000000
+pred: ............................................................
+  AA: ILVNWAVQIARGMNYLHDEAIVPIIHRDLKSSNILILQKVENGDLSNKILKITDFGLARE
+             250       260       270       280       290       300
+
+conf: 000001310000000000000000000000000000000000000000000000000000
+pred: ............................................................
+  AA: WHRTTKMSAAGTYAWMAPEVIRASMFSKGSDVWSYGVLLWELLTGEVPFRGIDGLAVAYG
+             310       320       330       340       350       360
+
+conf: 000000000000000000000000000000000000000000000035667777787777
+pred: ...............................................*************
+  AA: VAMNKLALPIPSTCPEPFAKLMEDCWNPDPHSRPSFTNILDQLTTIEESGFFEMPKDSFH
+             370       380       390       400       410       420
+
+conf: 765422320002345778889999999999999988888877777777666665432310
+pred: ***...........****************************************......
+  AA: CLQDNWKHEIQEMFDQLRAKEKELRTWEEELTRAALQQKNQEELLRRREQELAEREIDIL
+             430       440       450       460       470       480
+
+conf: 000000146789999999999999999999999999999999999999999999999999
+pred: ........****************************************************
+  AA: ERELNIIIHQLCQEKPRVKKRKGKFRKSRLKLKDGNRISLPSDFQHKFTVQASPTMDKRK
+             490       500       510       520       530       540
+
+conf: 999999999999999999888899999999999999999999999999999999999999
+pred: ************************************************************
+  AA: SLINSRSSPPASPTIIPRLRAIQLTPGESSKTWGRSSVVPKEEGEEEEKRAPKKKGRTWG
+             550       560       570       580       590       600
+
+conf: 999999999999999999999999988999999999999999999999999999999999
+pred: ************************************************************
+  AA: PGTLGQKELASGDEGSPQRREKANGLSTPSESPHFHLGLKSLVDGYKQWSSSAPNLVKGP
+             610       620       630       640       650       660
+
+conf: 999999999999999999999999999999999998887677778899999999999999
+pred: ************************************************************
+  AA: RSSPALPGFTSLMEMEDEDSEGPGSGESRLQHSPSQSYLCIPFPRGEDGDGPSSDGIHEE
+             670       680       690       700       710       720
+
+conf: 999999999999999999999999999999887500000000000000003577899999
+pred: **********************************.................*********
+  AA: PTPVNSATSTPQLTPTNSLKRGGAHHRRCEVALLGCGAVLAATGLGFDLLEAGKCQLLPL
+             730       740       750       760       770       780
+
+conf: 999999999999999999999999999999999999999999999999999999999999
+pred: ************************************************************
+  AA: EEPEPPAREEKKRREGLFQRSSRPRRSTSPPSRKLFKKEEPMLLLGDPSASLTLLSLSSI
+             790       800       810       820       830       840
+
+conf: 999999999999888888888889999999999999887777767788899999999999
+pred: ************************************************************
+  AA: SECNSTRSLLRSDSDEIVVYEMPVSPVEAPPLSPCTHNPLVNVRVERFKRDPNQSLTPTH
+             850       860       870       880       890       900
+
+conf: 999999999999999999999999999999999999999999999999999999999999
+pred: ************************************************************
+  AA: VTLTTPSQPSSHRRTPSDGALKPETLLASRSPSSNGLSPSPGAGMLKTPSPSRDPGEFPR
+             910       920       930       940       950       960
+
+conf: 999998877888899999999999888876667777788888888888888899999999
+pred: ************************************************************
+  AA: LPDPNVVFPPTPRRWNTQQDSTLERPKTLEFLPRPRPSANRQRLDPWWFVSPSHARSTSP
+             970       980       990      1000      1010      1020
+
+conf: 999999999999887765544443111111123434456555334310000000000000
+pred: *******************..................*****..................
+  AA: ANSSSTETPSNLDSCFASSSSTVEERPGLPALLPFQAGPLPPTERTLLDLDAEGQSQDST
+            1030      1040      1050      1060      1070      1080
+
+conf: 001223566666766630000000
+  AA: VPLCRAELNTHRPAPYEIQQEFWS
+pred: ......**********........
+            1090      1100
+
+Asterisks (*) represent disorder predictions and dots (.) 
+prediction of order. The confidence estimates give a rough
+indication of the probability that each residue is disordered.
+

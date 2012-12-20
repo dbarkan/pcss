@@ -1,0 +1,9 @@
+run_directory = /trombone1/home/dbarkan/pcss/runs/
+run_name = develop
+fasta_file = /trombone1/home/dbarkan/pcss/data/inputSequenceSingletonTruncated.txt
+rules_file = /trombone1/home/dbarkan/pcss/data/peptideRulesFile
+peptide_length = 8
+root_disopred_dir = /trombone1/home/dbarkan/pcss/data/features/disopredResults/
+run_disopred_command = /trombone1/home/dbarkan/pcss/bin/runDisopred/rundisopred
+root_psipred_dir = /trombone1/home/dbarkan/pcss/data/features/psipredResults/
+run_psipred_command = /trombone1/home/dbarkan/pcss/bin/runPsipred/runpsipred

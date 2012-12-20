@@ -1,0 +1,195 @@
+Git stuff
+move test model-directory to data
+disable or hack tests that retrieve from modbase or run disopred/psipred
+change testPcssConfig to have variables for pcss_directory
+figure out how to have different branch that switches testPcssConfig to different file an maybe those that retrieve from modbase if want to keep that locally 
+rm all ~
+
+next:
+handle real Exception; write exception name and stacktrace to file, make stest for it
+figure out if any differnces needed in ANnotationRunner / SVMClassifyRunner in readproteins and writeOutput
+throw error if expecting input attribute to be a column and don't get it -- maybe validate input file entirely (make test)
+also if I have a column that isn't an expected input attribute, throw error (make test)
+change optional variable to be outputOptional, also check output still has same behavior -- if it is not optional, throw error (should be fine)
+
+
+VALIDATION
+have one test to make sure configSpec works; should have that be a PcssGlobalError
+decide what to do if that error occurred, try block is inside execute, should be somewhere else?
+
+CONTEXT -- overall
+three attribute files; annotation, svm application, training 
+will have to either have different tests for each runner or figure out a way to change attribute file name for each test (the latter might be fine)
+
+CONTEXT -- Normal Annotation no input, write output (AnnotationRunner)
+line-by-line input / output test
+handle and make test for pcss global exception handled
+handle and make test for Exception
+
+CONTEXT -- Annotation and SVM Application no input, write output (SvmApplicationRunner) -- features are both input and output and svm is output only
+features: TPR, FPR, Score, maybe status
+just have test to make sure works start to finish and also that it writes global exception file correctly
+     do this after finishing giving scores to peptide
+try to throw a global exception while annotation file is open to make sure it closes file correctly
+test for file existance of errors real Exception
+line-by-line output test
+account for single sequence, no peptides parsed
+	account for it when processing
+	make sure it is still output to result file
+all sequences -- no peptides parsed
+       account when processing
+       make sure still output to result file
+
+
+CONTEXT -- SVM Application from file, read input, write output -- same attribute file as above
+make runner for it
+account for single sequence, no peptides parsed
+	account for it when processing
+	make sure it is still output to result file
+all sequences -- no peptides parsed
+       account when processing
+       make sure still output to result file
+handle	global error in input file -- becuase I had global exception in previous run
+handle and test global exception in SVM part
+handle and test Exception in SVM part
+handle and test exception in reading input file
+
+CONTEXT -- Training Annotation -- no input, all features output along with positive / negaitve (defined by user)
+make runner for it
+
+CONTEXT -- Training benchmarking -- input from file, output is the same as input. 
+output:  possibly could include bnechmarking socres from leave-one-out, but not critical
+make runner for it
+
+CONTEXT -- Training benchmarking, peptides in memory -- no inpu, output is the same as above
+make runner for it
+
+
+SVM
+applciation: validate all svm input that is retrieved from internal config on run-time (can't validate in config file since it is dynamically generated)
+after running svm:
+test we got expected score for a given peptide
+
+
+
+training overall:
+1. make annotation, write to output file (has positive / negative tag)
+2. read back in -- this will be the cluster way, although command line could go directly from memory
+3. not writing back out since they don't have to be scored -- although could. 
+4. big decision will be whether to write status -- think I should. can have true postivie / negative and also predicte positive / negative -- so status will always be output for a peptide
+
+
+
+
+ANNOTATION
+line-by-line big comparison for input and ouptut
+have test with annotaiton defined, one peptide that is different lengths than others
+consider error for annotationFileReader if file doesn't have any data. also make sure that the file exists
+defined mode: make sure we have one peptide for each protein (some will be sequence mismatch keyword)
+handle no peptides parsed for any sequences
+
+next big things overall
+global infrastructure for different contexts (esp parameters)
+status for peptides, handle outputting status in annotation only for training
+read svm ouptut file, apply scores to peptides, output result in output annotation file
+training
+move data
+
+SVM
+svm benchmark file -- handle 0,0 and 1,1 lines
+validate feature order naems are all valid feature names
+handle peptides less than canonical length
+       make sure to consider getEmptyFeatureOffset too
+
+
+LARGER DATA:
+will have to have some full tests for file output errors
+test exact output of annotation file line by line
+make sure bestModel still works when have multiple models (currently sorted works, but only two models)
+a couple spot checks on svm model
+would be great to see if current svm model is the same as a previous model in the perl code
+
+REFACTORING
+have destination directory for models have two letter directory unless I decide to just copy each time
+take out instance data for pcesProtein, pcssPeptide - have it all be getModbaseSequenceId() and then goes to the attribute dictionary
+change disorder variable names to disopred
+move all data into their own subdirectory
+have specialized fasta readers to parse fasta header
+getTwoLetterDir and getThreeLetterDir return differnt directory structures; synergize them
+have modelattribute types all be string atttribute objects, then have PCssIo not have to do checks for model string attributes as "" in setValueFromFile
+keyword for no errors instead of hardcoding "none", same for no peptide parsed
+
+ERRORS / TESTING
+validate runinfo
+validate pcssFileAttributes
+decide whether to have test input in data/ or in its own test input directory, and be consistent
+some global errors might not have 'e.msg' attribute -- need to handle these anyway (right now throws error saying doesn't have message)
+     in general figure out what to do with global errors, also for svm
+take out exception in getModeltyle,
+have tests for problems in rules file - same as in frontend
+fix test_sequence_long -- produces different result for the long sequence than previous (need to see if this is the same result on cluster)
+make sure files are always closed
+     also make sure these are closed when handling exception
+test to see if errors are written out where expected after I get a file reader -- can be streamlined pretty quickly in test_models, etc.
+
+CODE
+consider having sorted peptide list in ClassifySvm be finalized or constant so it can't be resorted, or some other way to keep those peptides
+	 sorted in that order
+explicit vs implicit zeroes for sequence feature
+have SVM be able to read peptides from input annotation file or work with peptides it already has
+figure out something for relative directories and home test directory in config
+soon will have to come up with parameters for different contexts. e.g. application SVM should have model file  / benchmark scores as config (and there need to decide internal vs user); training should have them as output (probably internal). Same thing for annotation output file
+move annotationOutput file to internal cofnig
+methods for old style run  info
+total model count
+template pdb
+other features (model url)
+change acc call to letters
+change secondary structure styel to be like amino acids: three features per call, set the feature that is my call to 1
+
+SEQUENCE FEATURES:
+explore using different blast database besides nr (maybe nr95?)
+psipred and disopred standalone script (probably cluster) and SOP
+
+
+PLOW
+git commit
+logging / stats
+log all exception messages as error
+go through peptide pipeline to see if i missed anything
+
+
+
+
+read peptides
+make training set and test set
+make file for each with a tag
+use SVM app to make a model with training set
+write model to file (think automatic)
+use created model to run test set
+write benchmark results based on stats
+if iterating, need to do multiple times and average
+
+
+
+WEB SERVER:
+maybe process sequences in increasing size. That way a long sequence won't time out and kill it for the rest of the sequences
+If one long sequence does kill it for the rest of the sequences (regardless of whether they were sorted in increasing size),
+see what the output looks like -- are there just feature errors for everything that didn't get processed but only one error 
+actually saying what happened for the one sequence? Could have an attribute for pcssProteins that says if the algorithm started 
+to run, that way we would know if it ran and had an error vs never ran because something else timed out. 
+
+In pcssFeatureHandler, make sure timeout feature exception message will work (the problem is that on the cluster, might be
+raising exceptions but they don't get caught because the whole code that is also processing exceptions dies during the timeout)
+
+decide whether to always copy models every run or copy to a pcss directory and cache there. Decision should be based on speed. 
+Disopred caches but there is no sali lab disopred results AFAIK, while there is a salilab modbase result. for now will just copy to run directory
+
+
+Exception guidelines
+if I am expecting a source file that I am copying or moving to exist, check to make sure it does and throw feature/protein exception if not; then run shutil (don't rely on that for exception)
+
+for each exception:
+make sure it is the right kind of exception
+make sure there is a test for it or if not notate it needs one
+make sure that features get peptides and proteins and fullproteins get protein somewhere along the way

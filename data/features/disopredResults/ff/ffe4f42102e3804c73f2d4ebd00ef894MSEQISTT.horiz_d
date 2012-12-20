@@ -1,0 +1,41 @@
+DISOPRED predictions for a false positive rate threshold of: 5%
+
+conf: 998600000000000000000000000100000000000000000000000000000000
+pred: ****........................................................
+  AA: MSEQSICQARASVMVYDDTSKKWVPIKPGQQGFSRINIYHNTASSTFRVVGVKLQDQQVV
+              10        20        30        40        50        60
+
+conf: 000000000000000000000000000000000000000000000004678999999999
+pred: ................................................************
+  AA: INYSIVKGLKYNQATPTFHQWRDARQVYGLNFASKEEATTFSNAMLFALNIMNSQEGGPS
+              70        80        90       100       110       120
+
+conf: 999999999999999999999999999999999999999999999999999999999999
+pred: ************************************************************
+  AA: TQRQVQNGPSPEEMDIQRRQVMEQQHRQESLERRISATGPILPPGHPSSAASTTLSCSGP
+             130       140       150       160       170       180
+
+conf: 999999999999999999999999999999999999999999999999999999999999
+pred: ************************************************************
+  AA: PPPPPPPVPPPPTGSTPPPPPPLPAGGAQGTNHDESSASGLAAALAGAKLRRVQRPEDAS
+             190       200       210       220       230       240
+
+conf: 999999999999999999999999999999999999999999999999999999999999
+pred: ************************************************************
+  AA: GGSSPSGTSKSDANRASSGGGGGGLMEEMNKLLAKRRKAASQTDKPADRKEDESQTEDPS
+             250       260       270       280       290       300
+
+conf: 999999999999999999999999999999999999999999999999999999999999
+pred: ************************************************************
+  AA: TSPSPGTRATSQPPNSSEAGRKPWERSNSVEKPVSSLLSRTPSVAKSPEAKSPLQSQPHS
+             310       320       330       340       350       360
+
+conf: 999999999988776541000000000000000000000000000360048999
+  AA: RVKPAGSVNDVGLDALDLDRMKQEILEEVVRELHKVKEEIIDAIRQELSGISTT
+pred: ****************..............................*...****
+             370       380       390       400       410
+
+Asterisks (*) represent disorder predictions and dots (.) 
+prediction of order. The confidence estimates give a rough
+indication of the probability that each residue is disordered.
+

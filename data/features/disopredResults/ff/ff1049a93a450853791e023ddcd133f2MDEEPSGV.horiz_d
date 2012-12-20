@@ -1,0 +1,41 @@
+DISOPRED predictions for a false positive rate threshold of: 5%
+
+conf: 998980043200000000000000000000000000003456788888888887764000
+pred: *****...................................****************....
+  AA: MDEEPERTKRWEGGYERTWEILKEDESGSLKATIEDILFKAKRKRVFEHHGQVRLGMMRH
+              10        20        30        40        50        60
+
+conf: 000000000002344000000000000000000000000000000000000000000000
+pred: ............................................................
+  AA: LYVVVDGSRTMEDQDLKPNRLTCTLKLLEYFVEEYFDQNPISQIGIIVTKSKRAEKLTEL
+              70        80        90       100       110       120
+
+conf: 000000000134555666766544300000000344567777644442000000000000
+pred: ............**********..............*******.................
+  AA: SGNPRKHITSLKKAVDMTCHGEPSLYNSLSIAMQTLKHMPGHTSREVLIIFSSLTTCDPS
+             130       140       150       160       170       180
+
+conf: 000000000000000000000000000000000000000000000000000000110035
+pred: ...........................................................*
+  AA: NIYDLIKTLKAAKIRVSVIGLSAEVRVCTVLARETGGTYHVILDESHYKELLTHHVSPPP
+             190       200       210       220       230       240
+
+conf: 555644442000000000000001000000000001011321100000000000000000
+pred: ****........................................................
+  AA: ASSSSECSLIRMGFPQHTIASLSDQDAKPSFSMAHLDGNTEPGLTLGGYFCPQCRAKYCE
+             250       260       270       280       290       300
+
+conf: 000000000000000000000000000000001323344322000000000000000000
+pred: ............................................................
+  AA: LPVECKICGLTLVSAPHLARSYHHLFPLDAFQEIPLEEYNGERFCYGCQGELKDQHVYVC
+             310       320       330       340       350       360
+
+conf: 00000000000000000000000000350089999
+  AA: AVCQNVFCVDCDVFVHDSLHCCPGCIHKIPAPSGV
+pred: ...........................*..*****
+             370       380       390
+
+Asterisks (*) represent disorder predictions and dots (.) 
+prediction of order. The confidence estimates give a rough
+indication of the probability that each residue is disordered.
+

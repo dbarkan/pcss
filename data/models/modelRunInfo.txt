@@ -1,0 +1,9 @@
+[human_2008]
+path = /salilab/park2/modbase/projects/genomes/human_2008/data
+offset = 0
+style = NewModelStyle
+
+[human_2010]
+path = /park3/modbase/projects/human_2010/data/
+offset = 0
+style = NewModelStyle
