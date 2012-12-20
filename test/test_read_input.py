@@ -22,7 +22,7 @@ class TestReadInput(unittest.TestCase):
         self.pcssConfig = configobj.ConfigObj(configFile, configspec=configSpecFile)
 
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
-
+        print "set up test"
         self.spi = pcssIO.ScanPeptideImporter(self.runner)
 
           
