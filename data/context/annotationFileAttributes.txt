@@ -1,0 +1,17 @@
+seq_id	protein	False	Modbase Sequence ID	string	input,output
+uniprot_id	protein	True	Uniprot ID	string	input,output
+model_id	model	True	Modbase Model ID	string	input,output
+status	peptide	False	Status	StringAttribute	none
+protein_length	protein	True	Protein Length	string	input,output
+peptide_start	peptide	False	Peptide Start Position	StringAttribute	input,output
+peptide_end	peptide	False	Peptide End Position	StringAttribute	input,output
+peptide_sequence	peptide	False	Peptide Sequence	PeptideSequenceFeature	input,output
+dssp_accessibility	peptide	True	DSSP Accessibility	DsspAccFeature	input,output
+dssp_structure	peptide	True	Dssp Structure	DsspStructureFeature	input,output
+disopred_string_feature	peptide	False	Disorder Calls	DisorderStringFeature	input,output
+disopred_score_feature	peptide	False	Disopred Scores	DisorderScoreFeature	input,output
+psipred_string_feature	peptide	False	Psipred Calls	PsipredStringFeature	input,output
+psipred_score_feature	peptide	False	Psipred Scores	PsipredScoreFeature	input,output
+protein_errors	protein	False	Protein Errors	string	input,output
+peptide_errors	peptide	False	Peptide Errors	PeptideErrorFeature	input,output
+

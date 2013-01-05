@@ -1,0 +1,1 @@
+Modbase Sequence ID	Uniprot ID	Modbase Model ID	Protein Length	Peptide Start Position	Peptide End Position	Peptide Sequence	DSSP Accessibility	Dssp Structure	Disorder Calls	Disopred Scores	Psipred Calls	Psipred Scores	Protein Errors	Peptide Errors
