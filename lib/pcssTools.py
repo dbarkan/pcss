@@ -17,12 +17,33 @@ import pcssModels
 import pcssFeatures
 import pcssFeatureHandlers
 import shutil
+from pympler import summary
+from pympler import muppy
+from pympler import tracker
+import traceback
 from Bio import PDB
 log = logging.getLogger("pcssTools")
-
+tr = tracker.SummaryTracker()
 def getOneLetterFromBioResidue(residueObject):
     return PDB.Polypeptide.three_to_one(residueObject)
 
+
+def getProteinErrorCodePrefix():
+    return "protein_error_"
+
+def getPeptideErrorCodePrefix():
+    return "peptide_error_"
+
+def isPeptideErrorValue(value):
+    return value.startswith(getPeptideErrorCodePrefix())
+
+def getAllPeptides(proteins, ignoreProteinErrors):
+    allPeptides = []
+    for protein in proteins:
+        print protein.getAttributeOutputString("protein_errors")
+        if (ignoreProteinErrors or not protein.hasErrors()):
+            allPeptides = allPeptides + protein.peptides.values()
+    return allPeptides
 
 def split_len(seq, length):
     return [seq[i:i+length] for i in range(0, len(seq), length)]
@@ -38,7 +59,6 @@ class PcssRunner:
 
     def __init__(self, pcssConfig):
         """Create new PTP runner. Initialization creates PCSS Directory Handler"""
-        
         self.pcssConfig = pcssConfig
         self.validateConfig(pcssConfig)
         self.internalConfig = configobj.ConfigObj(pcssConfig["internal_config_file"], configspec=pcssConfig["internal_config_spec_file"])
@@ -46,10 +66,13 @@ class PcssRunner:
 
         self.pdh = PcssDirectoryHandler(pcssConfig, self.internalConfig)
         self.pdh.createOutputDirectory()
-
         self.modelHandler = PcssModelHandler(pcssConfig, self.pdh)
         self.parser = PDB.PDBParser(QUIET=True)
         self.pfa = pcssIO.PcssFileAttributes(pcssConfig)
+
+    def execute(self):
+        self.checkForErrors()
+        self.executePipeline()
 
     def validateConfig(self, config):
         validator = Validator({'file': fileExists})
@@ -57,7 +80,33 @@ class PcssRunner:
         if (results != True):
             self.handleConfigError(results)
             
+    def checkForErrors(self):
+        if (os.path.exists(self.pdh.getPcssErrorFile()) or 
+            os.path.exists(self.pdh.getInternalErrorFile())):
+            raise pcssErrors.ErrorExistsException("Previous error exists")
 
+
+    def validatePeptideCodeStatus(self, status, peptideCode):
+        try:
+            return self.validatePeptideStatus(status)
+        except pcssErrors.PcssGlobalException as e:
+            raise pcssErrors.PcssGlobalException("%s (peptide code: %s)" % (e.msg, peptideCode))
+
+    def validatePeptideStatus(self, status):
+                                                
+        status = status.lower()
+        if (not (status == self.getPositiveKeyword() or status == self.getNegativeKeyword() or status == self.getApplicationKeyword())):
+            raise pcssErrors.PcssGlobalException("Peptide status %s not valid status (needs to be %s, %s, %s" % (status, self.getPositiveKeyword(), 
+                                                                                                                 self.getNegativeKeyword, self.getApplicationKeyword))
+        return status
+
+    def validatePeptideTrainingStatus(self, status):
+                                                
+        status = status.lower()
+        if (not (status == self.getPositiveKeyword() or status == self.getNegativeKeyword())):
+            raise pcssErrors.PcssGlobalException("Peptide status %s not valid status (needs to be %s, %s)" % (status, self.getPositiveKeyword(), 
+                                                                                                              self.getNegativeKeyword()))
+        return status
 
     def getBioParser(self):
         return self.parser
@@ -67,25 +116,65 @@ class PcssRunner:
         return featureOrderList
 
     def writePcssErrorFile(self, message):
-        errorFile = self.pdh.getFullOutputFile(self.internalConfig["error_output_file"])
+
+
+        errorFile = self.pdh.getPcssErrorFile()
         errorFh = open(errorFile, 'w')
         errorFh.write(self.internalConfig["keyword_pcss_error"] + "\n")
         errorFh.write(message + "\n")
+        tb = traceback.format_exc()
+        errorFh.write(tb + "\n")
+
+    def writeInternalErrorFile(self, e):
+        errorFile = self.pdh.getInternalErrorFile()
+        errorFh = open(errorFile, 'w')
+        errorFh.write(self.internalConfig["keyword_internal_error"] + "\n")
+        errorFh.write(str(e) + "\n")
+        tb = traceback.format_exc()
+        errorFh.write(tb + "\n")
+
+    def getPositiveKeyword(self):
+        return self.internalConfig["keyword_positive_status"]
+
+    def getNegativeKeyword(self):
+        return self.internalConfig["keyword_negative_status"]
+
+    def getApplicationKeyword(self):
+        return self.internalConfig["keyword_application_status"]
+
+    def readAnnotationFile(self):
+        self.reader = pcssIO.AnnotationFileReader(self)
+        self.reader.readAnnotationFile(self.pcssConfig["input_annotation_file_name"])
+        self.proteins = self.reader.getProteins()
+
+    def readProteins(self):
+
+        peptideImporterType = self.pcssConfig["peptide_importer_type"]
+        peptideImporter = None
+        if (peptideImporterType == "scan"):
+            peptideImporter = pcssIO.ScanPeptideImporter(self)
+        else:
+            peptideImporter = pcssIO.DefinedPeptideImporter(self)
+            
+        self.proteins = peptideImporter.readInputFile(self.pcssConfig['fasta_file'])
+
 
     def handleConfigError(self, results):
         msg = ""
+        print "An error occurred when validating a configuration file. Please check the log file for more details."
         for (section_list, key, _) in flatten_errors(self.pcssConfig, results):
             if key is not None:
-                msg +=  'The "%s" key in the section "%s" failed validation' % (key, ', '.join(section_list))
+                msg +=  'The "%s" key in the section "%s" failed validation\n' % (key, ', '.join(section_list))
             else:
                 msg += 'The following section was missing:%s ' % ', '.join(section_list)
-        raise Exception(msg)
-
+        print msg
+        raise pcssErrors.PcssGlobalException(msg)
+                
     def addPeptideFeatures(self):
         
         modelColumns = pcssModels.PcssModelTableColumns(self.pcssConfig)
         modelTable = pcssModels.PcssModelTable(self, modelColumns)
-        
+
         disopredFileHandler = pcssFeatureHandlers.DisopredFileHandler(self.pcssConfig, self.pdh)
         disopredReader = pcssFeatureHandlers.DisopredReader(disopredFileHandler)
         disopredRunner = pcssFeatureHandlers.SequenceFeatureRunner(disopredFileHandler)
@@ -99,61 +188,87 @@ class PcssRunner:
             protein.processPsipred(psipredReader, psipredRunner)
             protein.addModels(modelTable)        
             protein.processDssp()
+            
+        sum1 = summary.summarize(muppy.get_objects())
+        summary.print_(sum1)
+    def writeOutput(self):
+
+        afw = pcssIO.AnnotationFileWriter(self)
+        afw.writeAllOutput(self.proteins)
 
 
 class SvmApplicationRunner(PcssRunner):
+    def runSvm(self):
+        self.appSvm = pcssSvm.ApplicationSvm(self)
+        self.appSvm.setProteins(self.proteins)
+        self.appSvm.writeClassificationFile()
+        self.appSvm.classifySvm()
+        self.appSvm.readResultFile()
+        self.appSvm.addScoresToPeptides()
 
-    def execute(self):
+
+
+class SvmApplicationInputRunner(SvmApplicationRunner):
+
+    def executePipeline(self):
+        try:
+            self.readSvmApplicationInput()
+
+            self.runSvm()
+        
+            self.writeOutput()
+
+        except pcssErrors.PcssGlobalException as pge:
+            print pge.msg
+            tb = traceback.format_exc()
+            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
+            self.writePcssErrorFile(pge.msg + "\n" + tb)
+
+        except pcssErrors.ErrorExistsException:
+            return
+        
+        except Exception as e:
+            print e
+            self.writeInternalErrorFile(e)
+        
+    def readSvmApplicationInput(self):
+        self.readAnnotationFile()
+        
+        self.reader.readProteinSequences(self.pcssConfig["fasta_file"])
+
+class SvmApplicationFeatureRunner(SvmApplicationRunner):
+
+    def executePipeline(self):
         
         try:
             self.readProteins()
 
             self.addPeptideFeatures()
 
-            self.addPeptideSvmScores()
+            self.runSvm()
         
             self.writeOutput()
 
         except pcssErrors.PcssGlobalException as pge:
             print pge.msg
             self.writePcssErrorFile(pge.msg)
+
+        except pcssErrors.ErrorExistsException:
+            return
         
         except Exception as e:
-            print "normal exceptio: %s" % e
-
-    def addPeptideSvmScores(self):
-        
-        modelFileName = self.pcssConfig["svm_model_file"]
-        benchmarkFileName = self.pcssConfig["svm_benchmark_file"]
-
-        appSvm = pcssSvm.ApplicationSvm(self, modelFileName, benchmarkFileName)
-        appSvm.setProteins(self.proteins)
-        appSvm.writeClassificationFile()
-        appSvm.classifySvm()
-        appSvm.readResultFile()
-
-    def readProteins(self):
-        
-        peptideImporterType = self.pcssConfig["peptide_importer_type"]
-        peptideImporter = None
-        if (peptideImporterType == "scan"):
-            peptideImporter = pcssIO.ScanPeptideImporter(self)
-        else:
-            peptideImporter = pcssIO.DefinedPeptideImporter(self)
-
-        self.proteins = peptideImporter.readInputFile(self.pcssConfig['fasta_file'])
+            print e
+            self.writeInternalErrorFile(e)
         
 
 class AnnotationRunner(PcssRunner):
-#need updating
-    def handleGlobalException(self, pge):
-        self.writePcssErrorFile(pge.msg)
 
     def handleInternalException(PcssRunner, e):
         self.writeInternalErrorFile(e)
 
-    def execute(self):
+    def executePipeline(self):
         try:
+
             self.readProteins()
 
             self.addPeptideFeatures()
@@ -161,30 +276,50 @@ class AnnotationRunner(PcssRunner):
             self.writeOutput()
 
         except pcssErrors.PcssGlobalException as pge:
+
             self.writePcssErrorFile(pge.msg)
         
         except Exception as e:
-            print e
-            self.handleInternalException(e)
+
+            self.writeInternalErrorFile(e)
+
 
         
 class SvmTrainingRunner(PcssRunner):
-    def execute(self):
+    def executePipeline(self):
         try:
-            self.readProteins()
-            
+            self.readAnnotationFile()
+        
             self.benchmark()
             
             self.writeOutput()
 
+        except pcssErrors.ErrorExistsException:
+            return
+
         except pcssErrors.PcssGlobalException as pge:
             print pge.msg
-            self.handleGlobalException(pge)
-        
+
+            tb = "none"
+            self.writePcssErrorFile(pge.msg + "\n" + tb)      
+
         except Exception as e:
             print e
-            #self.handleException(e)
-            
+            self.writeInternalErrorFile(e)
+      
+    def benchmark(self):
+        benchmarker = pcssSvm.SvmBenchmarker(self)
+ 
+        for i in range(self.pcssConfig["training_iterations"]):
+            benchmarker.createTrainingAndTestSets(getAllPeptides(self.proteins, False))  #parition pepitdes, write training and test set files
+
+            benchmarker.trainAndApplyModel() #call svm command line
+
+            benchmarker.readBenchmarkResults() #read result file
+
+        benchmarker.processAllResults()
+
+        
 
 class PcssModelHandler:
 
@@ -307,6 +442,14 @@ class PcssDirectoryHandler:
         ptd = PcssTempDirectory()
         return ptd
 
+
+    def getPcssErrorFile(self):
+        return self.getFullOutputFile(self.internalConfig["pcss_error_output_file"])
+
+    def getInternalErrorFile(self):
+        return self.getFullOutputFile(self.internalConfig["internal_error_output_file"])
+
+
     def createOutputDirectory(self):
         """Creates the 'run directory' which is where all output for this program goes. Run directory is created as $run_directory/$run_name
         where each variable specified in the parameter file. Thus if the user wants to run a program twice with different input, simply change
@@ -368,7 +511,6 @@ class PcssDirectoryHandler:
 
     def runSubprocess(self, args, checkStdError=True):
         """Run python subprocess module command; by default, raise exception if anything was written to stderr"""
-        print "subprocess args: %s" % args
         process = subprocess.Popen(args, shell=False, stderr=subprocess.PIPE)
         processOutput = process.communicate()
         if (processOutput[1] != "" and checkStdError):
@@ -414,9 +556,20 @@ class PcssDirectoryHandler:
     def getSvmTestSetFile(self):
         return self.getFullOutputFile(self.internalConfig["test_set_file_name"])
 
+
+
+    def getSvmTrainingSetFile(self):
+        return self.getFullOutputFile(self.internalConfig["training_set_file_name"])
+
+    def getSvmNewModelFile(self):
+        return self.getFullOutputFile(self.internalConfig["training_new_model_name"])
+
     def getSvmApplicationOutputFile(self):
         return self.getFullOutputFile(self.internalConfig["application_set_output_file_name"])
 
+
+    def getSvmTestOutputFile(self):
+        return self.getFullOutputFile(self.internalConfig["test_set_output_file_name"])
    
 class PcssFileReader:
 

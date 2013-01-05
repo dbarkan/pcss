@@ -53,7 +53,7 @@ class TestModels(unittest.TestCase):
         print "best model id: %s" % bestModel.getId()
         bestModel.setAttribute("model_id", "fake")
 
-        self.processException("peptide_no_source_model", pcssProtein.processDssp, [])
+        self.processException("peptide_error_no_source_model", pcssProtein.processDssp, [])
         
     def test_column_count_mismatch(self):
         self.setupPcssModelTest()
@@ -79,7 +79,7 @@ class TestModels(unittest.TestCase):
 
         pcssProtein = self.getProtein("76c3a409540532138c6b44bde9e4d248MDDRDENQ")
         pcssProtein.addModels(self.modelTable)
-        self.processException("peptide_dssp_error", pcssProtein.processDssp, [])
+        self.processException("peptide_error_dssp_error", pcssProtein.processDssp, [])
 
 
     def test_dssp_peptide_mismatch(self):
@@ -90,7 +90,7 @@ class TestModels(unittest.TestCase):
         pcssProtein = self.getProtein("76c3a409540532138c6b44bde9e4d248MDDRDENQ")
         pcssProtein.addModels(self.modelTable)
         pcssProtein.peptides[2].sequence = "FAKEFAKE"
-        self.processException("peptide_dssp_mismatch", pcssProtein.processDssp, [])
+        self.processException("peptide_error_dssp_mismatch", pcssProtein.processDssp, [])
 
     def test_read_model_table(self):
         try:

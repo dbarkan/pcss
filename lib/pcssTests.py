@@ -81,6 +81,8 @@ class TestSequenceFeatures(unittest.TestCase):
         self.fileHandler.rootDataDir = self.seqData.badCallDir
         self.processException(self.proteins[0].peptides.values()[0], self.seqData.stringFeatureName, self.seqData.badCallCode, self.processResultFile)
 
+    
+
     def test_command_error(self):
         initialCwd = os.getcwd()
         self.setBadCommandData()
@@ -104,11 +106,11 @@ class DisopredData:
         self.badCallDir = "testInput/disopredErrors/badCall/"
         self.badLineDir = "testInput/disopredErrors/badLine/"
 
-        self.peptideNotFoundCode = "peptide_disopred_peptide_not_found"
-        self.proteinMismatchCode = "peptide_disopred_protein_mismatch"
-        self.badCommandCode = "peptide_disopred_bad_command"
-        self.badLineCode = "peptide_disopred_bad_line"
-        self.badCallCode = "peptide_disopred_bad_call"
+        self.peptideNotFoundCode = "peptide_error_disopred_peptide_not_found"
+        self.proteinMismatchCode = "peptide_error_disopred_protein_mismatch"
+        self.badCommandCode = "peptide_error_disopred_bad_command"
+        self.badLineCode = "peptide_error_disopred_bad_line"
+        self.badCallCode = "peptide_error_disopred_bad_call"
 
     def getExpectedFullStringResult(self):
         return "DDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDDDDDDDDDDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDDDDDDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDOOOOOOOOOOOOOOOOODDDDDDDDDDDDDDDDDDDDDDDD"
@@ -122,11 +124,11 @@ class PsipredData:
         self.badLineDir = "testInput/psipredErrors/badLine/"
         self.residueMismatchDir = "testInput/psipredErrors/residueMismatch/"
         self.badCallDir = "testInput/psipredErrors/badCall/"
-        self.peptideNotFoundCode = "peptide_psipred_peptide_not_found"
-        self.proteinMismatchCode = "peptide_psipred_protein_mismatch"
-        self.badCommandCode = "peptide_psipred_bad_command"
-        self.badCallCode = "peptide_psipred_bad_call"
-        self.badLineCode = "peptide_psipred_bad_line"
+        self.peptideNotFoundCode = "peptide_error_psipred_peptide_not_found"
+        self.proteinMismatchCode = "peptide_error_psipred_protein_mismatch"
+        self.badCommandCode = "peptide_error_psipred_bad_command"
+        self.badCallCode = "peptide_error_psipred_bad_call"
+        self.badLineCode = "peptide_error_psipred_bad_line"
 
     def getExpectedFullStringResult(self):
         return "LLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALLLLLLAAAAAAAAAAAAAAALLAAAAAAAAAAAAAAAALLLLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALLLLLLLLLLBBBBBBLLLLBBBBLLLLLLLAAAAAAAAAAAAAAAAAAAAAAAALLLLLLLLLLAAAAAAAAAAAAALLAAAAAAAAAAAAAAAAAAALLLLLLAAAAAAAAAAAAAAAAAALLLLLLLLLLLLLLLLLLLLLLLLL"

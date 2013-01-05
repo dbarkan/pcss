@@ -12,6 +12,7 @@ import pcssFeatures
 import pcssFeatureHandlers
 log = logging.getLogger("pcssPeptide")
 
+
 class ScanPeptideImporter:
 
     """Class to read a fasta sequence and parse peptides from the actual sequence according to defined rules"""
@@ -70,6 +71,7 @@ class DefinedPeptideImporter:
 
     def readInputFile(self, proteinFastaFile):
         """Read input fasta file, parse headers to create PcssProteins and parse sequence to create PcssPeptides"""
+        print "DEFINED: Reading input %s" % proteinFastaFile
         fh = open(proteinFastaFile, 'r')
         fastaIterator = SeqIO.FastaIO.FastaIterator(fh)
         pcssProteins = []
@@ -80,8 +82,7 @@ class DefinedPeptideImporter:
             pcssProtein.setProteinSequence(seqRecord.seq)
             pcssProtein.validatePeptideSequences()
             pcssProteins.append(pcssProtein)
-            
-        
+
         log.info("Read %s proteins from input file" % len(pcssProteins))
         return pcssProteins
         
@@ -93,16 +94,26 @@ class DefinedPeptideImporter:
         seq.setUniprotId(uniprotId)
     
         peptideList = []
-        for col in cols[2:-1]:
-            peptideList.append(self.makePeptideFromCode(col))
         
+        for col in cols[2:len(cols)]:
+            nextPeptide = self.makePeptideFromCode(col)
+            if (nextPeptide is not None):
+                peptideList.append(nextPeptide)
+        
+        if (len(peptideList) < 1):
+            raise pcssErrors.PcssGlobalException("Protein %s has no peptides" % modbaseSeqId)
         seq.setPeptides(peptideList)
         return seq
 
     def makePeptideFromCode(self, peptideCode):
-        [peptideStart, peptideSequence, classification] = peptideCode.split('_')
+        print "making peptide from %s" % peptideCode
+        [peptideStart, peptideSequence, status] = peptideCode.split('_')
+        if (peptideSequence == self.pcssRunner.internalConfig["keyword_peptide_sequence_mismatch"]):
+            return None
+        status = self.pcssRunner.validatePeptideCodeStatus(status, peptideCode)
         peptideStart = int(peptideStart)
         peptide = pcssPeptide.PcssPeptide(peptideSequence, peptideStart, peptideStart + len(peptideSequence) -1, self.pcssRunner)
+        peptide.addStringAttribute("status", status)
         return peptide
 
 class AnnotationFileReader:
@@ -119,30 +130,64 @@ class AnnotationFileReader:
 
         for (i, line) in enumerate(lines):
             if (i == 0):
-                firstAttribute = sortedAttributes[0]
-                if (not line.startswith(firstAttribute.niceName)):
-                    raise pcssErrors.PcssGlobalException("Error: read annotation file %s\n. Expected first row to be column header "
-                                                         "(starting with %s) but didn't find it; instead got\n%s" % (annotationFile, 
-                                                                                                                     firstAttribute.niceName, line))
+                self.validateColumnLine(annotationFile, line)
+
                 continue
             pcssProtein = self.getProteinFromLine(line)
             if (not(pcssProtein.hasErrors())):
                 cols = line.split('\t')
                 for attribute in sortedAttributes:
-                    attribute.setValueFromFile(cols[attribute.order], pcssProtein, int(self.getValueForAttributeName("peptide_start", cols)))
-            
+                    attribute.setValueFromFile(self.getValueForAttributeName(attribute.name, cols), 
+                                               pcssProtein, 
+                                               int(self.getValueForAttributeName("peptide_start", cols)))
+        
+        if (len(self.proteins) == 0):
+            raise pcssErrors.PcssGlobalException("Did not read any proteins from annotation file")
+
+    def readProteinSequences(self, fastaFileName):
+        fh = open(fastaFileName, 'r')
+        fastaIterator = SeqIO.FastaIO.FastaIterator(fh)
+        for seqRecord in fastaIterator:
+            [modbaseId, uniprotId] = seqRecord.id.split('|')
+            if (modbaseId in self.proteins):
+                protein = self.proteins[modbaseId]
+                protein.setProteinSequence(seqRecord.seq)
+
+        for protein in self.proteins.values():
+            if (protein.proteinSequence is None):
+                raise pcssErrors.PcssGlobalException("Protein %s has no sequence set" % protein.modbaseSequenceId)
+    def validateColumnLine(self, annotationFile, line):
+        sortedAttributes = self.pcssRunner.pfa.getColumnSortedInputAttributes()
+        firstAttribute = sortedAttributes[0]
+        if (not line.startswith(firstAttribute.niceName)):
+            raise pcssErrors.PcssGlobalException("Error: read annotation file %s\n. Expected first row to be column header "
+                                                 "(starting with %s) but didn't find it; instead got\n%s" % (annotationFile, 
+                                                                                                             firstAttribute.niceName, line))
+        columnNames = line.split('\t')
+        sortedAttributeNames = []
+        for i in sortedAttributes:
+            sortedAttributeNames.append(i.niceName)
+            if (i.niceName not in columnNames):
+                raise pcssErrors.PcssGlobalException("Error: read annotation file %s\n. Expected input attribute %s but did not find it"
+                                                     % (annotationFile, i.niceName))
+        for i in columnNames:
+            if i not in sortedAttributeNames:
+                raise pcssErrors.PcssGlobalException("Error: read annotation file %s\n. Read column header %s that wasn't specified in attributes file"
+                                                     % (annotationFile, i))
+        
     def getProteinFromLine(self, line):
         cols = line.split('\t')
         
-        sequenceId = self.getValueForAttributeName("seq_id", cols)
-        protein = self.getProtein(sequenceId)
+
+        protein = self.getProtein(cols)
         protein.setStringAttribute("protein_errors", self.getValueForAttributeName("protein_errors", cols))
-        
         if (not protein.hasErrors()):
             peptide = self.getPeptideFromLine(cols)
             model = self.getModelFromLine(cols)
             protein.setPeptide(peptide)
             peptide.bestModel = model
+        
+        
                         
         return protein
 
@@ -162,11 +207,18 @@ class AnnotationFileReader:
     
                              
     def getValueForAttributeName(self, attributeName, cols):
-         return cols[self.pcssRunner.pfa.getAttribute(attributeName).order]
+         return cols[self.pcssRunner.pfa.getAttribute(attributeName).inputOrder]
             
-    def getProtein(self, sequenceId):
+    def getProtein(self, cols):
+        sequenceId = self.getValueForAttributeName("seq_id", cols)
+
         if (sequenceId not in self.proteins):
-            self.proteins[sequenceId] = pcssPeptide.PcssProtein(sequenceId, self.pcssRunner)         
+            protein = pcssPeptide.PcssProtein(sequenceId, self.pcssRunner)
+            self.proteins[sequenceId] = protein
+            uniprotId = self.getValueForAttributeName("uniprot_id", cols)
+            protein.setStringAttribute("uniprot_id", uniprotId)
+            protein.uniprotId = self.getValueForAttributeName("uniprot_id", cols)
+
         return self.proteins[sequenceId]
 
 
@@ -216,14 +268,13 @@ class PcssFileAttribute:
 
     This class manages the order that attributes are written to the file, whether they are mandatory
     or optional, and other properties."""
-    def __init__(self, order, name, attributeType, optional, niceName, featureClass, io):
+    def __init__(self, name, attributeType, optional, niceName, featureClass, io):
         self.name = name
-        self.order = order
         self.attributeType = attributeType
         if (optional == "True"):
-            self.optional = True
+            self.outputOptional = True
         else:
-            self.optional = False
+            self.outputOptional = False
         self.niceName = niceName
         self.featureClass = featureClass
         ioCols = io.split(',')
@@ -234,6 +285,12 @@ class PcssFileAttribute:
                 self.input = True
             if (col == "output"):
                 self.output = True
+
+    def setInputOrder(self, inputOrder):
+        self.inputOrder = inputOrder
+
+    def setOutputOrder(self, outputOrder):
+        self.outputOrder = outputOrder
 
     def isInputAttribute(self):
         return self.input
@@ -247,7 +304,7 @@ class PcssFileAttribute:
         attributeValue = protein.getAttributeOutputString(self.name)
 
         if (attributeValue is None): 
-            if (self.optional is False):
+            if (self.outputOptional is False):
                 raise pcssErrors.PcssGlobalException("Protein %s never set mandatory attribute %s" % (protein.modbaseSequenceId, self.name))
             else:
                 return ""
@@ -264,32 +321,40 @@ class PcssFileAttribute:
         else:
             attributeValue = peptide.getAttributeOutputString(self.name)
             if (attributeValue is None): 
-                if (self.optional is False):
+                if (self.outputOptional is False):
                     raise pcssErrors.PcssGlobalException("Peptide %s never set mandatory attribute %s" % (peptide.startPosition, self.name))
                 else:
                     return ""
             return attributeValue
 
     def setValueFromFile(self, fileValue, protein, peptideStartPosition):
-        #if (fileValue != ""):
+
         if (self.attributeType == "protein"):
             protein.setStringAttribute(self.name, fileValue) #currently all attributes are string attributes
         elif(self.attributeType == "peptide"):
             peptide = protein.peptides[peptideStartPosition]
-            fullClassName = "pcssFeatures.%s" % self.featureClass
-            className = eval(fullClassName)
-
-            classObject = className()
-            if (self.featureClass == "StringAttribute"):
-                classObject.initFromFileValue(self.name, fileValue)
+            if (self.isError(fileValue)):
+                peptide.addStringAttribute(self.name, fileValue)
             else:
-
-                classObject.initFromFileValue(fileValue)
+                classObject = self.getFeatureClassObject()
+                if (self.featureClass == "StringAttribute"):
+                    classObject.initFromFileValue(self.name, fileValue)
+                else:
+                    classObject.initFromFileValue(fileValue)
                 peptide.addFeature(classObject)
         else:
             if (fileValue != ""):
                 protein.peptides[peptideStartPosition].bestModel.setAttribute(self.name, fileValue)
 
+    def isError(self, attributeValue):
+        return attributeValue.startswith("peptide_")
+    
+
+    def getFeatureClassObject(self):
+        fullClassName = "pcssFeatures.%s" % self.featureClass
+        className = eval(fullClassName)
+        classObject = className()
+        return classObject
 
 class PcssFileAttributes:
 
@@ -304,10 +369,18 @@ class PcssFileAttributes:
         reader = pcssTools.PcssFileReader(self.pcssConfig["attribute_file_name"])
         lines = reader.getLines()
         self._attributes = {}
-        for (i, line) in enumerate(lines):
+        inputCounter = 0
+        outputCounter = 0
+        for line in lines:
 
             [name, attributeType, optional, niceName, featureClass, io] = line.split('\t')
-            att = PcssFileAttribute(i, name, attributeType, optional, niceName, featureClass, io)
+            att = PcssFileAttribute(name, attributeType, optional, niceName, featureClass, io)
+            if (att.isInputAttribute()):
+                att.setInputOrder(inputCounter)
+                inputCounter += 1
+            if (att.isOutputAttribute()):
+                att.setOutputOrder(outputCounter)
+                outputCounter += 1
             self.setFileAttribute(att)
 
     def setFileAttribute(self, attribute):
@@ -319,7 +392,7 @@ class PcssFileAttributes:
     def setAllOptional(self):
         """Set all attributes to be optional regardless of what was in the file; useful for testing"""
         for att in self._attributes.values():
-            att.optional = True
+            att.outputOptional = True
 
     def getAttributeListByType(self, targetType):
         attributeList = []
@@ -331,23 +404,20 @@ class PcssFileAttributes:
 
     def getColumnSortedInputAttributes(self):
         """Get all input attributes objects sorted by their output order"""
-        finalAttributes = []
-        for att in self.getColumnSortedAttributes():
-            if (att.isInputAttribute()):
-                finalAttributes.append(att)
-        return finalAttributes
+        inputAttributes = []
+        for attribute in self._attributes.values():
+            if (attribute.isInputAttribute()):
+                inputAttributes.append(attribute)
+        return sorted (inputAttributes, key=lambda attribute: attribute.inputOrder)
 
     def getColumnSortedOutputAttributes(self):
         """Get all input attributes objects sorted by their output order"""
-        finalAttributes = []
-        for att in self.getColumnSortedAttributes():
-            if (att.isOutputAttribute()):
-                
-                finalAttributes.append(att)
-        return finalAttributes
-
-    def getColumnSortedAttributes(self):
-        return sorted (self._attributes.values(), key=lambda attribute: attribute.order)
+        outputAttributes = []
+        for attribute in self._attributes.values():
+            if (attribute.isOutputAttribute()):
+                outputAttributes.append(attribute)
+        return sorted (outputAttributes, key=lambda attribute: attribute.outputOrder)
+        
 
     def validateAttribute(self, attributeName):
         """Check to see if this is an attribute originally specified in the input attribute table file"""
@@ -363,8 +433,8 @@ class AnnotationFileWriter:
 
     def __init__(self, pcssRunner):
         self.pcssRunner = pcssRunner
-        self.outputFh = open(pcssRunner.pdh.getFullOutputFile(pcssRunner.pcssConfig["annotation_output_file"]), 'w')
-            
+        self.outputFh = open(pcssRunner.pdh.getFullOutputFile(pcssRunner.internalConfig["annotation_output_file"]), 'w')
+
     def writeGlobalException(self):
         print "global exception"
 
@@ -372,34 +442,37 @@ class AnnotationFileWriter:
         """Write output file; write column headers and write one line for each peptide in the protein set."""
         self.outputFh.write("%s\n" % self.pcssRunner.pfa.getOutputColumnHeaderString())
         for protein in proteins:
-            peptides = protein.peptides.values()
-            for peptide in peptides:
-                self.writeOutputLine(protein, peptide)
+            self.writeProteinOutputLines(protein)
         self.outputFh.close()
 
-    def makeOutputLine(self, protein, peptide):
-        """Return a string representing the output line for this peptide"""
-        outputList = self.makeOutputList(protein, peptide)
+    def writeProteinOutputLines(self, protein):
+        if (protein.hasErrors()):
+            self.outputFh.write(self.makeProteinErrorLine(protein))
+        else:
+            peptides = protein.peptides.values()
+            for peptide in peptides:
+                self.outputFh.write(self.makePeptideOutputLine(protein, peptide))
+
+    def makeProteinErrorLine(self, protein):
+        outputList = self.makeProteinErrorOutputList(protein)        
         outputString = "%s\n" % '\t'.join(str(x) for x in outputList)
         return outputString
 
-    def writeOutputLine(self, protein, peptide):
-        """Write the string for this peptide to disk"""
-        self.outputFh.write(self.makeOutputLine(protein, peptide))
-        
+    def makePeptideOutputLine(self, protein, peptide):
+        """Return a string representing the output line for this peptide"""
+        outputList = self.makePeptideOutputList(protein, peptide)
+        outputString = "%s\n" % '\t'.join(str(x) for x in outputList)
+        return outputString
 
-    def makeOutputList(self, protein, peptide):
-        """Return a list of protein and peptide attributes, ordered by specified file attribute order.
+    #def makeOutputList(self, protein, peptide):
+    #    """Return a list of protein and peptide attributes, ordered by specified file attribute order.
 
-        If protein has errors affecting the whole protein (e.g., doesn't have any peptides) then return a list
-        containing only the protein sequence and error code, and empty elements where other attributes would 
-        normally be"""
-        if (protein.hasErrors()):
-            return self.makeProteinErrorOutputList(protein)
-        else:
-            return self.makeProteinOutputList(protein, peptide)
+    #    If protein has errors affecting the whole protein (e.g., doesn't have any peptides) then return a list
+    #    containing only the protein sequence and error code, and empty elements where other attributes would 
+    #    normally be"""
+    #    return self.makeProteinOutputList(protein, peptide)
 
-    def makeProteinOutputList(self, protein, peptide):
+    def makePeptideOutputList(self, protein, peptide):
         """Return a list of protein and peptide attributes, ordered by specified file attribute order. Assumes no ProteinErrors"""
         attributeList = self.pcssRunner.pfa.getColumnSortedOutputAttributes()
         outputList = []
@@ -415,10 +488,12 @@ class AnnotationFileWriter:
         attributeList = self.pcssRunner.pfa.getColumnSortedOutputAttributes()
         outputList = []
         for attribute in attributeList:
-            if (attribute.name == "sequence_id" or attribute.name == "protein_errors"):
+            if (attribute.name == "seq_id" or attribute.name == "protein_errors" or attribute.name == "uniprot_id"):
+                #sort of a hack to include uniprot_id; don't need it in output list but need it to get the tests to pass
                 outputList.append(attribute.getProteinValue(protein))
             else:
                 outputList.append('')
+
         return outputList
                 
 class FinishPcss:

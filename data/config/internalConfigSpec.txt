@@ -1,1 +1,2 @@
 svm_classify_command = file()
+make_random_test_set = boolean()

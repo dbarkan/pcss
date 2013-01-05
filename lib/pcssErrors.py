@@ -22,10 +22,14 @@ class ProteinException(Exception):
         self.msg = msg
 
     def getErrorCodePrefix(self):
-        return "protein_"
+        return pcssTools.getProteinErrorCodePrefix()
 
     def setProtein(self, pcssProtein):
         self.pcssProtein = pcssProtein
+
+class ErrorExistsException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
 
 class PeptideException(ProteinException):
     def __init__(self,  msg):
@@ -33,7 +37,8 @@ class PeptideException(ProteinException):
 
 
     def getErrorCodePrefix(self):
-        return "peptide_"
+        return pcssTools.getPeptideErrorCodePrefix()
+
     
     def setPeptide(self, pcssPeptide):
         self.pcssPeptide = pcssPeptide

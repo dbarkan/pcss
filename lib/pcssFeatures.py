@@ -185,14 +185,22 @@ class PsipredStringFeature(PcssFeature):
 
 
 class PeptideSequenceFeature(PcssFeature):
-    def __init__(self, sequence):
+    def __init__(self, sequence=None):
         self.sequence = sequence
         self.name = "peptide_sequence"
         self.seqList = []
-        for i in range(len(sequence)):
-            self.seqList.append(sequence[i])
+        if (sequence is not None):
+            self.populateSeqList()
         
         self.makeSvmMap()
+
+    def populateSeqList(self):
+        for i in range(len(self.sequence)):
+            self.seqList.append(self.sequence[i])
+
+    def initFromFileValue(self, fileValue):
+        self.sequence = fileValue
+        self.populateSeqList()
 
     def makeSvmMap(self):
         self.residueOrder = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
@@ -251,6 +259,9 @@ class StringAttribute(PcssFeature):
     def isInitialized(self):
         return self.value is not None
 
+    def makeSvmFeature(self):
+        if (self.value.startswith(pcssTools.getPeptideErrorCodePrefix())):
+            return 
 
 class PsipredScoreFeature(PcssFeature):
     def __init__(self, psipredScoreList=None):

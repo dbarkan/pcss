@@ -10,7 +10,7 @@ import pcssFeatures
 import pcssFeatureHandlers
 log = logging.getLogger("pcssPeptide")
 
-class PcssProtein:
+class PcssProtein(object):
 
     """Class for one protein sequence, containing a number of peptides on which features are assessed"""
     
@@ -20,6 +20,7 @@ class PcssProtein:
         self._pcssModels = None
         self.uniprotId = "<uninitialized>"
         self.pcssRunner = pcssRunner
+        self.proteinSequence = None
         self.proteinAttributes = {}
         self.setStringAttribute("seq_id", modbaseSequenceId)
         self.setStringAttribute("uniprot_id", self.uniprotId)
@@ -36,7 +37,7 @@ class PcssProtein:
         return attributeName in self.proteinAttributes
 
     def hasModels(self):
-        return self._pcssModels is not None
+        return len(self._pcssModels.values()) > 0
 
     def setStringAttribute(self, attributeName, attributeValue):
         self.pcssRunner.pfa.validateAttribute(attributeName)
@@ -96,13 +97,17 @@ class PcssProtein:
 
     def processDisopred(self, disopredReader, disopredRunner):
         """Run disopred if needed and read result file. Propogate results to peptides as features"""
+        if self.hasErrors():
+            return
         try:
             self.runDisopred(disopredReader, disopredRunner)
         except pcssErrors.DisopredException as pe:
+            print "caught exception %s" % pe.msg
             for nextPeptide in self.peptides.values():
+                print "next peptide %s process excpetion" % nextPeptide.startPosition
                 nextPeptide.processException(pe)
-                log.error(pe.msg)
-                return
+            log.error(pe.msg)
+            return
         self.populatePeptideDisopredValues()
 
     def runDisopred(self, disopredReader, disopredRunner):
@@ -120,13 +125,15 @@ class PcssProtein:
 
     def processPsipred(self, psipredReader, psipredRunner):
         """Run psipred if needed and read result file. Propogate results to peptides as features"""
+        if self.hasErrors():
+            return
         try:
             self.runPsipred(psipredReader, psipredRunner)
         except pcssErrors.PsipredException as pe:
             for nextPeptide in self.peptides.values():
                 nextPeptide.processException(pe)
-                log.error(pe.msg)
-                return
+            log.error(pe.msg)
+            return
         self.populatePeptidePsipredValues()
 
     def runPsipred(self, psipredReader, psipredRunner):
@@ -157,8 +164,13 @@ class PcssProtein:
 
     def addModels(self, modelTable):
         """Get models for my protein from model table object and add it to my internal dictionary"""
+        if self.hasErrors():
+            return
+        
         modelSequence = modelTable.getPcssModelSequence(self.modbaseSequenceId)
+        print "got model squence; %s" % modelSequence
         modelList = modelSequence.getModels()
+        print "model list length: %s" % len(modelList)
         self._pcssModels = {}
         for model in modelList:
             model.calculateCoverage(self.getSequenceLength())
@@ -166,6 +178,8 @@ class PcssProtein:
 
     def processDssp(self):
         """Run DSSP on each of my peptide's best model"""
+        if self.hasErrors():
+            return
         for nextPeptide in self.peptides.values():
             if (self.hasModels()):
                 nextPeptide.setBestModel(self.getRankedModels())
@@ -202,7 +216,7 @@ class PcssProtein:
                 print "protein ie1"
                 return False
             if (str(self.getAttributeOutputString(attName)) != str(otherProtein.getAttributeOutputString(attName))):
-                print "protein ie2"
+                print "protein ie2 attriute %s" % attName
                 return False
         for otherPeptide in otherProtein.peptides.values():
             if (otherPeptide.startPosition not in self.peptides):
@@ -404,10 +418,10 @@ class PcssPeptide:
             if (not self.hasAttribute(featureName)):
                 raise pcssErrors.PcssGlobalException("Error: peptide tried to make svm feature for %s but does not have this feature" % featureName)
             
-            if (not self.getAttribute(featureName).isInitialized()):
+            if (not self.getAttribute(featureName).isInitialized() or pcssTools.isPeptideErrorValue(self.getAttributeOutputString(featureName))):
                 svmHandler.processEmptyFeature(self, self.getAttribute(featureName))
+                
             else:
-
                 svmFileStringList.append(self.getAttribute(featureName).makeSvmFeature(svmHandler))
         return " ".join(svmFileStringList)
                                      
