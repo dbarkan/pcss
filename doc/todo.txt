@@ -1,4 +1,3 @@
-peptides without same length
 test runners have one error for each feature type
 all tests subclass test
 decide whether to propogate feature errors for all peptides in protein
@@ -7,6 +6,22 @@ validate runInfo, pcssFileAttributes
 close filehandles
 try other disopred dbs for time, fix test_sequence_long
 all plow stuff
+have DefinedPeptideImporter get max peptide length from input
+     frontend was doing this before, backend a better place? scan user has to set though, but might be OK if not symmetrical...think about it
+
+places that change across trombone / mac
+testPcssConig:
+home_pcss_directory
+dssp_command
+
+internalConfig:
+home-pcss_dir
+svm learn
+svm classify
+
+timing:
+nr: time 20 min but didn't print exact outpu ttime, saw it later  seqs       21496717
+uniprot90 time   seqs 9151522
 
 
 
@@ -15,6 +30,7 @@ have all tests subclass pcss test, which looks for the config file itself.
 change test config so that there is one root directory and that is the only thing that needs to be changed
 have test check for operating system and run svm type accordingly
 disable or hack tests that retrieve from modbase or run disopred/psipred
+have test for exception in pcssSvm.finalizeFeature()
 
 CONTEXT -- Normal Annotation no input, write output (AnnotationRunner)
 CONTEXT -- Annotation and SVM Application no input, write output (SvmApplicationRunner) -- features are both input and output and svm is output only
@@ -48,8 +64,12 @@ run an svm classification file through web server in run through svm application
 ANNOTATION
 consider having one feature error of each type in annotation output and anything that reads in an annotation file for all normal / runner processing 
 	 just need dssp, disopred, psipred -- working on disopred now
+         disopred error -- changed file ffef0e2dd621d6a5fc2851aef4341226MESAYTRS|Q16572 -- in disopred file changed position 484 from V (wildtype) to R (induced error)
+	 peptides different length -- sequence ffac1dc8985f57c80dd0b64a519b9adbMPNFVENT peptide at position 23 (FPRDPAR) has 7 residues instead of 8. this is only in test input
+	 svmTrainingAnnotationInput
 have test with annotaiton defined, one peptide that is different lengths than others
 handle no peptides parsed for any sequences
+
 
 
 TRAINING

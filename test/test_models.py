@@ -19,7 +19,7 @@ class TestModels(unittest.TestCase):
         self.assertEquals(peptide.getAttributeOutputString("dssp_structure"), exceptionCode)
         afw = pcssIO.AnnotationFileWriter(self.runner)
         self.runner.pfa.setAllOptional()
-        print afw.makeOutputLine(self.proteins[0], peptide)
+        print afw.makePeptideOutputLine(self.proteins[0], peptide)
 
     def setupPcssModelTest(self):
         configFile = "testConfig/testPcssConfig.txt"

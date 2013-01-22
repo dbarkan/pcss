@@ -10,7 +10,7 @@
 # NOTE: Script modified to be more cluster friendly (DTJ April 2008)
 
 # The name of the BLAST data bank
-set dbname = /trombone1/home/dbarkan/pcss/data/nr/nr
+set dbname = /trombone1/home/dbarkan/nr/uniprot90
 
 # Where the NCBI programs have been installed
 set ncbidir = /salilab/diva1/programs/x86_64linux/blast-2.2.13/bin

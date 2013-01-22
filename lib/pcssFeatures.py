@@ -116,8 +116,8 @@ class PcssFeature:
     def initFromFileValue(self, fileValue):
         print "%s: inititng from %s" % (self.name, fileValue)
 
-    def getEmptyFeatureOffset(self, peptide):
-        return peptide.getPeptideLength()
+    def getEmptyFeatureOffset(self, peptideLength):
+        return self.getFeatureLength() * peptideLength
 
     def convertStringListToFloat(self, stringList):
         floatList = []
@@ -127,6 +127,9 @@ class PcssFeature:
 
     def isInitialized(self):
         return True
+
+    def getFeatureLength(self):
+        return 1
 
 class DisorderStringFeature(PcssFeature):
     def __init__(self, disorderStringList=None):
@@ -194,6 +197,9 @@ class PeptideSequenceFeature(PcssFeature):
         
         self.makeSvmMap()
 
+    def getFeatureLength(self):
+        return 20
+
     def populateSeqList(self):
         for i in range(len(self.sequence)):
             self.seqList.append(self.sequence[i])
@@ -234,12 +240,6 @@ class PeptideSequenceFeature(PcssFeature):
             featureList.append(self.getSingleResidueFeatureList(residue, svmHandler.getFeatureNumber(), self.seqList))
             svmHandler.processFeature(20)
         return " ".join(featureList)
-
-    def getEmptyFeatureOffset(self, peptide):
-        #unlikely a peptide would not want its sequence to be a feature, this hasn't been tested extensively
-        return 20 * peptide.getPeptideLength()
-    
-
 
 class StringAttribute(PcssFeature):
     def __init__(self, name=None, value=None):

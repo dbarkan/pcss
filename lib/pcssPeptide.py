@@ -419,9 +419,10 @@ class PcssPeptide:
                 raise pcssErrors.PcssGlobalException("Error: peptide tried to make svm feature for %s but does not have this feature" % featureName)
             
             if (not self.getAttribute(featureName).isInitialized() or pcssTools.isPeptideErrorValue(self.getAttributeOutputString(featureName))):
-                svmHandler.processEmptyFeature(self, self.getAttribute(featureName))
+                svmHandler.processEmptyFeature(self.pcssRunner.pcssConfig["peptide_length"], self.getAttribute(featureName))
                 
             else:
                 svmFileStringList.append(self.getAttribute(featureName).makeSvmFeature(svmHandler))
+            svmHandler.finalizeFeature(self, self.getAttribute(featureName), self.pcssRunner.pcssConfig["peptide_length"])
         return " ".join(svmFileStringList)
                                      
