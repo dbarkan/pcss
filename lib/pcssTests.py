@@ -100,7 +100,7 @@ class DisopredData:
         self.stringFeatureName = "disopred_string_feature"
         self.stringFeatureValue = "OOOOOOOO"
         self.scoreFeatureName =  "disopred_score_feature"
-        self.scoreFeatureValue = "0.016, 0.01, 0.007, 0.003, 0.008, 0.004, 0.003, 0.002"
+        self.scoreFeatureValue = "0.014, 0.007, 0.007, 0.005, 0.007, 0.003, 0.003, 0.003"
 
         self.residueMismatchDir = "testInput/disopredErrors/residueMismatch/"
         self.badCallDir = "testInput/disopredErrors/badCall/"
@@ -113,14 +113,15 @@ class DisopredData:
         self.badCallCode = "peptide_error_disopred_bad_call"
 
     def getExpectedFullStringResult(self):
-        return "DDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDDDDDDDDDDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDDDDDDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDOOOOOOOOOOOOOOOOODDDDDDDDDDDDDDDDDDDDDDDD"
+        return "DDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDDDDDDDDDDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDDDDOOOOOOOOOOOOOOODDDDDDDDDDDDDDDDDDDDDDDDD"
+
 
 class PsipredData:
     def __init__(self):
         self.stringFeatureName = "psipred_string_feature"
         self.stringFeatureValue = "AAAAAAAA"
         self.scoreFeatureName =  "psipred_score_feature"
-        self.scoreFeatureValue =  "0.256, 0.602, 0.049, 0.011, 0.008, 0.004, 0.003, 0.004"
+        self.scoreFeatureValue =  "0.454, 0.624, 0.122, 0.017, 0.01, 0.004, 0.002, 0.004"
         self.badLineDir = "testInput/psipredErrors/badLine/"
         self.residueMismatchDir = "testInput/psipredErrors/residueMismatch/"
         self.badCallDir = "testInput/psipredErrors/badCall/"
@@ -131,4 +132,4 @@ class PsipredData:
         self.badLineCode = "peptide_error_psipred_bad_line"
 
     def getExpectedFullStringResult(self):
-        return "LLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALLLLLLAAAAAAAAAAAAAAALLAAAAAAAAAAAAAAAALLLLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALLLLLLLLLLBBBBBBLLLLBBBBLLLLLLLAAAAAAAAAAAAAAAAAAAAAAAALLLLLLLLLLAAAAAAAAAAAAALLAAAAAAAAAAAAAAAAAAALLLLLLAAAAAAAAAAAAAAAAAALLLLLLLLLLLLLLLLLLLLLLLLL"
+        return "LLLAAAAAAAAAAAAAAAAAAAAAAAAAAAALLLLLLLLAAAAAAAAAAAAAALLLAAAAAAAAAAAAAAALLLLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALLLLLLLLLLBBBAAAAAAAAAAAAAAALLLLAAAAAAAAAAAAAAAAAAAAAAALLLLLAAAAAAAAAAAAAAAAALLLAAAAAAAAAAAAAAAAAAAAALLLAAAAAAAAAAAAAAAAAAALLLLLLLLLLLLLLLLLLLLLLLLL"

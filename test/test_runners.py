@@ -13,7 +13,7 @@ import pcssTests
 import pcssSvm
 import pcssIO
 from validate import Validator
-import objgraph
+#import objgraph
 
 logging.basicConfig(stream=sys.stdout)
 logging.root.setLevel(logging.DEBUG)
@@ -165,7 +165,7 @@ class TestRunner(unittest.TestCase):
         self.runner.execute()
         
     
-    def test_annotation_runner(self):
+    def dtest_annotation_runner(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "annotationFileAttributes.txt")
         self.runner = pcssTools.AnnotationRunner(self.pcssConfig)
         self.clearErrorFiles()

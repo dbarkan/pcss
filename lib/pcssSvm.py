@@ -133,6 +133,7 @@ class TrainingSvm:
         trainingSetFh = open(trainingSetFileName, 'w')
         for peptide in self.peptides:
             nextLine = peptide.makeSvmFileLine()
+            print "got file line %s for peptide %s" % (nextLine, peptide.startPosition)
             statusCode = self.getStatusCode(peptide)
             trainingSetFh.write("%s %s\n" % (statusCode, nextLine))
         trainingSetFh.close()
@@ -259,6 +260,7 @@ class ClassifySvm:
             print "write peptide %s count %s" % (peptide.startPosition, i)
             i += 1
             nextLine = peptide.makeSvmFileLine()
+            print "got file line %s" % nextLine
             classificationFh.write("%s %s\n" % ("0", nextLine))
         classificationFh.close()
 
@@ -385,12 +387,21 @@ class SvmFeatureHandler:
     def __init__(self):
         self.featureNumber = 1
 
-    def processEmptyFeature(self, peptide, feature):
+    def processEmptyFeature(self, peptideLength, feature):
         
-        self.featureNumber += feature.getEmptyFeatureOffset(peptide)
+        self.featureNumber += feature.getEmptyFeatureOffset(peptideLength)
         
     def getFeatureNumber(self):
         return self.featureNumber
 
     def processFeature(self, increment):
         self.featureNumber += increment
+
+    def finalizeFeature(self, peptide, feature, referencePeptideLength):
+        if (peptide.getPeptideLength() > referencePeptideLength):
+            raise pcssErrors.PcssGlobalException("Peptide %s has length of %s which is greater than reference %s" % (peptide.startPosition, 
+                                                                                                                     peptide.getPeptideLength(),
+                                                                                                                     referencePeptideLength()))
+        lengthDifference = referencePeptideLength - peptide.getPeptideLength() 
+        multiplier = feature.getFeatureLength()
+        self.featureNumber += (lengthDifference * multiplier)

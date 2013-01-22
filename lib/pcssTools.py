@@ -17,13 +17,13 @@ import pcssModels
 import pcssFeatures
 import pcssFeatureHandlers
 import shutil
-from pympler import summary
-from pympler import muppy
-from pympler import tracker
+#from pympler import summary
+#from pympler import muppy
+#from pympler import tracker
 import traceback
 from Bio import PDB
 log = logging.getLogger("pcssTools")
-tr = tracker.SummaryTracker()
+#tr = tracker.SummaryTracker()
 def getOneLetterFromBioResidue(residueObject):
     return PDB.Polypeptide.three_to_one(residueObject)
 
@@ -189,8 +189,8 @@ class PcssRunner:
             protein.addModels(modelTable)        
             protein.processDssp()
             
-        sum1 = summary.summarize(muppy.get_objects())
-        summary.print_(sum1)
+        #sum1 = summary.summarize(muppy.get_objects())
+        #summary.print_(sum1)
     def writeOutput(self):
 
         afw = pcssIO.AnnotationFileWriter(self)

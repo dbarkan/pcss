@@ -1,4 +1,4 @@
-pcss_directory = /Users/dbarkan/Documents/UCSF/PCSS/pcss/
+pcss_directory = /trombone1/home/dbarkan/pcss/
 home_test_directory = %(pcss_directory)s/test/
 run_directory = %(home_test_directory)s/runs/
 run_name = develop
@@ -14,7 +14,7 @@ model_table_file = %(pcss_directory)s/data/models/human2008ModelTableTruncated.t
 model_directory = %(pcss_directory)s/data/features/dssp/
 model_run_info = %(pcss_directory)s/data/models/modelRunInfo.txt
 best_model_attribute = no35
-dssp_executable = %(pcss_directory)s/bin/dsspcmbi_mac
+dssp_executable = %(pcss_directory)s/bin/dsspcmbi
 attribute_file_name = %(pcss_directory)s/data/context/annotationFileAttributes.txt
 svm_benchmark_file = %(pcss_directory)s/data/benchmark/grbBenchmarkScores.txt
 svm_model_file =  %(pcss_directory)s/data/benchmark/grbCreateModel_svmModelFile

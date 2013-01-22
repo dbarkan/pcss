@@ -17,7 +17,7 @@ logging.root.setLevel(logging.DEBUG)
 
 class TestSequenceFeaturesLong(pcssTests.TestSequenceFeaturesLong):
 
-    def dtest_psipred_long(self):
+    def test_psipred_long(self):
         self.globalSetup("testConfig/testPcssConfigLong.txt")
         self.fileHandler = pcssFeatureHandlers.PsipredFileHandler(self.pcssConfig, self.runner.pdh)
         psipredReader = pcssFeatureHandlers.PsipredReader(self.fileHandler)
@@ -30,9 +30,9 @@ class TestSequenceFeaturesLong(pcssTests.TestSequenceFeaturesLong):
         self.assertEquals(psipredCallString, psipredData.getExpectedFullStringResult())
 
         peptide = self.proteins[0].peptides[17]
-        self.assertEquals(peptide.features["psipred_string_feature"].getValueString(), psipredData.stringFeatureValue)
-        self.assertEquals(peptide.features["psipred_score_feature"].getValueString(), psipredData.scoreFeatureValue)
-        self.assertRaises(pcssErrors.FeatureException, self.proteins[0].psipredProteinCalls.getSequenceFeatureCall, 1000)
+        self.assertEquals(peptide.attributes["psipred_string_feature"].getValueString(), psipredData.stringFeatureValue)
+        self.assertEquals(peptide.attributes["psipred_score_feature"].getValueString(), psipredData.scoreFeatureValue)
+        self.assertRaises(pcssErrors.PsipredPeptideNotFoundException, self.proteins[0].psipredProteinCalls.getSequenceFeatureCall, 1000)
         time.sleep(5)
         shutil.rmtree(self.fileHandler.getSequenceFeatureDir(self.proteins[0].modbaseSequenceId))
 
@@ -45,17 +45,17 @@ class TestSequenceFeaturesLong(pcssTests.TestSequenceFeaturesLong):
 
         disopredData = pcssTests.DisopredData()
         self.proteins[0].processDisopred(disopredReader, disopredRunner)
-
-        disopredCallString = self.proteins[0].disorderProteinCalls.makeFullCallString()
+        print  time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+        disopredCallString = self.proteins[0].disopredProteinCalls.makeFullCallString()
         self.assertEquals(disopredCallString, disopredData.getExpectedFullStringResult())
 
         peptide = self.proteins[0].peptides[17]
-        self.assertEquals(peptide.features["disorder_string_feature"].getValueString(), disopredData.stringFeatureValue)
-        self.assertEquals(peptide.features["disorder_score_feature"].getValueString(), disopredData.scoreFeatureValue)
-        self.assertRaises(pcssErrors.FeatureException, self.proteins[0].disorderProteinCalls.getSequenceFeatureCall, 1000)
+        self.assertEquals(peptide.attributes["disopred_string_feature"].getValueString(), disopredData.stringFeatureValue)
+        self.assertEquals(peptide.attributes["disopred_score_feature"].getValueString(), disopredData.scoreFeatureValue)
+        self.assertRaises(pcssErrors.DisopredPeptideNotFoundException, self.proteins[0].disopredProteinCalls.getSequenceFeatureCall, 1000)
         time.sleep(5)
         shutil.rmtree(self.fileHandler.getSequenceFeatureDir(self.proteins[0].modbaseSequenceId))
-        print  time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+
     
 if __name__ == '__main__':
     unittest.main()
