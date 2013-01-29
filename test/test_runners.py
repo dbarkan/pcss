@@ -156,14 +156,15 @@ class TestRunner(unittest.TestCase):
         self.compareFilesAlmostEqual(self.runner.pdh.getFullOutputFile(self.runner.internalConfig["annotation_output_file"]),
                                      self.getExpectedOutputFile("trainingAnnotation"))
 
-    def dtest_training_svm_runner(self):
+    def test_training_svm_runner(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
         self.pcssConfig["input_annotation_file_name"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "svmTrainingAnnotationInput.txt")
         self.runner = pcssTools.SvmTrainingRunner(self.pcssConfig)
         #self.runner.internalConfig["make_random_test_set"] = False
         self.clearErrorFiles()
+        self.runner.internalConfig["make_random_test_set"] = False
         self.runner.execute()
-        
+
     
     def dtest_annotation_runner(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "annotationFileAttributes.txt")
