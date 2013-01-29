@@ -137,6 +137,7 @@ class TestRunner(unittest.TestCase):
                                      self.getExpectedOutputFile("svmApplication"), True)
 
     def setLargeFastaFile(self):
+        #self.pcssConfig['fasta_file'] = os.path.join(self.pcssConfig["pcss_directory"], "data", "inputSequences", "ffSequencesFastaLong.txt")
         self.pcssConfig['fasta_file'] = os.path.join(self.pcssConfig["pcss_directory"], "data", "inputSequences", "ffSequencesFasta.txt")
         self.pcssConfig['model_table_file'] = os.path.join(self.pcssConfig["pcss_directory"], "data", "models", "human2008ModelTable.txt")
 
@@ -156,7 +157,7 @@ class TestRunner(unittest.TestCase):
         self.compareFilesAlmostEqual(self.runner.pdh.getFullOutputFile(self.runner.internalConfig["annotation_output_file"]),
                                      self.getExpectedOutputFile("trainingAnnotation"))
 
-    def test_training_svm_runner(self):
+    def dtest_training_svm_runner(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
         self.pcssConfig["input_annotation_file_name"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "svmTrainingAnnotationInput.txt")
         self.runner = pcssTools.SvmTrainingRunner(self.pcssConfig)
@@ -166,7 +167,7 @@ class TestRunner(unittest.TestCase):
         self.runner.execute()
 
     
-    def dtest_annotation_runner(self):
+    def test_annotation_runner(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "annotationFileAttributes.txt")
         self.runner = pcssTools.AnnotationRunner(self.pcssConfig)
         self.clearErrorFiles()
