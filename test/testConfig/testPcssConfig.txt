@@ -1,4 +1,4 @@
-pcss_directory = /trombone1/home/dbarkan/pcss/
+pcss_directory = /Users/dbarkan/Documents/UCSF/PCSS/pcss/
 home_test_directory = %(pcss_directory)s/test/
 run_directory = %(home_test_directory)s/runs/
 run_name = develop
@@ -14,7 +14,7 @@ model_table_file = %(pcss_directory)s/data/models/human2008ModelTableTruncated.t
 model_directory = %(pcss_directory)s/data/features/dssp/
 model_run_info = %(pcss_directory)s/data/models/modelRunInfo.txt
 best_model_attribute = no35
-dssp_executable = %(pcss_directory)s/bin/dsspcmbi
+dssp_executable = %(pcss_directory)s/bin/dsspcmbi_mac
 attribute_file_name = %(pcss_directory)s/data/context/annotationFileAttributes.txt
 svm_benchmark_file = %(pcss_directory)s/data/benchmark/grbBenchmarkScores.txt
 svm_model_file =  %(pcss_directory)s/data/benchmark/grbCreateModel_svmModelFile
@@ -22,8 +22,8 @@ internal_config_file = %(pcss_directory)s/data/config/internalConfigFile.txt
 internal_config_spec_file = %(pcss_directory)s/data/config/internalConfigSpec.txt
 peptide_importer_type = scan
 input_annotation_file_name = %(home_test_directory)s/testInput/svmApplicationAnnotationInput.txt
-training_iterations = 1
+training_iterations = 5
 jackknife_fraction = .1
 svm_training_gamma = 0.01
 svm_training_c = 10
-
+on_cluster = True

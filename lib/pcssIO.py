@@ -4,7 +4,7 @@ from Bio import SeqIO
 import itertools
 import pcssModels
 import pcssTools
-
+import pcssCluster
 import logging
 import pcssPeptide
 import pcssErrors
@@ -71,6 +71,7 @@ class DefinedPeptideImporter:
     def readInputFile(self, proteinFastaFile):
         """Read input fasta file, parse headers to create PcssProteins and parse sequence to create PcssPeptides"""
         print "DEFINED: Reading input %s" % proteinFastaFile
+        
         fh = open(proteinFastaFile, 'r')
         fastaIterator = SeqIO.FastaIO.FastaIterator(fh)
         pcssProteins = []
@@ -93,7 +94,7 @@ class DefinedPeptideImporter:
         seq.setUniprotId(uniprotId)
     
         peptideList = []
-        
+        print "making all peptides from seq id %s" % modbaseSeqId
         for col in cols[2:len(cols)]:
             nextPeptide = self.makePeptideFromCode(col)
             if (nextPeptide is not None):

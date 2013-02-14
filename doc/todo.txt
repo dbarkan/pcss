@@ -1,64 +1,95 @@
-test runners have one error for each feature type
-all tests subclass test
-decide whether to propogate feature errors for all peptides in protein
-check memory profile
-validate runInfo, pcssFileAttributes
-close filehandles
-try other disopred dbs for time, fix test_sequence_long
-all plow stuff
-have DefinedPeptideImporter get max peptide length from input
-     frontend was doing this before, backend a better place? scan user has to set though, but might be OK if not symmetrical...think about it
-
-places that change across trombone / mac
-testPcssConig:
-home_pcss_directory
-dssp_command
-
-internalConfig:
-home-pcss_dir
-svm learn
-svm classify
-
-timing:
-nr: time 20 min but didn't print exact outpu ttime, saw it later  seqs       21496717
-uniprot90 time   seqs 9151522
+big things to do:
+better merge of git
+setup cluster script generator for annotation pipeline
+finish profiling training time
+setup cluster script generator for training iterations
+setup executable for training iterations
+setup cluster script generator for svm annotation pipeline(s) -- might need multiple
+setup executable for svm annotation pipelines(s)
+create good benchmark situation for web server regression
+web server back end -- see if I can get it to work without changing front end
+web server front end
 
 
-
-TEST
-have all tests subclass pcss test, which looks for the config file itself. 
-change test config so that there is one root directory and that is the only thing that needs to be changed
-have test check for operating system and run svm type accordingly
-disable or hack tests that retrieve from modbase or run disopred/psipred
-have test for exception in pcssSvm.finalizeFeature()
-
-CONTEXT -- Normal Annotation no input, write output (AnnotationRunner)
-CONTEXT -- Annotation and SVM Application no input, write output (SvmApplicationRunner) -- features are both input and output and svm is output only
-CONTEXT -- SVM Application from file, read input, write output -- same attribute file as above
-CONTEXT -- Training Annotation -- no input, all features output along with positive / negaitve (defined by user)
-CONTEXT -- Training benchmarking -- input from file, output is the same as input. 
-CONTEXT -- Training benchmarking, peptides in memory -- no inpu, output is the same as above
-make runner for it
-
-TRAINING ERRORS
-If I have an error for a feature for one peptide, it applies for all peptides in the protein. best way to handle?
-have error test to make sure all peptides have feature error when the first one gets it
-consider whether to hardcode jackknife fraction
+SEQ DIVIDER
+read back in sequences that were written to different directories and test they are 1:1 with what was originally written
+have seqBatchDirectory and seqBatchFilePrefix be the same as in previous
+maybe have subdirectories (1, 2, etc.) have seq batch prefix too -- was that the case before?
+have something that says if output directory isn't set, throw error -- need to figure out at which point to do that
+test "del pcssCopy["run_name"]" in pcssCluster.py -- cases where it does and does not have
+consider changing "pcss_directory" to something else everywhere -- right now it is assumed that pcss_directory contains runs, bin, lib, data -- we don't
+want it to automatically assume that it contains runs. Should have pcss_source_directory which contains bin, lib, data, and pccs_run_directory which contains
+runs, and can be equal to pcss_source_directory for command line context
+      actually already do this -- it is called run_directory -- should be fine
+everywhere --- have recently added a lot of os.mkdir. Might need to add sleep until done.
 
 
-MULTIPLE RUNS
-print out number of negatives in the test set so we can make sure it is the same across each training iterations
-when have multiple psts, validate all have the same length
-have test for training runner, exact file match, after done with the 'processAllResults' equivalent
-in annotation mode, try to throw a global exception while annotation file is open to make sure it closes file correctly
+
+
+Next:
+add # commands to top of cluster script -- might have to have another param for 'webserver' which says whether these should be written
+make bin script that the cluster can run -- should just make runner and execute it.
+better git merge
+
+
+Two options: can copy everything over to node, run on node, copy everything back
+or 
+just CD to node and use it to process everything that is currently on netapp
+
+Going with the second one. The downside is that output directory would be specific to the context -- i.e., if we 
+are on cluster we would use one way to get full output file (which would use the subdirectory 1/2/3 name) and if
+we are not, we would use pipelineDirectory/runName. Other downside is we have to explicitly delete certain output files
+on netapp so they don't take up too much space -- previously we just deleted everything on the node and copied back selectively.
+
+The main thing is that the cluster head node directory, assuming we are still using the same overall peptideTools / peptideRunner base code, will have 
+to implement a different way to do 'getFullOutputFile' on cluster anyway, which uses the job directory for the web server. So it doesn't make too much sense
+to have the node preserve the canonical way of doing things but have separate code for the headnode; better to have everything go through the netapp (input and output)
+
+however can also have the node's cluster run directory be fulldirectory/seqBatches and run name be the number, and that way can use existing code but still not have to copy anything around. Then the head node would have 'head_node' parameter (or something) so its output files can be in job directory.
+
+
+presumably the head node could have completely different code for managing cluster stuff, that could be a future refactoring. It is fairly distinct
+from actually running any PCSS code. But it still needs to know file names and a lot of the parameter values that the pcss code knows. 
+
+
+
+
+
+
+
+
+>modbase_no_peptides|Q12345|
+TTTTTTTTTT
+threw error since it couldn't unpack defined peptides -- make sure this is handled more cleanly
+      same error for another peptide that just didn't have anything parsed from a previous scan import
+
+
+CREATION PIPELINE
+Find appropriate class to create it
+have it create trainingSvm, give it all peptides, call writeFullPeptideModelFile
+quick test for file equality
+
+LEAVE ONE OUT
+consider refactor of both benchmarkers to take peptide and handle iteration counts themselves
+see if there's anything in old version
+have peptide start position and protein also be written out
+handle global error in peptides (same as training)
+keep track of tested peptides and throw error if they were already tested once 
+
+MULTIPLE RUNS CODE
+make sure peptides know their proteins in all instances -- allows for better error writing as well as benchmark reading / writing
 do context with peptides read in memory and then immediately to training / test -- do some profiling to see how long it takes
-training overall:
-1. make annotation, write to output file (has positive / negative tag)
-2. read back in -- this will be the cluster way, although command line could go directly from memory
-3. not writing back out since they don't have to be scored -- although could. 
-4. big decision will be whether to write status -- think I should. can have true postivie / negative and also predicte positive / negative -- so status will always be output for a peptide
-run an svm classification file through web server in run through svm application mode, same model file, same benchmark file,  
-    and see if we get same or similar scores before and after (not really multiple runs issue but do it at the same time)
+creation pipeline, write model and benchmark file
+check to make sure fpr for one test set result is always >= fpr in the next line
+check to make sure tp is always greater than tp in previous line
+critical points
+consider consolidating loo trainer and jackknife trainer, use parameter to switch between them
+have test to make sure no peptide in training set is in the test set for all benchmarkers
+
+TRAINING NEW CONTEXT
+decide on context for training -- see if we need two (both peptides in memory and read peptides from file) or can get away with one
+test full run, should be able to deterministically create tests -- test expected training result file
+     just do svm test for now with two iterations, after looking at contexts can decide how to make the test for the full runner
 
 
 ANNOTATION
@@ -67,23 +98,11 @@ consider having one feature error of each type in annotation output and anything
          disopred error -- changed file ffef0e2dd621d6a5fc2851aef4341226MESAYTRS|Q16572 -- in disopred file changed position 484 from V (wildtype) to R (induced error)
 	 peptides different length -- sequence ffac1dc8985f57c80dd0b64a519b9adbMPNFVENT peptide at position 23 (FPRDPAR) has 7 residues instead of 8. this is only in test input
 	 svmTrainingAnnotationInput
-
+have error test to make sure all peptides have feature error when the first one gets it
 have test with annotaiton defined, one peptide that is different lengths than others
 handle no peptides parsed for any sequences
-
-
-
-TRAINING
-will have context for single and multiple iterations
-single assumes that someone else will come along and read all directories with result files
-multiple will do it itself
-however, won't output to its own directory-- just make a class, point it to a fiel, and say add result or something
-then single can reuse the directory each time, multiple can have files from different directories
-
-SVM
-handle peptides less than canonical length
-       make sure to consider getEmptyFeatureOffset too
-
+have test for exception in pcssSvm.finalizeFeature()
+in annotation mode, try to throw a global exception while annotation file is open to make sure it closes file correctly
 
 LARGER DATA:
 make sure bestModel still works when have multiple models (currently sorted works, but only two models)
@@ -108,8 +127,10 @@ keyword for no errors instead of hardcoding "none", same for no peptide parsed
 isError in pcssIo shouldn't be hardcoded
 right now we tell a feature it has an error by setting it to be a string attribute with an error prefix value. Better way would be to have a flag for that feature that says if it's an error. Can have the flag be on the superclass. when reading from attribute file, would have to then initialize the feature as its own class with the flag set rather than as a string attribute which is what is happening now.
 change references to model to be homology model and svm model to be svm model to distinguish them
+have pcss check for operating system and run svm type accordingly
 have every pcss global exception have an error code that the test can check to make sure the right error is being thrown -- will have a lot, consider if worth it
      or have them all be pcss global exception subclasses
+all tests subclass pcssTest
 
 LOGGING
 be very explicit about config file errors; make sure that the actual config file that failed is named (internal vs user)
@@ -124,6 +145,7 @@ make sure files are always closed
      also make sure these are closed when handling exception
 
 CODE
+If I have an error for a feature for one peptide, it applies for all peptides in the protein. should I keep it that way or have it be specific to that peptide only?
 attribute file names / locations shold be internal keywords (maybe)
 consider having sorted peptide list in ClassifySvm be finalized or constant so it can't be resorted, or some other way to keep those peptides
 	 sorted in that order
@@ -149,7 +171,90 @@ logging / stats
 log all exception messages as error
 go through peptide pipeline to see if i missed anything
 
+LIST OF CONTEXTS
+CONTEXT -- Normal Annotation no input, write output (AnnotationRunner)
+	Scan or Defined input. Scan needs input fasta file; defined needs input fasta file and list of peptide codes
+	SUB CONTEXT: Single CPU
+	SUB CONTEXT: Cluster command line
+
+
+CONTEXT -- Annotation and SVM Application no input, write output (SvmApplicationRunner) -- features are both input and output and svm is output only
+	Input is Defined or scan input mode. Web server in defined mode will dynamically generate input file from defined file
+	SUB CONTEXT: Single CPU
+	SUB CONTEXT: Cluster Command line
+	SUB CONTEXT: Cluster Web Server   
+
+CONTEXT -- Training Annotation -- no input, all features output along with positive / negaitve (defined by user)
+	Training gets defined input, but in server will have one input file specifying peptide status and will use that to dynamically generate input fasta file	
+	SUB CONTEXT: Single CPU
+	SUB CONTEXT: Cluster Command Line
+	SUB CONTEXT: Web Server phase one	
+
+CONTEXT -- Training benchmarking -- input from file, output is the same as input. 
+	SUB CONTEXT: Single  CPU
+	SUB CONTEXT: Web Server phase 2, run on single cluster CPU
+
+Goals:
+Web server and cluster command line should get to the same point, not have to have any special code except input and output
+
+
+
+Cluster command line vs cluster web server
+cluster command line:
+run one script to prepare everything:
+1. divide sequences
+2. make cluster script
+3. make parameter file for the run on the node
+
+
+everything run out of bin, runs, lib
+
+
+
+
+
+
+CONTEXT -- Training benchmarking, peptides in memory -- no inpu, output is the same as above
+	SUB CONTEXT: Single CPU
+	Only context I haven't written yet -- will hold off for now	
+
+CONTEXT -- SVM Application from file, read input, write output -- same attribute file as above
+	Input is annotation file previously done; not sure if need fasta file or not. Output is new annotation file	
+	SUB CONTEXT: Single CPU
+	SUB CONTEXT: Cluster Command Line
+	Consider not supporting for now
+
+
+
+TRAINING FLOW
+1. make annotation, write to output file (has positive / negative tag)
+2. read back in -- this will be the cluster way, although command line could go directly from memory
+3. not writing back out since they don't have to be scored -- although could. 
+4. big decision will be whether to write status -- think I should. can have true postivie / negative and also predicte positive / negative -- so status will always be output for a peptide
+will have context for single and multiple iterations
+single assumes that someone else will come along and read all directories with result files
+multiple will do it itself
+however, won't output to its own directory-- just make a class, point it to a fiel, and say add result or something
+then single can reuse the directory each time, multiple can have files from different directories
+
+
+PLACES THAT CHANGE ACROSS TROMBONE / MAC
+testPcssConig:
+pcss_directory
+dssp_command
+
+internalConfig:
+home-pcss_dir
+svm learn
+svm classify
+
+
 PRODUCTION
+see if training ROC plot result file name (created by test set tracker) uses run name in old version and if it's returned. Think it is but no run name. Consider adding run name since user gets it
+see if old version reports critical rate in final training file -- didn't see it in backend (maybe in LOO?)
+check memory profile
+have DefinedPeptideImporter get max peptide length from input
+     frontend was doing this before, backend a better place? scan user has to set though, but might be OK if not symmetrical...think about it
 consider whether to have parameters specific to certain contexts or to have one for all contexts
 	 one factor is that it will be harder to validate that everything was set in the config file if I have one global file. keep it global for now.
 if running with SVM Annotation Input mode, need to link the fasta file for sequences with the original fasta file that was passed. 
@@ -157,6 +262,10 @@ if running with SVM Annotation Input mode, need to link the fasta file for seque
    don't think I had to do this before since I was alwyas essentailly svm annotaiton features mode
 
 WEB SERVER:
+run an svm classification file through web server in run through svm application mode, same model file, same benchmark file,  
+    and see if we get same or similar scores before and after (not really multiple runs issue but do it at the same time)
+
+consider whether to do jackknife fraction myself or let user enter it
 run through svm application mode and see if we get same or similar scores before and after
 be sure to test what happens if there are so many peptide mismatches that there are more negatives than positives. is this checked before or after
 retrieving sequences?
@@ -191,3 +300,11 @@ for each exception:
 make sure it is the right kind of exception
 make sure there is a test for it or if not notate it needs one
 make sure that features get peptides and proteins and fullproteins get protein somewhere along the way
+
+
+
+
+workflow:
+annotation
+	from server
+	

@@ -58,7 +58,7 @@ class TestSvm(unittest.TestCase):
         appSvm.addScoresToPeptides()
         protein = self.getProtein("ffb930a1b85cc26007aae5956ddf888dMEAFKKLR",  reader.getProteins())
         peptide = protein.peptides[100]
-        self.assertEquals(peptide.getAttributeOutputString("svm_score"),  -1.6477627)
+        self.assertEquals(peptide.getAttributeOutputString("svm_score"),  -1.6814754)
 
     def test_train_svm(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
@@ -86,12 +86,180 @@ class TestSvm(unittest.TestCase):
         benchmarker.createTrainingAndTestSets(pcssTools.getAllPeptides(reader.getProteins(), False))
         benchmarker.trainAndApplyModel() 
         benchmarker.readBenchmarkResults()
-        pstList = benchmarker.testSvm.getBenchmarkScoreTupleList()
+        pstList = benchmarker.testSvm.getTestSetResult()
         firstTuple = pstList.getBenchmarkTuple(0)
-        self.assertEquals(float(firstTuple.score), -4.7859908)
+        self.assertEquals(float(firstTuple.score), -4.8898455)
         self.assertEquals(float(firstTuple.fpr), 0.0136986301369863)
         
+    def test_leave_one_out(self):
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        reader = pcssIO.AnnotationFileReader(self.runner)
+
+        reader.readAnnotationFile("testInput/svmTrainingAnnotationInput.txt")
+                            
+        benchmarker = pcssSvm.LeaveOneOutBenchmarker(self.runner)
+        peptideSet = pcssTools.getAllPeptides(reader.getProteins(), False)[0:20]
+        for i in range(len(peptideSet)):
+            benchmarker.createTrainingAndTestSets(peptideSet)
+            benchmarker.trainAndApplyModel() 
+            benchmarker.readBenchmarkResults()
+        benchmarker.processAllResults()
+        expectedFile = os.path.join(self.runner.pcssConfig["home_test_directory"], "testInput", "expectedOutput", "leaveOneOut_expectedOutput.txt")
+        observedOutputFile = self.runner.pdh.getLeaveOneOutResultFileName()
+        self.compareFiles(expectedFile, observedOutputFile)
+
+    def test_leave_one_out_internal_count_error(self):
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        reader = pcssIO.AnnotationFileReader(self.runner)
+
+        reader.readAnnotationFile("testInput/svmTrainingAnnotationInput.txt")
+                            
+        benchmarker = pcssSvm.LeaveOneOutBenchmarker(self.runner)
+        peptideSet = pcssTools.getAllPeptides(reader.getProteins(), False)[0:20]
         
+        self.assertRaises(pcssErrors.PcssGlobalException, self.throwBadCountError, benchmarker, peptideSet)
+
+    def test_leave_one_out_test_set_error(self):
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        reader = pcssIO.AnnotationFileReader(self.runner)
+
+        reader.readAnnotationFile("testInput/svmTrainingAnnotationInput.txt")
+                            
+        benchmarker = pcssSvm.LeaveOneOutBenchmarker(self.runner)
+        peptideSet = pcssTools.getAllPeptides(reader.getProteins(), False)[0:20]
+        benchmarker.createTrainingAndTestSets(peptideSet)
+        fakeTestSvm = pcssSvm.TestSvm(self.runner)
+        fakeTestSvm.setPeptides(pcssTools.getAllPeptides(reader.getProteins(), False)[21:23])
+        benchmarker.testSvm = fakeTestSvm
+        self.assertRaises(pcssErrors.PcssGlobalException, benchmarker.trainAndApplyModel)
+
+    def throwBadCountError(self, benchmarker, peptideSet):
+        badCount = len(peptideSet) + 1
+        for i in range(badCount):
+            benchmarker.createTrainingAndTestSets(peptideSet)
+            benchmarker.trainAndApplyModel() 
+            benchmarker.readBenchmarkResults()
+
+
+    def test_multiple_iteration_normal_output(self):
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        tsrt = pcssSvm.TestSetResultTracker(self.runner)
+        reader = pcssIO.AnnotationFileReader(self.runner)
+        self.runner.internalConfig["make_random_test_set"] = False
+        reader.readAnnotationFile("testInput/svmTrainingAnnotationInput.txt")
+                            
+        benchmarker = pcssSvm.SvmBenchmarker(self.runner)
+        
+        benchmarker.createTrainingAndTestSets(pcssTools.getAllPeptides(reader.getProteins(), False))
+        benchmarker.trainAndApplyModel() 
+        benchmarker.testSvm.readResultFile()
+        
+
+        tsrt.addTestSetResult(benchmarker.testSvm.getTestSetResult())
+        
+        newPeptideList = pcssTools.getAllPeptides(reader.getProteins(), False)
+        newPeptideList.reverse()
+        
+        benchmarker.createTrainingAndTestSets(newPeptideList)
+        benchmarker.trainAndApplyModel() 
+        benchmarker.testSvm.readResultFile()
+        
+        tsrt.addTestSetResult(benchmarker.testSvm.getTestSetResult())
+        
+        tsrt.finalize()
+        tsrt.writeResultFile(self.runner.pdh.getFullBenchmarkResultFileName())
+        expectedOutputFile = os.path.join(self.runner.pcssConfig["home_test_directory"], "testInput", "expectedOutput", "trainingSvm_expectedOutput.txt")
+        observedOutputFile = self.runner.pdh.getFullBenchmarkResultFileName()
+        self.compareFiles(expectedOutputFile, observedOutputFile)
+        
+
+    def test_tracker_average(self):
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        reader = pcssIO.AnnotationFileReader(self.runner)
+
+        reader.readAnnotationFile("testInput/svmTrainingAnnotationInput.txt")
+                            
+        benchmarker = pcssSvm.SvmBenchmarker(self.runner)
+        
+        tsrList = []
+        for i in range(2):
+            benchmarker.createTrainingAndTestSets(pcssTools.getAllPeptides(reader.getProteins(), False))
+            benchmarker.trainAndApplyModel() 
+            benchmarker.testSvm.readResultFile()
+            tsrList.append(benchmarker.testSvm.getTestSetResult())
+        fprRates = []    
+        tsrt = pcssSvm.TestSetResultTracker(self.runner)
+        
+        for tsr in tsrList:
+            tprTuples = tsr.getIncrementedTprTuples()
+            firstFprRate = tprTuples[0].fpr
+            fprRates.append(firstFprRate)
+            tsrt.addTestSetResult(tsr)
+        print "LIST OF FPR RATES: %s" % fprRates
+        average = float(sum(fprRates)) / float(len(fprRates))
+        tsrt.finalize()
+        firstTuple = tsrt.getBenchmarkTuple(0)
+        self.assertAlmostEqual(average, firstTuple.fpr)
+
+    def test_test_sets_count_positive_mismatch(self):
+        tsrt = self.countMismatch(self.runner.getPositiveKeyword(), 8)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as e:
+            tsrt.finalize()
+        print "GOT EXCPETION %s" % e.exception.msg
+        self.assertTrue(self.runner.getPositiveKeyword().lower() in e.exception.msg)
+
+    def test_test_sets_count_negative_mismatch(self):
+        tsrt = self.countMismatch(self.runner.getNegativeKeyword(), 1)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as e:
+            tsrt.finalize()
+        print "GOT EXCPETION %s" % e.exception.msg
+        self.assertTrue(self.runner.getNegativeKeyword().lower() in e.exception.msg)
+
+    def countMismatch(self, keyword, peptidesToRemoveCount):
+        
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        reader = pcssIO.AnnotationFileReader(self.runner)
+
+        reader.readAnnotationFile("testInput/svmTrainingAnnotationInput.txt")
+                            
+        benchmarker = pcssSvm.SvmBenchmarker(self.runner)
+        self.runner.internalConfig["make_random_test_set"] = False
+        
+        tsrList = []
+        benchmarker.createTrainingAndTestSets(pcssTools.getAllPeptides(reader.getProteins(), False))
+        benchmarker.trainAndApplyModel() 
+        benchmarker.testSvm.readResultFile()
+        firstTestSetResult = benchmarker.testSvm.getTestSetResult()
+        positivePeptidesRemoved = 0
+        for protein in reader.getProteins():
+            peptides = protein.peptides
+
+            peptideIter = peptides.iteritems()
+            for peptidePosition, peptide in list(peptideIter):
+                if (peptide.getAttributeOutputString("status") == keyword):
+                    peptides.pop(peptidePosition)
+                    positivePeptidesRemoved += 1
+                    if (positivePeptidesRemoved > peptidesToRemoveCount):
+                        break
+            if (positivePeptidesRemoved > peptidesToRemoveCount):
+                break
+
+        benchmarker.createTrainingAndTestSets(pcssTools.getAllPeptides(reader.getProteins(), False))
+        benchmarker.trainAndApplyModel() 
+        benchmarker.testSvm.readResultFile()
+        secondTestSetResult = benchmarker.testSvm.getTestSetResult()
+                
+        tsrt = pcssSvm.TestSetResultTracker(self.runner)
+        tsrt.addTestSetResult(firstTestSetResult)
+        tsrt.addTestSetResult(secondTestSetResult)
+        return tsrt
+            
     def test_bad_status(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
@@ -102,6 +270,21 @@ class TestSvm(unittest.TestCase):
         peptide.addStringAttribute("status", "fake")
         svm = pcssSvm.TrainingSvm(self.runner)
         self.assertRaises(pcssErrors.PcssGlobalException, svm.setPeptides, pcssTools.getAllPeptides(reader.getProteins(), False))
+
+    def compareFiles(self, firstFile, secondFile, sortLines=False):
+        firstReader = pcssTools.PcssFileReader(firstFile)
+        secondReader = pcssTools.PcssFileReader(secondFile)
+        if (sortLines):
+            firstLines =  sorted(firstReader.getLines())
+            secondLines = sorted(secondReader.getLines())
+        else:
+            firstLines =  sorted(firstReader.getLines())
+            secondLines = sorted(secondReader.getLines())
+
+        for (i, firstLine) in enumerate(firstLines):
+
+            secondLine = secondLines[i]
+            self.assertEquals(firstLine, secondLine)
 
 
     def test_bad_svm_training_command(self):
@@ -117,7 +300,6 @@ class TestSvm(unittest.TestCase):
         self.runner.internalConfig["training_set_file_name"] = "fake"
             
         self.assertRaises(pcssErrors.PcssGlobalException, svm.trainModel)
-
 
     def test_more_positives_than_negatives(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")

@@ -11,60 +11,74 @@ import pcssErrors
 import pcssFeatures
 import pcssFeatureHandlers
 import collections
-
-class BenchmarkResults:
-    
-    def __init__(self):
-        self._results = []
-        self.ScoreTuple = collections.namedtuple('svmScore', ['fpr', 'tpr', 'score'])
-
-    def checkBoundaryLines(self, line, value):
-        value = str(value)
-        line = line.rstrip()
-        cols = line.split('\t')
-        if (cols[0] == value and cols[1] == value and len(cols) == 2):
-            return True
-        return False
-
-    def readBenchmarkFile(self, fileName):
-        reader = pcssTools.PcssFileReader(fileName)
-        lines = reader.getLines()
-        firstLine = lines[0]
-        lastLine = lines[-1]
-        if (not self.checkBoundaryLines(firstLine, 0)):
-            raise pcssErrors.PcssGlobalException("Expected benchmark file %s to have first line of 0\t0")
-        if (not self.checkBoundaryLines(lastLine, 1)):
-            raise pcssErrors.PcssGlobalException("Expected benchmark file %s to have last line of 1\t1")
-        
-        for line in lines[1:len(lines) - 2]:
             
-            cols = line.split()
-            fpr = float(cols[0])
-            tpr = float(cols[1])
-            score = float(cols[2])
-            self.validateScore(score)
-            st = self.ScoreTuple(fpr, tpr, score)
-            self._results.append(st)
 
-    def validateScore(self, score):
-        if (len(self._results) > 0):
-            if (score > self._results[-1].score):
-                raise pcssErrors.PcssGlobalException("Benchmark file error: got score %s that was larger than score from previous line %s" % 
-                                                     (score, self._results[-1].score))
-    def getClosestScoreTuple(self, score):
-        for st in self._results:
-            if (float(score) >  st.score):
-                return st
+
+class LeaveOneOutBenchmarker:
+    def __init__(self, pcssRunner):
+        self.pcssRunner = pcssRunner
+        self.trainingSvm = TrainingSvm(pcssRunner)
+        self.testSvm = TestSvm(pcssRunner)  
+        self.currentPeptidePosition = 0
+        self.looTsr = TestSetResult(pcssRunner)
+
+    def createTrainingAndTestSets(self, peptides):
+        trainingPeptideList = []
+        if (self.currentPeptidePosition >= len(peptides)):
+            msg = "Error: Leave one out benchmarker internal peptide counter (%s) must be smaller than input peptide set count (%s)" % (self.currentPeptidePosition,
+                                                                                                                                        len(peptides))
+            raise pcssErrors.PcssGlobalException(msg)
+        for (i, peptide) in enumerate(peptides):
+            if (i == self.currentPeptidePosition):
+                self.testSvm.setPeptides([peptide])
+                print "next test set peptide position %s status %s" % (peptide.startPosition, peptide.getAttributeOutputString("status"))
+            else:
+                trainingPeptideList.append(peptide)
+        self.trainingSvm.setPeptides(trainingPeptideList)
+        self.trainingSvm.writeTrainingSetFile()
+        self.testSvm.writeClassificationFile()
+        self.currentPeptidePosition += 1
+        
+    def trainAndApplyModel(self):
+        
+        self.trainingSvm.trainModel()
+
+        if (len(self.testSvm.peptides) > 1):
+            raise pcssErrors.PcssGlobalException("Error: Leave One Out Benchmarker has test set greater than size 1 (%s total)" % len(self.testSvm.peptides))
+        
+        self.testSvm.classifySvm()
+
+    def readBenchmarkResults(self):
+        self.testSvm.readResultFile()
+        
+        pstList = self.testSvm.getPstList()
+        
+        self.looTsr.addPst(pstList[0])
+        
+    def processAllResults(self):
+        self.looTsr.finalize()
+
+        resultFile = self.pcssRunner.pdh.getLeaveOneOutResultFileName()
+        resultFh = open(resultFile, 'w')
+        size = self.looTsr.getSize()
+        for i in range(size):
+            nextBpst = self.looTsr.getBenchmarkTuple(i)
+            #add petpides start position and modbase seq id
+            outputList = [nextBpst.fpr, nextBpst.tpr, nextBpst.score,  nextBpst.peptide.getAttributeOutputString("status"), 
+                          nextBpst.negativeCount, nextBpst.positiveCount]
+            resultFh.write("%s\n" % "\t".join(str(x) for x in outputList))
+        
+
 
 class SvmBenchmarker:
     def __init__(self, pcssRunner):
         self.pcssRunner = pcssRunner
         self.trainingSvm = TrainingSvm(pcssRunner)
         self.testSvm = TestSvm(pcssRunner)  
+        self.testSetResultTracker = TestSetResultTracker(self.pcssRunner)
         
     def getAllPeptides(self, proteins):
         return pcssTools.getAllPeptides(proteins, False)
-
 
     def createTrainingAndTestSets(self, peptides):
         
@@ -79,15 +93,11 @@ class SvmBenchmarker:
                                                                                                                   len(self.benchmarkHandler.negativeTestSet))
         self.fullTrainingSet = self.benchmarkHandler.positiveTrainingSet + self.benchmarkHandler.negativeTrainingSet
         self.fullTestSet = self.benchmarkHandler.positiveTestSet + self.benchmarkHandler.negativeTestSet
-        
         self.trainingSvm.setPeptides(self.fullTrainingSet)
         self.trainingSvm.writeTrainingSetFile()
         self.testSvm.setPeptides(self.fullTestSet)
         self.testSvm.writeClassificationFile()
-
-    
-
-    
+        
     def trainAndApplyModel(self):
         
         self.trainingSvm.trainModel()
@@ -97,20 +107,18 @@ class SvmBenchmarker:
     def readBenchmarkResults(self):
         self.testSvm.readResultFile()
         
-        pstList = self.testSvm.getBenchmarkScoreTupleList()
-        for i in range(len(self.fullTestSet)):
-            nextTuple = pstList.getBenchmarkTuple(i)
-            print "next peptide %s score %s fpr %s" % (nextTuple.peptide.startPosition, nextTuple.score, nextTuple.fpr)
-        #self.pstTracker.addPstList(pstList)
-        #peptide score tuple list:
-        #should be able to tell me what the fpr, tpr is at each point
-        #should be able to tell the critical point is
-        #if I have a list, get the average of fpr, tpr and standard deviation
-        #SinglePeptideScoreTupleList
-        #get the fpr, tpr at a certain index
+        testSetResult = self.testSvm.getTestSetResult()
+        #might want to write to file if not doing everything in memory
+        self.testSetResultTracker.addTestSetResult(testSetResult)
 
-    
+    def processAllResults(self):
+
+        self.testSetResultTracker.finalize()
+        for i in range(self.testSetResultTracker.getTprCount()):
+            nextTuple = self.testSetResultTracker.getBenchmarkTuple(i)
+            print "next run: tpr %s fpr %s score  %s stddev %s" % (nextTuple.tpr, nextTuple.fpr, nextTuple.score, nextTuple.fprStdev)
         
+        self.testSetResultTracker.writeResultFile(self.pcssRunner.pdh.getFullBenchmarkResultFileName())
         
 class TrainingSvm:
     def __init__(self, runner):
@@ -128,12 +136,19 @@ class TrainingSvm:
         else:
             return -1
     
+    def writeFullPeptideModelFile(self):
+        fullPeptideModelFileName = self.runner.pdh.getUserCreatedModelFileName()
+        self.writePeptidesToFile(fullPeptideModelFileName)
+
     def writeTrainingSetFile(self):
         trainingSetFileName  = self.runner.pdh.getSvmTrainingSetFile()
-        trainingSetFh = open(trainingSetFileName, 'w')
+        self.writePeptidesToFile(trainingSetFileName)
+    
+    def writePeptidesToFile(self, fileName):
+        
+        trainingSetFh = open(fileName, 'w')
         for peptide in self.peptides:
             nextLine = peptide.makeSvmFileLine()
-            print "got file line %s for peptide %s" % (nextLine, peptide.startPosition)
             statusCode = self.getStatusCode(peptide)
             trainingSetFh.write("%s %s\n" % (statusCode, nextLine))
         trainingSetFh.close()
@@ -236,7 +251,7 @@ class ClassifySvm:
     def __init__(self, pcssRunner):
         self.pcssRunner = pcssRunner
         self.PeptideScoreTuple = collections.namedtuple('peptideScore', ['peptide', 'score'])
-
+        self.peptides = []        
         self.pstList = []
 
     def setProteins(self, proteins):
@@ -251,16 +266,15 @@ class ClassifySvm:
 
     def setPeptides(self, peptides):
         self.peptides = peptides
+        print "set peptides; have %s total" % len(self.peptides)
         
     def writeClassificationFile(self):
         classificationFileName = self.getSvmInputFile()
         classificationFh = open(classificationFileName, 'w')
         i = 1
         for peptide in self.peptides:
-            print "write peptide %s count %s" % (peptide.startPosition, i)
             i += 1
             nextLine = peptide.makeSvmFileLine()
-            print "got file line %s" % nextLine
             classificationFh.write("%s %s\n" % ("0", nextLine))
         classificationFh.close()
 
@@ -279,7 +293,7 @@ class ClassifySvm:
         
     def readResultFile(self):
         resultFile = self.getClassifyOutputFile()
-
+        self.pstList = []
         if (not os.path.exists(resultFile)):
             raise pcssErrors.PcssGlobalException("Classify SVM could not read result file %s; \n"
                                                  "check to make sure svm_classify completed as suggested" % resultFile)
@@ -293,10 +307,16 @@ class ClassifySvm:
             pst = self.PeptideScoreTuple(peptide, score)
             self.pstList.append(pst)
 
-class BenchmarkPeptideScoreTupleList:
+    def getPstList(self):
+        return self.pstList
+
+class TestSetResult:
     def __init__(self, pcssRunner):
         self.pstList = []
         self.pcssRunner = pcssRunner
+        self.setupTuple()
+
+    def setupTuple(self):
         self.BenchmarkPeptideScoreTuple = collections.namedtuple('peptideScore', ['peptide', 'score', 'positiveCount', 'negativeCount', 'tpr', 'fpr'])
 
     def addPst(self, peptideScoreTuple):
@@ -332,11 +352,141 @@ class BenchmarkPeptideScoreTupleList:
                                                    self.getRate(currentNegativeCount, self.totalNegativeCount))
             self.benchmarkPstList.append(bpst)
 
+    def getFinalPositiveCount(self):
+        return self.benchmarkPstList[-1].positiveCount
+
+    def getFinalNegativeCount(self):
+        return self.benchmarkPstList[-1].negativeCount
+
+    def getIncrementedTprTuples(self):
+        currentTpr = 0.0
+        tuplePositions = []
+        for bpst in self.benchmarkPstList:
+            if (bpst.tpr > currentTpr):
+                currentTpr = bpst.tpr
+                tuplePositions.append(bpst)
+        return tuplePositions
+
     def getRate(self, currentCount, totalCount):
         return float(currentCount) / float(totalCount)
 
     def getBenchmarkTuple(self, i):
         return self.benchmarkPstList[i]
+
+    def getSize(self):
+        return len(self.benchmarkPstList)
+
+class BenchmarkResults:
+    
+    def __init__(self):
+        self._results = []
+        self.ScoreTuple = collections.namedtuple('svmScore', ['fpr', 'tpr', 'score'])
+
+    def checkBoundaryLines(self, line, value):
+        value = str(value)
+        line = line.rstrip()
+        cols = line.split('\t')
+        if (cols[0] == value and cols[1] == value and len(cols) == 2):
+            return True
+        return False
+
+    def readBenchmarkFile(self, fileName):
+        reader = pcssTools.PcssFileReader(fileName)
+        lines = reader.getLines()
+        firstLine = lines[0]
+        lastLine = lines[-1]
+        if (not self.checkBoundaryLines(firstLine, 0)):
+            raise pcssErrors.PcssGlobalException("Expected benchmark file %s to have first line of 0\t0")
+        if (not self.checkBoundaryLines(lastLine, 1)):
+            raise pcssErrors.PcssGlobalException("Expected benchmark file %s to have last line of 1\t1")
+        
+        for line in lines[1:len(lines) - 2]:
+            
+            cols = line.split()
+            fpr = float(cols[0])
+            tpr = float(cols[1])
+            score = float(cols[2])
+            self.validateScore(score)
+            st = self.ScoreTuple(fpr, tpr, score)
+            self._results.append(st)
+
+    def validateScore(self, score):
+        if (len(self._results) > 0):
+            if (score > self._results[-1].score):
+                raise pcssErrors.PcssGlobalException("Benchmark file error: got score %s that was larger than score from previous line %s" % 
+                                                     (score, self._results[-1].score))
+    def getClosestScoreTuple(self, score):
+        for st in self._results:
+            if (float(score) >  st.score):
+                return st
+
+class TestSetResultTracker:
+
+    def __init__(self, runner):
+        self.pcssRunner = runner
+        self.TestSetTprAveragesTuple = collections.namedtuple('singleTpr', ['tpr', 'fpr', 'score', 'fprStdev'])
+        self.allTestSetResults = []
+        
+    def addTestSetResult(self, pstList):
+        
+        self.allTestSetResults.append(pstList)
+
+    def validateTestSetResult(self, tsr):
+        if (tsr.getFinalPositiveCount() != self.referencePositiveCount):
+            raise pcssErrors.PcssGlobalException("Error: test set did not have same number of positives (%s) as the reference (%s)" % (tsr.getFinalPositiveCount(),
+                                                                                                                                       self.referencePositiveCount))
+        if (tsr.getFinalNegativeCount() != self.referenceNegativeCount):
+            raise pcssErrors.PcssGlobalException("Error: test set did not have same number of negatives (%s) as the reference (%s)" % (tsr.getFinalNegativeCount(),
+                                                                                                                                       self.referenceNegativeCount))
+        
+    def finalize(self):
+        tprCountsToTuples = {}
+        self.referencePositiveCount = self.allTestSetResults[0].getFinalPositiveCount()
+        self.referenceNegativeCount = self.allTestSetResults[0].getFinalNegativeCount()
+        for testSetResult in self.allTestSetResults:
+            self.validateTestSetResult(testSetResult)
+            tprTuples = testSetResult.getIncrementedTprTuples()
+            for tprTuple in tprTuples:
+                if (not tprTuple.tpr in tprCountsToTuples):
+                    tprCountsToTuples[tprTuple.tpr] = []
+                tprCountsToTuples[tprTuple.tpr].append(tprTuple)
+            #assert same FPR?
+        self.testSetTprAveragesList = []
+        for tpr, bpstList in sorted(tprCountsToTuples.iteritems()):
+
+            fprAverage = self.average(list(x.fpr for x in bpstList))
+            fprStdev = self.stddev(list(x.fpr for x in bpstList))
+            scoreAverage = self.average(list(x.score for x in bpstList))
+            self.testSetTprAveragesList.append(self.TestSetTprAveragesTuple(tpr, fprAverage, scoreAverage, fprStdev))
+
+    def getBenchmarkTuple(self, i):
+        return self.testSetTprAveragesList[i]
+
+    def getRunCount(self):
+        return len(self.allTestSetResults)
+
+    def getTprCount(self):
+        return len(self.testSetTprAveragesList)
+
+    def average(self, list):
+        average = float(sum(list)) / float(len(list))
+        return average
+
+    def stddev(self, list):
+        stddev = math.sqrt((float(sum(x * x for x in list)) / float(len(list))) - (float(self.average(list)) * float(self.average(list))))
+        return stddev
+    
+
+    def writeResultFile(self, resultFileName):
+        resultFh = open(resultFileName, 'w')
+        initialOutputList = ["0", "0", "N/A", "N/A"]
+        finalOutputList = ["1", "1", "N/A", "N/A"]
+        resultFh.write("%s\n" % "\t".join(initialOutputList))
+        for averagesTuple in self.testSetTprAveragesList:
+            outputList = [averagesTuple.fpr, averagesTuple.tpr, averagesTuple.score, averagesTuple.fprStdev]
+            resultFh.write("%s\n" % "\t".join(str(round(x, 3)) for x in outputList))
+        resultFh.write("%s\n" % "\t".join(finalOutputList))
+
 
 class ApplicationSvm(ClassifySvm):
 
@@ -375,13 +525,13 @@ class TestSvm(ClassifySvm):
             raise pcssErrors.PcssGlobalException("Could not find newly created model file for test svm (looked for %s)" % modelFileName)
         return modelFileName
                                                 
-
-    def getBenchmarkScoreTupleList(self):
-        bpstList = BenchmarkPeptideScoreTupleList(self.pcssRunner)
+    def getTestSetResult(self):
+        tsr = TestSetResult(self.pcssRunner)
         for pst in self.pstList:
-            bpstList.addPst(pst)
-        bpstList.finalize()
-        return bpstList
+            tsr.addPst(pst)
+        tsr.finalize()
+        return tsr
+    
 
 class SvmFeatureHandler:
     def __init__(self):

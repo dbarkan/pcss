@@ -23,4 +23,4 @@ internal_config_file = file()
 internal_config_spec_file = file()
 peptide_importer_type = option("scan", "defined")
 input_annotation_file_name = file()
-
+on_cluster = boolean()

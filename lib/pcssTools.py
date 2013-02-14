@@ -147,6 +147,19 @@ class PcssRunner:
         self.reader.readAnnotationFile(self.pcssConfig["input_annotation_file_name"])
         self.proteins = self.reader.getProteins()
 
+    def getSeqBatchDirectory(self):
+        directoryName = self.pdh.getFullOutputFile(self.internalConfig["seq_batch_directory"])
+        if (not os.path.exists(directoryName)):
+            os.mkdir(directoryName)
+        return directoryName
+        
+    def getJobDirectory(self):
+        return self.pdh.getJobDirectory()
+
+    def setJobDirectory(self, directoryName):
+        self.pdh.setJobDirectory(directoryName)
+
+
     def readProteins(self):
 
         peptideImporterType = self.pcssConfig["peptide_importer_type"]
@@ -283,7 +296,6 @@ class AnnotationRunner(PcssRunner):
 
             self.writeInternalErrorFile(e)
 
-
         
 class SvmTrainingRunner(PcssRunner):
     def executePipeline(self):
@@ -308,6 +320,7 @@ class SvmTrainingRunner(PcssRunner):
             self.writeInternalErrorFile(e)
       
     def benchmark(self):
+        
         benchmarker = pcssSvm.SvmBenchmarker(self)
  
         for i in range(self.pcssConfig["training_iterations"]):
@@ -319,7 +332,6 @@ class SvmTrainingRunner(PcssRunner):
 
         benchmarker.processAllResults()
 
-        
 
 class PcssModelHandler:
 
@@ -449,25 +461,37 @@ class PcssDirectoryHandler:
     def getInternalErrorFile(self):
         return self.getFullOutputFile(self.internalConfig["internal_error_output_file"])
 
-
     def createOutputDirectory(self):
         """Creates the 'run directory' which is where all output for this program goes. Run directory is created as $run_directory/$run_name
         where each variable specified in the parameter file. Thus if the user wants to run a program twice with different input, simply change
         the run_name parameter and nothing from previous runs will be overwritten
         """
-        outputDir = self.pcssConfig["run_directory"]
-        runName = self.pcssConfig["run_name"]
-        fullOutputDir = os.path.join(outputDir, runName)
-        self.fullOutputDir =  os.path.join(outputDir, runName)
-        log.info("Created output directory %s" % self.fullOutputDir)
-        
+        if (not self.pcssConfig["on_cluster"]):  #consider changing to 'head_node'
+            outputDir = self.pcssConfig["run_directory"]
+            runName = self.pcssConfig["run_name"]
+            fullOutputDir = os.path.join(outputDir, runName)
+            self.fullOutputDir =  os.path.join(outputDir, runName)
+            if (not os.path.exists(self.fullOutputDir)):
+                os.mkdir(self.fullOutputDir)
+
+    def getJobDirectory(self):
+        return self.jobDirectory
+
+    def setJobDirectory(self, directoryName):
+        self.jobDirectory = directoryName
+        if (not os.path.exists(directoryName)):
+            os.mkdir(directoryName)
+
     def getStructureDirectory(self):
         """Return full path of directory where models are stored and copied to"""
         return self.pcssConfig["model_directory"]
 
     def getFullOutputFile(self, fileName):
         """Return full path fileName where the path is the full run directory for this run"""
-        return os.path.join(self.fullOutputDir, fileName)
+        if (self.pcssConfig["on_cluster"]): #consider changing to head_node
+            return os.path.join(self.jobDirectory, fileName)
+        else:
+            return os.path.join(self.fullOutputDir, fileName)
 
     def getFullModelFileFromId(self, modelId):
         """Return full path model file name for this modelId"""
@@ -567,6 +591,11 @@ class PcssDirectoryHandler:
     def getSvmApplicationOutputFile(self):
         return self.getFullOutputFile(self.internalConfig["application_set_output_file_name"])
 
+    def getFullBenchmarkResultFileName(self):
+        return self.getFullOutputFile("%s_%s" % (self.pcssConfig["run_name"], self.internalConfig["benchmark_result_file_suffix"]))
+
+    def getLeaveOneOutResultFileName(self):
+        return self.getFullOutputFile("%s_%s" % (self.pcssConfig["run_name"], self.internalConfig["loo_result_file_suffix"]))
 
     def getSvmTestOutputFile(self):
         return self.getFullOutputFile(self.internalConfig["test_set_output_file_name"])
