@@ -1,7 +1,10 @@
 big things to do:
-better merge of git
-setup cluster script generator for annotation pipeline
-finish profiling training time
+python 2.7 on netapp if possible
+dynamically create config spec
+local param on_cluster = False
+
+
+test cluster genration script
 setup cluster script generator for training iterations
 setup executable for training iterations
 setup cluster script generator for svm annotation pipeline(s) -- might need multiple
