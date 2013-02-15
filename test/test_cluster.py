@@ -17,7 +17,8 @@ class TestCluster(unittest.TestCase):
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         seqDivider = pcssCluster.SeqDivider(self.runner)
         seqDivider.divideSeqsFromFasta(self.pcssConfig['fasta_file'])
-        seqDivider.makeBaseSgeScript()
+        
+        seqDivider.makeFullSgeScript()
 
 if __name__ == '__main__':
     unittest.main()

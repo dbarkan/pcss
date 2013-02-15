@@ -30,7 +30,7 @@ class SeqDivider:
         self.seqBatchCount = len(seqGroupList)
         return seqGroupList
 
-    def getSequenceTaskList(self):
+    def getSequenceTaskListString(self):
         taskList = []
         for i in range(self.seqBatchCount):
             taskList.append(str(i))
@@ -61,7 +61,8 @@ class SeqDivider:
         pcssCopy["fasta_file"] =  self.getSeqBatchFileName(i)
         pcssCopy["run_name"] = str(i)
         pcssCopy["run_directory"] = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["seq_batch_directory"])
-        
+        pcssCopy["on_cluster"] = False
+
         subDirectoryName = self.getSeqBatchSubDirectoryName(i)
         pcssCopy.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_parameter_file_name"])
         pcssCopy.write()
@@ -91,9 +92,28 @@ class SeqDivider:
             fh.write("%s\n" % str(seqRecord.seq))
         fh.close()
         
+    def makeFullSgeScript(self):
+        script = self.makeClusterHeaderCommands()
+        script += self.makeBaseSgeScript()
+        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile("develop_cluster_script.sh")
+        scriptFh = open(scriptOutputFile, 'w')
+        scriptFh.write(script)
+        scriptFh.close()
+        
+    def makeClusterHeaderCommands(self):
+
+        taskCount = self.seqBatchCount
+        script = """
+#!/bin/tcsh
+#$ -S /bin/tcsh                                                                                                                                                                     #$ -o clusterOutput.txt                                                                                                                                                             #$ -e clusterError.txt                                                                                                                                                              #$ -cwd                                                                                                                                                                             #$ -r y                                                                                                                                                                             #$ -j y                                                                                                                                                                             #$ -l mem_free=1G                                                                                                                                                                   #$ -l arch=linux-x64                                                                                                                                                                #$ -l netapp=1G,scratch=1G                                                                                                                                                          #$ -l h_rt=24:00:00                                                                                                                                                                 #$ -t 1-%(taskCount)s
+
+
+""" %locals()
+        return script
+
     def makeBaseSgeScript(self):
 
-        taskList = self.getSequenceTaskList()
+        taskList = self.getSequenceTaskListString()
 
         pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
         topLevelSeqBatchDir = self.getSeqBatchDirectory()
@@ -130,10 +150,6 @@ python $PCSS_BASE_DIRECTORY/bin/%(modelPipelineScriptName)s --parameterFileName 
 rm -r $NODE_HOME_DIR/
 """ %locals()
 
-        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile("develop_cluster_script.sh")
-        scriptFh = open(scriptOutputFile, 'w')
-        scriptFh.write(script)
-        scriptFh.close()
-
         return script
+
 
