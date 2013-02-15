@@ -1,4 +1,8 @@
 big things to do:
+create production cluster mode and test everything out of there instead of out of test
+create regression test for test cluster -- at least check the script against expected
+
+
 better merge of git
 setup cluster script generator for annotation pipeline
 finish profiling training time
