@@ -7,7 +7,7 @@ import os
 
 
 configFileName = sys.argv[1]
-tempPcssConfig = configobj.ConfigObj(configFileName, configspec=configSpec)
+tempPcssConfig = configobj.ConfigObj(configFileName)
 configSpec = tempPcssConfig["config_spec_file"]
 
 pcssConfig = configobj.ConfigObj(configFileName, configspec=configSpec)
