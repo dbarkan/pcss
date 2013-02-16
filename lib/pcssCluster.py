@@ -35,7 +35,23 @@ class SeqDivider:
         for i in range(self.seqBatchCount):
             taskList.append(str(i))
         return " ".join(taskList)
-                
+ 
+    def mergeResults(self):
+        fastaFile = self.pcssRunner.pcssConfig['fasta_file']
+        seqGroupList = self.getFastaGroupList(fastaFile)
+
+        seqBatchDirectory = self.pcssRunner.getSeqBatchDirectory()
+        allProteins = []
+        for (i, nextGroup) in enumerate(seqGroupLisnt):
+            subDirName = self.getSeqBatchSubDirectoryName(i)
+            subOutputFile = os.path.join(subDirName, self.pcssRunner.internalConfig["annotation_output_file"])
+            reader = pcssIO.AnnotationFileReader(self)
+            reader.readAnnotationFile(subOutputFile)
+            proteins = reader.getProteins()
+            allProteins += proteins
+        
+        afw = pcssIO.AnnotationFileWriter(self.pcssRunner)
+        afw.writeAllOutput(allProteins)
 
     #when we get here, we have fasta file and unannotated sequences. 
     def divideSeqsFromFasta(self):
@@ -155,8 +171,9 @@ pwd
 set PARAMETER_FILE_NAME="%(topLevelSeqBatchDir)s/$input/%(parameterFileName)s"
 
 setenv PYTHONPATH $PCSS_BASE_DIRECTORY/lib
-python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(modelPipelineScriptName)s $PARAMETER_FILE_NAME  
-#> & $MODEL_OUTPUT_FILE_NAME
+python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(modelPipelineScriptName)s $PARAMETER_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
+
+cp $MODEL_OUTPUT_FILE_NAME "%(topLevelSeqBatchDir)s/$input/"
 
 rm -r $NODE_HOME_DIR/
 """ %locals()

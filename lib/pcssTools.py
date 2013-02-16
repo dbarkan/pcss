@@ -620,6 +620,10 @@ class PcssDirectoryHandler:
     def getFullBenchmarkResultFileName(self):
         return self.getFullOutputFile("%s_%s" % (self.pcssConfig["run_name"], self.internalConfig["benchmark_result_file_suffix"]))
 
+    def getFinalSvmApplicationResultFile(self):
+        return self.getFullOutputFile
+                                           
+
     def getLeaveOneOutResultFileName(self):
         return self.getFullOutputFile("%s_%s" % (self.pcssConfig["run_name"], self.internalConfig["loo_result_file_suffix"]))
 
