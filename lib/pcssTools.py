@@ -4,6 +4,7 @@ import os
 import re
 from Bio import SeqIO
 import pcssIO
+import pcssCluster
 import tempfile
 import configobj
 import subprocess
@@ -49,6 +50,7 @@ def split_len(seq, length):
     return [seq[i:i+length] for i in range(0, len(seq), length)]
 
 def fileExists(fileName):
+
     if (not os.path.exists(fileName)):
         raise ValidateError("FileName %s does not exist" % fileName)
     return fileName
@@ -215,9 +217,9 @@ class PcssApplicationClusterRunner(PcssRunner):
             
             self.setJobDirectory(os.path.join(self.pcssConfig["run_directory"], "developClusterJob"))
 
-            seqDivider = pcssCluster.SeqDivider(runner)
+            seqDivider = pcssCluster.SeqDivider(self)
 
-            seqDivider.divideSeqsFromFasta(self.pcssConfig['fasta_file'])
+            seqDivider.divideSeqsFromFasta()
         
             seqDivider.makeFullSgeScript()
             

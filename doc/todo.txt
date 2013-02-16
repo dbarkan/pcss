@@ -5,7 +5,6 @@ create regression test for test cluster -- at least check the script against exp
 
 python 2.7 on netapp if possible
 dynamically create config spec
-local param on_cluster = False
 
 have checks to make sure run_disopred_command has all files it needs. Split the command, and check for existence of the command itself and everhting after
 same for psipred
@@ -14,7 +13,6 @@ git makes me change parameters every time I switch and commit. any way around th
 
 had a case where I put the wrong run_disopred_Command lcoation in and the internalErrors.out wrote "no such file or directory" -- possible to get the actual name of the file it is looking for and put that in the error output too?
 
-test cluster genration script
 
 setup cluster script generator for training iterations
 setup executable for training iterations

@@ -38,9 +38,10 @@ class SeqDivider:
                 
 
     #when we get here, we have fasta file and unannotated sequences. 
-    def divideSeqsFromFasta(self, fastaFile):
+    def divideSeqsFromFasta(self):
+        fastaFile = self.pcssRunner.pcssConfig['fasta_file']
         seqGroupList = self.getFastaGroupList(fastaFile)
-        
+
         seqBatchDirectory = self.pcssRunner.getSeqBatchDirectory()
         
         for (i, nextGroup) in enumerate(seqGroupList):
@@ -154,7 +155,8 @@ pwd
 set PARAMETER_FILE_NAME="%(topLevelSeqBatchDir)s/$input/%(parameterFileName)s"
 
 setenv PYTHONPATH $PCSS_BASE_DIRECTORY/lib
-python $PCSS_BASE_DIRECTORY/bin/%(modelPipelineScriptName)s --parameterFileName $PARAMETER_FILE_NAME  > & $MODEL_OUTPUT_FILE_NAME
+python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(modelPipelineScriptName)s $PARAMETER_FILE_NAME  
+#> & $MODEL_OUTPUT_FILE_NAME
 
 rm -r $NODE_HOME_DIR/
 """ %locals()
