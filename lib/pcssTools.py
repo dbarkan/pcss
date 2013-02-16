@@ -209,6 +209,30 @@ class PcssRunner:
         afw = pcssIO.AnnotationFileWriter(self)
         afw.writeAllOutput(self.proteins)
 
+class PcssApplicationClusterRunner(PcssRunner):
+    def executePipeline(self):
+        try:
+            
+            self.setJobDirectory(os.path.join(self.pcssConfig["run_directory"], "developClusterJob"))
+
+            seqDivider = pcssCluster.SeqDivider(runner)
+
+            seqDivider.divideSeqsFromFasta(self.pcssConfig['fasta_file'])
+        
+            seqDivider.makeFullSgeScript()
+            
+        except pcssErrors.PcssGlobalException as pge:
+            print pge.msg
+            tb = traceback.format_exc()
+            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
+            self.writePcssErrorFile(pge.msg + "\n" + tb)
+
+        except pcssErrors.ErrorExistsException:
+            return
+        
+        except Exception as e:
+            print e
+            self.writeInternalErrorFile(e)
 
 class SvmApplicationRunner(PcssRunner):
     def runSvm(self):

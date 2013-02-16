@@ -105,8 +105,17 @@ class SeqDivider:
         taskCount = self.seqBatchCount
         script = """
 #!/bin/tcsh
-#$ -S /bin/tcsh                                                                                                                                                                     #$ -o clusterOutput.txt                                                                                                                                                             #$ -e clusterError.txt                                                                                                                                                              #$ -cwd                                                                                                                                                                             #$ -r y                                                                                                                                                                             #$ -j y                                                                                                                                                                             #$ -l mem_free=1G                                                                                                                                                                   #$ -l arch=linux-x64                                                                                                                                                                #$ -l netapp=1G,scratch=1G                                                                                                                                                          #$ -l h_rt=24:00:00                                                                                                                                                                 #$ -t 1-%(taskCount)s
-
+#$ -S /bin/tcsh                    
+#$ -o clusterOutput.txt            
+#$ -e clusterError.txt             
+#$ -cwd                            
+#$ -r y                            
+#$ -j y                            
+#$ -l mem_free=1G                  
+#$ -l arch=linux-x64               
+#$ -l netapp=1G,scratch=1G         
+#$ -l h_rt=24:00:00                
+#$ -t 1-%(taskCount)s
 
 """ %locals()
         return script
