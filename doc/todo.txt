@@ -2,7 +2,7 @@ big things to do:
 python 2.7 on netapp if possible
 dynamically create config spec
 local param on_cluster = False
-
+copy output file when done, test to see if it gets copied if dumb expcetiop
 
 test cluster genration script
 setup cluster script generator for training iterations
