@@ -42,7 +42,7 @@ class SeqDivider:
 
         seqBatchDirectory = self.pcssRunner.getSeqBatchDirectory()
         allProteins = []
-        for (i, nextGroup) in enumerate(seqGroupLisnt):
+        for (i, nextGroup) in enumerate(seqGroupList):
             subDirName = self.getSeqBatchSubDirectoryName(i)
             subOutputFile = os.path.join(subDirName, self.pcssRunner.internalConfig["annotation_output_file"])
             reader = pcssIO.AnnotationFileReader(self)

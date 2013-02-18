@@ -12,6 +12,12 @@ git makes me change parameters every time I switch and commit. any way around th
 
 had a case where I put the wrong run_disopred_Command lcoation in and the internalErrors.out wrote "no such file or directory" -- possible to get the actual name of the file it is looking for and put that in the error output too?
 
+Next: 
+maybe check to make sure that mergeResults has no syntax errors befroe cluster
+change seq batch parameter to that there are 5 sequences in each dir
+test run on cluster
+all the stuff in 'merging' below
+
 merging:
 make sure we have column row as first row
 check for error file
