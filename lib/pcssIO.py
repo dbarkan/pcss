@@ -221,10 +221,8 @@ class AnnotationFileReader:
 
         return self.proteins[sequenceId]
 
-
     def getProteins(self):
         return self.proteins.values()
-
 
 class ParsingRules:
     def __init__(self, rulesFile):

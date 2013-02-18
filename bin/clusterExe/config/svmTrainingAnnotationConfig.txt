@@ -1,9 +1,8 @@
 pcss_directory = /trombone1/home/dbarkan/pcss/
-home_test_directory = %(pcss_directory)s/test/
-run_directory = %(home_test_directory)s/runs/
+run_directory = %(pcss_directory)s/runs/
 run_name = develop
-fasta_file = %(home_test_directory)s/testInput/inputSequenceSingleton.txt
-rules_file = %(home_test_directory)s/testInput/peptideRulesFile
+fasta_file = %(pcss_directory)/data/inputSequences/ffSequencesFasta.txt
+rules_file = %(pcss_directory)/data/peptideRulesFile
 peptide_length = 8
 root_disopred_dir = %(pcss_directory)s/data/features/disopredResults/
 root_psipred_dir = %(pcss_directory)s/data/features/psipredResults/

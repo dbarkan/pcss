@@ -1,10 +1,10 @@
-pcss_directory = /Users/dbarkan/Documents/UCSF/PCSS/pcss/
+pcss_directory = /trombone1/home/dbarkan/pcss/
 application_set_file_name = svm_application_set
 training_set_file_name = svm_training_set
 test_set_file_name = svm_test_set
 feature_order = peptide_sequence,disopred_score_feature,psipred_score_feature,dssp_structure,dssp_accessibility 
-svm_classify_command = %(pcss_directory)s/bin/svm_classify_mac
-svm_train_command = %(pcss_directory)s/bin/svm_learn_mac
+svm_classify_command = %(pcss_directory)s/bin/svm_classify_x64
+svm_train_command = %(pcss_directory)s/bin/svm_learn_x64
 training_new_model_name = trainingSvmModel
 application_set_output_file_name = svmApplicationResults
 benchmark_result_file_suffix = benchmarkScores.txt

@@ -15,9 +15,12 @@ class TestCluster(unittest.TestCase):
         self.pcssConfig['fasta_file'] = os.path.join(self.pcssConfig["pcss_directory"], "data", "inputSequences", "ffSequencesFasta.txt")
 
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        self.runner.setJobDirectory(os.path.join(self.runner.pcssConfig["run_directory"], "developClusterJob"))
         seqDivider = pcssCluster.SeqDivider(self.runner)
-        seqDivider.divideSeqsFromFasta(self.pcssConfig['fasta_file'])
-        seqDivider.makeBaseSgeScript()
+        seqDivider.divideSeqsFromFasta()
+        
+        seqDivider.makeFullSgeScript()
 
 if __name__ == '__main__':
     unittest.main()
+

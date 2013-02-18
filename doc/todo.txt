@@ -1,10 +1,27 @@
 big things to do:
-python 2.7 on netapp if possible
-dynamically create config spec
-local param on_cluster = False
-copy output file when done, test to see if it gets copied if dumb expcetiop
 
-test cluster genration script
+create production cluster mode and test everything out of there instead of out of test
+create regression test for test cluster -- at least check the script against expected
+
+python 2.7 on netapp if possible
+
+have checks to make sure run_disopred_command has all files it needs. Split the command, and check for existence of the command itself and everhting after
+same for psipred
+
+git makes me change parameters every time I switch and commit. any way around this?
+
+had a case where I put the wrong run_disopred_Command lcoation in and the internalErrors.out wrote "no such file or directory" -- possible to get the actual name of the file it is looking for and put that in the error output too?
+
+merging:
+make sure we have column row as first row
+check for error file
+maybe check to make sure we got a result for all input
+deal wtih no peptides parsed, other protein error
+use annotatin file writer to get columns header?
+change annotation file writer to write to the file that I give it. right now jus changing its ouptut fh. 
+
+
+
 setup cluster script generator for training iterations
 setup executable for training iterations
 setup cluster script generator for svm annotation pipeline(s) -- might need multiple

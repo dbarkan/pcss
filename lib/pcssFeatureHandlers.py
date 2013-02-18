@@ -54,6 +54,7 @@ class PsipredFileHandler(SequenceFeatureFileHandler):
         self.pdh = pdh
         self.pcssConfig = pcssConfig
         self.name = "psipred"
+        
 
     def getName(self):
         return self.name
@@ -94,7 +95,11 @@ class SequenceFeatureRunner:
     def runSequenceSubprocess(self, pcssProtein, cwd):
         """Run system command that runs disopred / psipred algorithm"""
         fastaFile = pcssProtein.writeSequenceToFasta(cwd)
-        output = self.sfh.pdh.runSubprocess([self.sfh.sequenceCmd, fastaFile], checkStdError=False)
+        print "running command %s" % self.sfh.sequenceCmd
+        commandList = self.sfh.sequenceCmd.split(" ")
+        commandList.append(fastaFile)
+        
+        output = self.sfh.pdh.runSubprocess(commandList, checkStdError=False)
         
         outputFile = self.getSequenceFeatureOutputFile(pcssProtein)
         if (not os.path.exists(outputFile)):

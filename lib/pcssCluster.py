@@ -30,17 +30,34 @@ class SeqDivider:
         self.seqBatchCount = len(seqGroupList)
         return seqGroupList
 
-    def getSequenceTaskList(self):
+    def getSequenceTaskListString(self):
         taskList = []
         for i in range(self.seqBatchCount):
             taskList.append(str(i))
         return " ".join(taskList)
-                
+ 
+    def mergeResults(self):
+        fastaFile = self.pcssRunner.pcssConfig['fasta_file']
+        seqGroupList = self.getFastaGroupList(fastaFile)
+
+        seqBatchDirectory = self.pcssRunner.getSeqBatchDirectory()
+        allProteins = []
+        for (i, nextGroup) in enumerate(seqGroupLisnt):
+            subDirName = self.getSeqBatchSubDirectoryName(i)
+            subOutputFile = os.path.join(subDirName, self.pcssRunner.internalConfig["annotation_output_file"])
+            reader = pcssIO.AnnotationFileReader(self)
+            reader.readAnnotationFile(subOutputFile)
+            proteins = reader.getProteins()
+            allProteins += proteins
+        
+        afw = pcssIO.AnnotationFileWriter(self.pcssRunner)
+        afw.writeAllOutput(allProteins)
 
     #when we get here, we have fasta file and unannotated sequences. 
-    def divideSeqsFromFasta(self, fastaFile):
+    def divideSeqsFromFasta(self):
+        fastaFile = self.pcssRunner.pcssConfig['fasta_file']
         seqGroupList = self.getFastaGroupList(fastaFile)
-        
+
         seqBatchDirectory = self.pcssRunner.getSeqBatchDirectory()
         
         for (i, nextGroup) in enumerate(seqGroupList):
@@ -61,7 +78,8 @@ class SeqDivider:
         pcssCopy["fasta_file"] =  self.getSeqBatchFileName(i)
         pcssCopy["run_name"] = str(i)
         pcssCopy["run_directory"] = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["seq_batch_directory"])
-        
+        pcssCopy["on_cluster"] = False
+
         subDirectoryName = self.getSeqBatchSubDirectoryName(i)
         pcssCopy.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_parameter_file_name"])
         pcssCopy.write()
@@ -91,9 +109,37 @@ class SeqDivider:
             fh.write("%s\n" % str(seqRecord.seq))
         fh.close()
         
+    def makeFullSgeScript(self):
+        script = self.makeClusterHeaderCommands()
+        script += self.makeBaseSgeScript()
+        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile("develop_cluster_script.sh")
+        scriptFh = open(scriptOutputFile, 'w')
+        scriptFh.write(script)
+        scriptFh.close()
+        
+    def makeClusterHeaderCommands(self):
+
+        taskCount = self.seqBatchCount
+        script = """
+#!/bin/tcsh
+#$ -S /bin/tcsh                    
+#$ -o clusterOutput.txt            
+#$ -e clusterError.txt             
+#$ -cwd                            
+#$ -r y                            
+#$ -j y                            
+#$ -l mem_free=1G                  
+#$ -l arch=linux-x64               
+#$ -l netapp=1G,scratch=1G         
+#$ -l h_rt=24:00:00                
+#$ -t 1-%(taskCount)s
+
+""" %locals()
+        return script
+
     def makeBaseSgeScript(self):
 
-        taskList = self.getSequenceTaskList()
+        taskList = self.getSequenceTaskListString()
 
         pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
         topLevelSeqBatchDir = self.getSeqBatchDirectory()
@@ -125,15 +171,13 @@ pwd
 set PARAMETER_FILE_NAME="%(topLevelSeqBatchDir)s/$input/%(parameterFileName)s"
 
 setenv PYTHONPATH $PCSS_BASE_DIRECTORY/lib
-python $PCSS_BASE_DIRECTORY/bin/%(modelPipelineScriptName)s --parameterFileName $PARAMETER_FILE_NAME  > & $MODEL_OUTPUT_FILE_NAME
+python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(modelPipelineScriptName)s $PARAMETER_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
+
+cp $MODEL_OUTPUT_FILE_NAME "%(topLevelSeqBatchDir)s/$input/"
 
 rm -r $NODE_HOME_DIR/
 """ %locals()
 
-        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile("develop_cluster_script.sh")
-        scriptFh = open(scriptOutputFile, 'w')
-        scriptFh.write(script)
-        scriptFh.close()
-
         return script
+
 
