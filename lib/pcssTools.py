@@ -50,7 +50,6 @@ def split_len(seq, length):
     return [seq[i:i+length] for i in range(0, len(seq), length)]
 
 def fileExists(fileName):
-
     if (not os.path.exists(fileName)):
         raise ValidateError("FileName %s does not exist" % fileName)
     return fileName
@@ -211,6 +210,9 @@ class PcssRunner:
         afw = pcssIO.AnnotationFileWriter(self)
         afw.writeAllOutput(self.proteins)
 
+
+
+
 class PcssApplicationClusterRunner(PcssRunner):
     def executePipeline(self):
         try:
@@ -235,6 +237,55 @@ class PcssApplicationClusterRunner(PcssRunner):
         except Exception as e:
             print e
             self.writeInternalErrorFile(e)
+
+class PcssTrainingAnnotationClusterRunner(PcssRunner):
+    def executePipeline(self):
+        try:
+            
+            self.setJobDirectory(os.path.join(self.pcssConfig["run_directory"], "trainingAnnotation"))
+
+            seqDivider = pcssCluster.SeqDivider(self)
+            
+            seqDivider.divideSeqsFromFasta()
+        
+            seqDivider.makeFullSgeScript()
+            
+        except pcssErrors.PcssGlobalException as pge:
+            print pge.msg
+            tb = traceback.format_exc()
+            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
+            self.writePcssErrorFile(pge.msg + "\n" + tb)
+
+        except pcssErrors.ErrorExistsException:
+            return
+        
+        except Exception as e:
+            print e
+            self.writeInternalErrorFile(e)
+
+class PcssFinalizeApplicationClusterRunner(PcssRunner):
+    def executePipeline(self):
+        try:
+            
+            self.setJobDirectory(os.path.join(self.pcssConfig["run_directory"], "developClusterJob"))
+
+            seqDivider = pcssCluster.SeqDivider(self)
+
+            seqDivider.mergeResults()
+        
+        except pcssErrors.PcssGlobalException as pge:
+            print pge.msg
+            tb = traceback.format_exc()
+            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
+            self.writePcssErrorFile(pge.msg + "\n" + tb)
+
+        except pcssErrors.ErrorExistsException:
+            return
+        
+        except Exception as e:
+            print e
+            self.writeInternalErrorFile(e)
+
 
 class SvmApplicationRunner(PcssRunner):
     def runSvm(self):
@@ -482,6 +533,7 @@ class PcssDirectoryHandler:
 
 
     def getPcssErrorFile(self):
+        
         return self.getFullOutputFile(self.internalConfig["pcss_error_output_file"])
 
     def getInternalErrorFile(self):

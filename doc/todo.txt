@@ -1,5 +1,13 @@
 big things to do:
 
+have the runnrs set the job directory dynamically (currently hardcoded); need to think about how it will get that
+info when it's on the webserver. 
+will also need to have runners know whether they are webserver or not, and if they are, don't include cluster header
+
+see if training annotation needs peptide length param or not
+
+currently svmApplication on cluster param is false; probably should be true? need more complete workflow
+
 create production cluster mode and test everything out of there instead of out of test
 create regression test for test cluster -- at least check the script against expected
 
@@ -25,6 +33,7 @@ maybe check to make sure we got a result for all input
 deal wtih no peptides parsed, other protein error
 use annotatin file writer to get columns header?
 change annotation file writer to write to the file that I give it. right now jus changing its ouptut fh. 
+
 
 
 setup cluster script generator for training iterations

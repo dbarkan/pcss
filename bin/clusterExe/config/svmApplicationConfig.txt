@@ -1,7 +1,7 @@
-pcss_directory = /trombone1/home/dbarkan/pcss/
+pcss_directory = /Users/dbarkan/Documents/UCSF/PCSS/pcss/
 run_directory = %(pcss_directory)s/runs/
 run_name = svmApplicationCluster
-fasta_file = %(pcss_directory)s/data/inputSequences/ffSequencesFasta.txt
+fasta_file = %(pcss_directory)s/data/inputSequences/ffDefinedInputFasta.txt
 rules_file = %(pcss_directory)s/data/peptideRulesFile
 peptide_length = 8
 root_disopred_dir = %(pcss_directory)s/data/features/disopredResults/

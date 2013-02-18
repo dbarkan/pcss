@@ -2,6 +2,7 @@ import sys
 import os
 from Bio import SeqIO
 import itertools
+import pcssIO
 import pcssModels
 import pcssTools
 import copy
@@ -45,7 +46,7 @@ class SeqDivider:
         for (i, nextGroup) in enumerate(seqGroupList):
             subDirName = self.getSeqBatchSubDirectoryName(i)
             subOutputFile = os.path.join(subDirName, self.pcssRunner.internalConfig["annotation_output_file"])
-            reader = pcssIO.AnnotationFileReader(self)
+            reader = pcssIO.AnnotationFileReader(self.pcssRunner)
             reader.readAnnotationFile(subOutputFile)
             proteins = reader.getProteins()
             allProteins += proteins

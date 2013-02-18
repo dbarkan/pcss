@@ -1,8 +1,8 @@
 seq_id	protein	False	Modbase Sequence ID	string	input,output
 uniprot_id	protein	True	Uniprot ID	string	input,output
-svm_score	peptide	True	SVM Score	string	output
-svm_tpr	peptide	True	SVM True Positive Rate	string	output
-svm_fpr	peptide	True	SVM False Positive Rate	string	output
+svm_score	peptide	True	SVM Score	StringAttribute	input,output
+svm_tpr	peptide	True	SVM True Positive Rate	StringAttribute	input,output
+svm_fpr	peptide	True	SVM False Positive Rate	StringAttribute	input,output
 model_id	model	True	Modbase Model ID	string	input,output
 protein_length	protein	True	Protein Length	string	input,output
 peptide_start	peptide	False	Peptide Start Position	StringAttribute	input,output
