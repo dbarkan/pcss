@@ -1,4 +1,4 @@
-pcss_directory = /Users/dbarkan/Documents/UCSF/PCSS/pcss/
+pcss_directory = /trombone1/home/dbarkan/pcss/
 run_directory = %(pcss_directory)s/runs/
 run_name = svmTraining
 fasta_file = %(pcss_directory)s/data/inputSequences/ffDefinedInputFasta.txt
@@ -19,3 +19,4 @@ internal_config_file = %(pcss_directory)s/data/config/internalConfigFile.txt
 internal_config_spec_file = %(pcss_directory)s/data/config/internalConfigSpec.txt
 peptide_importer_type = defined
 on_cluster = False
+

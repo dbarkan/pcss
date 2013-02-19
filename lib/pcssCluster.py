@@ -110,9 +110,18 @@ class SeqDivider:
             fh.write("%s\n" % str(seqRecord.seq))
         fh.close()
         
-    def makeFullSgeScript(self):
+    def makeFullSvmApplicationSgeScript(self):
+        scriptName = self.pcssRunner.internalConfig["model_pipeline_script_name"]
+        self.makeFullSgeScript(scriptName)
+
+    def makeFullTrainingAnnotationSgeScript(self):
+        scriptName = self.pcssRunner.internalConfig["svm_training_annotation_script_name"]
+        self.makeFullSgeScript(scriptName)
+
+    def makeFullSgeScript(self, commandName):
+
         script = self.makeClusterHeaderCommands()
-        script += self.makeBaseSgeScript()
+        script += self.makeBaseSgeScript(commandName)
         scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile("develop_cluster_script.sh")
         scriptFh = open(scriptOutputFile, 'w')
         scriptFh.write(script)
@@ -138,7 +147,7 @@ class SeqDivider:
 """ %locals()
         return script
 
-    def makeBaseSgeScript(self):
+    def makeBaseSgeScript(self, commandName):
 
         taskList = self.getSequenceTaskListString()
 
@@ -148,7 +157,6 @@ class SeqDivider:
         parameterFileName = self.pcssRunner.internalConfig["seq_batch_parameter_file_name"]
         modelOutputFileName = self.pcssRunner.internalConfig["cluster_stdout_file"]
         nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
-        modelPipelineScriptName = self.pcssRunner.internalConfig["model_pipeline_script_name"]
         
         taskListString = " ".join(taskList)
 
@@ -172,7 +180,7 @@ pwd
 set PARAMETER_FILE_NAME="%(topLevelSeqBatchDir)s/$input/%(parameterFileName)s"
 
 setenv PYTHONPATH $PCSS_BASE_DIRECTORY/lib
-python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(modelPipelineScriptName)s $PARAMETER_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
+python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(commandName)s $PARAMETER_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
 
 cp $MODEL_OUTPUT_FILE_NAME "%(topLevelSeqBatchDir)s/$input/"
 

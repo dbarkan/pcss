@@ -1,4 +1,4 @@
-pcss_directory = /Users/dbarkan/Documents/UCSF/PCSS/pcss/
+pcss_directory = /trombone1/home/dbarkan/pcss/
 application_set_file_name = svm_application_set
 training_set_file_name = svm_training_set
 test_set_file_name = svm_test_set
@@ -32,3 +32,4 @@ netapp_lib_directory = %(netapp_home_directory)s/lib
 cluster_stdout_file = clusterOutput.txt
 cluster_pipeline_directory = /scratch/peptide
 model_pipeline_script_name = svmApplicationScript.py
+svm_training_annotation_script_name = svmTrainingAnnotationScript.py

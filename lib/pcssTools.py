@@ -223,7 +223,7 @@ class PcssApplicationClusterRunner(PcssRunner):
 
             seqDivider.divideSeqsFromFasta()
         
-            seqDivider.makeFullSgeScript()
+            seqDivider.makeFullSvmApplicationSgeScript()
             
         except pcssErrors.PcssGlobalException as pge:
             print pge.msg
@@ -247,8 +247,8 @@ class PcssTrainingAnnotationClusterRunner(PcssRunner):
             seqDivider = pcssCluster.SeqDivider(self)
             
             seqDivider.divideSeqsFromFasta()
-        
-            seqDivider.makeFullSgeScript()
+            
+            seqDivider.makeFullTrainingAnnotationSgeScript()
             
         except pcssErrors.PcssGlobalException as pge:
             print pge.msg
