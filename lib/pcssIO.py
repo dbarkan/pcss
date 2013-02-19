@@ -65,7 +65,7 @@ class DefinedPeptideImporter:
 
     def __init__(self, pcssRunner):
 
-        self.rules = ParsingRules(pcssRunner.pcssConfig['rules_file'])
+        
         self.pcssRunner = pcssRunner
 
     def readInputFile(self, proteinFastaFile):
