@@ -238,6 +238,30 @@ class PcssApplicationClusterRunner(PcssRunner):
             print e
             self.writeInternalErrorFile(e)
 
+class PcssTrainingBenchmarkClusterRunner(PcssRunner):
+
+    def executePipeline(self):
+        try:
+            tcb =  pcssCluster.ClusterBenchmarker(self)
+            
+            tcb.prepareTrainingBenchmarkRun()
+            
+            tcb.makeFullTrainingBenchmarkScript()
+            
+        except pcssErrors.PcssGlobalException as pge:
+            print pge.msg
+            tb = traceback.format_exc()
+            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
+            self.writePcssErrorFile(pge.msg + "\n" + tb)
+
+        except pcssErrors.ErrorExistsException:
+            return
+        
+        except Exception as e:
+            print e
+            self.writeInternalErrorFile(e)
+    
+
 class PcssTrainingAnnotationClusterRunner(PcssRunner):
     def executePipeline(self):
         try:
@@ -263,7 +287,7 @@ class PcssTrainingAnnotationClusterRunner(PcssRunner):
             print e
             self.writeInternalErrorFile(e)
 
-class PcssFinalizeApplicationClusterRunner(PcssRunner):
+class FinalizeApplicationClusterRunner(PcssRunner):
     def executePipeline(self):
         try:
             
@@ -271,7 +295,7 @@ class PcssFinalizeApplicationClusterRunner(PcssRunner):
 
             seqDivider = pcssCluster.SeqDivider(self)
 
-            seqDivider.mergeResults()
+            seqDivider.mergeSvmApplicationResults()
         
         except pcssErrors.PcssGlobalException as pge:
             print pge.msg
@@ -285,6 +309,28 @@ class PcssFinalizeApplicationClusterRunner(PcssRunner):
         except Exception as e:
             print e
             self.writeInternalErrorFile(e)
+
+
+class FinalizeTrainingAnnotationClusterRunner(PcssRunner):
+    def executePipeline(self):
+        try:
+            seqDivider = pcssCluster.SeqDivider(self)
+
+            seqDivider.mergeSvmApplicationResults()
+        
+        except pcssErrors.PcssGlobalException as pge:
+            print pge.msg
+            tb = traceback.format_exc()
+            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
+            self.writePcssErrorFile(pge.msg + "\n" + tb)
+
+        except pcssErrors.ErrorExistsException:
+            return
+        
+        except Exception as e:
+            print e
+            self.writeInternalErrorFile(e)
+
 
 
 class SvmApplicationRunner(PcssRunner):

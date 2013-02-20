@@ -19,7 +19,7 @@ class TestCluster(unittest.TestCase):
         seqDivider = pcssCluster.SeqDivider(self.runner)
         seqDivider.divideSeqsFromFasta()
         
-        seqDivider.makeFullSgeScript()
+        seqDivider.csg.makeFullSgeScript() #needs update
 
 if __name__ == '__main__':
     unittest.main()

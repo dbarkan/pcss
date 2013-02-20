@@ -6,12 +6,21 @@ have the runnrs set the job directory dynamically (currently hardcoded); need to
 info when it's on the webserver. 
 will also need to have runners know whether they are webserver or not, and if they are, don't include cluster header
 
+consider refactor of clusterScriptGenerator; don't like having to pass so many parameters and don't know how useful it is to be shared across different contexts
+
 see if training annotation needs peptide length param or not
 
 currently svmApplication on cluster param is false; probably should be true? need more complete workflow
 
 create production cluster mode and test everything out of there instead of out of test
 create regression test for test cluster -- at least check the script against expected
+
+ClusterBenchmarker should check to see if input_annotation_file_name exists
+
+try to have names for runners and scripts all be the same -- ie, TrainingSvm and TrainingBenchmarker are the same but different for cluster vs runner nanme
+config spec entries for user_config_spec, svm_training_parameters (maybe go through all configs and make config spec)
+
+right now pcssRunner makes its own modelHandler, but that isn't needed for training benchmark. Can that be moved to things that need models only and then can take parameters out?
 
 python 2.7 on netapp if possible
 

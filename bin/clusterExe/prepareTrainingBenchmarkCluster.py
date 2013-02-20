@@ -11,6 +11,6 @@ tempPcssConfig = configobj.ConfigObj(configFileName)
 configSpecFile = tempPcssConfig["user_config_spec_file"]
 
 pcssConfig = configobj.ConfigObj(configFileName, configspec=configSpecFile)
-runner = pcssTools.FinalizeApplicationClusterRunner(pcssConfig)
+runner = pcssTools.PcssTrainingBenchmarkClusterRunner(pcssConfig)
 
 runner.execute()
