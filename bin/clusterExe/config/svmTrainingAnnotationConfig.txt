@@ -18,5 +18,5 @@ user_config_spec_file = %(pcss_directory)s/data/config/userTrainingAnnotationCon
 internal_config_file = %(pcss_directory)s/data/config/internalConfigFile.txt
 internal_config_spec_file = %(pcss_directory)s/data/config/internalConfigSpec.txt
 peptide_importer_type = defined
-on_cluster = False
+using_web_server = False
 

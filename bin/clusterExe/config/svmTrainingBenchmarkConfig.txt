@@ -7,11 +7,8 @@ model_run_info = %(pcss_directory)s/data/models/modelRunInfo.txt
 user_config_spec_file = %(pcss_directory)s/data/config/userTrainingBenchmarkConfigSpec.txt
 internal_config_file = %(pcss_directory)s/data/config/internalConfigFile.txt
 internal_config_spec_file = %(pcss_directory)s/data/config/internalConfigSpec.txt
-on_cluster = False
+using_web_server = False
 training_iterations = 5
 jackknife_fraction = .1
 svm_training_gamma = 0.01
 svm_training_c = 10
-
-
-

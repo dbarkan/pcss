@@ -7,5 +7,5 @@ attribute_file_name = file()
 internal_config_file = file()
 internal_config_spec_file = file()
 user_config_spec_file = file()
-on_cluster = boolean()
+using_web_server = boolean()
 

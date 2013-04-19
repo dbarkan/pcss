@@ -27,4 +27,4 @@ training_iterations = 5
 jackknife_fraction = .1
 svm_training_gamma = 0.01
 svm_training_c = 10
-on_cluster = False
+using_web_server = False

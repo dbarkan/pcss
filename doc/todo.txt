@@ -1,43 +1,42 @@
-big things to do:
+next big things:
+make sure tests are working
+make sure I am where I think I am
+get it so it works out of the box
 
+add more tests / continue on below work
+integrate into web server -- back end only
+web server front end refactor
+
+
+web server
+update job directory logic when get to web server; think we might have to change it across different steps of the server (preprocess vs run)
+factor out cluster header commands using on_web_server param after seeing what web server provides
+create good benchmark situation for web server regression
+web server back end -- see if I can get it to work without changing front end
+web server front end
+
+test finalize svm application
+
+exception handling for pcss cluster errors
+
+name changes
 change "model_pipeline_script_name" param name, doesn't make any sense
-
-have the runnrs set the job directory dynamically (currently hardcoded); need to think about how it will get that
-info when it's on the webserver. 
-will also need to have runners know whether they are webserver or not, and if they are, don't include cluster header
-
-consider refactor of clusterScriptGenerator; don't like having to pass so many parameters and don't know how useful it is to be shared across different contexts
-
-see if training annotation needs peptide length param or not
-
-currently svmApplication on cluster param is false; probably should be true? need more complete workflow
-
-create production cluster mode and test everything out of there instead of out of test
-create regression test for test cluster -- at least check the script against expected
-
-ClusterBenchmarker should check to see if input_annotation_file_name exists
-
+parameterize cluster script names
+better value name for model aoutput file than clusterOutput.txt
 try to have names for runners and scripts all be the same -- ie, TrainingSvm and TrainingBenchmarker are the same but different for cluster vs runner nanme
-config spec entries for user_config_spec, svm_training_parameters (maybe go through all configs and make config spec)
+take out 'script' from actual command name
+have seqBatchDirectory and seqBatchFilePrefix be the same as in previous
+maybe have subdirectories (1, 2, etc.) have seq batch prefix too -- was that the case before?
 
+
+refactoring
+consider refactor of clusterScriptGenerator; don't like having to pass so many parameters and don't know how useful it is to be shared across different contexts
 right now pcssRunner makes its own modelHandler, but that isn't needed for training benchmark. Can that be moved to things that need models only and then can take parameters out?
 
-python 2.7 on netapp if possible
-
+testing / errros
 have checks to make sure run_disopred_command has all files it needs. Split the command, and check for existence of the command itself and everhting after
 same for psipred
-
-git makes me change parameters every time I switch and commit. any way around this?
-
 had a case where I put the wrong run_disopred_Command lcoation in and the internalErrors.out wrote "no such file or directory" -- possible to get the actual name of the file it is looking for and put that in the error output too?
-
-next:
-implement training annotation using that too, finalize everything for that
-move training annotation to cluster and test
-all training benchmarker
-
-
-
 merging:
 make sure we have column row as first row
 check for error file
@@ -45,57 +44,15 @@ maybe check to make sure we got a result for all input
 deal wtih no peptides parsed, other protein error
 use annotatin file writer to get columns header?
 change annotation file writer to write to the file that I give it. right now jus changing its ouptut fh. 
-
-
-
-setup cluster script generator for training iterations
-setup executable for training iterations
-setup cluster script generator for svm annotation pipeline(s) -- might need multiple
-setup executable for svm annotation pipelines(s)
-create good benchmark situation for web server regression
-web server back end -- see if I can get it to work without changing front end
-web server front end
-
-
-SEQ DIVIDER
 read back in sequences that were written to different directories and test they are 1:1 with what was originally written
-have seqBatchDirectory and seqBatchFilePrefix be the same as in previous
-maybe have subdirectories (1, 2, etc.) have seq batch prefix too -- was that the case before?
 have something that says if output directory isn't set, throw error -- need to figure out at which point to do that
 test "del pcssCopy["run_name"]" in pcssCluster.py -- cases where it does and does not have
-consider changing "pcss_directory" to something else everywhere -- right now it is assumed that pcss_directory contains runs, bin, lib, data -- we don't
-want it to automatically assume that it contains runs. Should have pcss_source_directory which contains bin, lib, data, and pccs_run_directory which contains
-runs, and can be equal to pcss_source_directory for command line context
-      actually already do this -- it is called run_directory -- should be fine
 everywhere --- have recently added a lot of os.mkdir. Might need to add sleep until done.
 
-
-
-
-Next:
-add # commands to top of cluster script -- might have to have another param for 'webserver' which says whether these should be written
-make bin script that the cluster can run -- should just make runner and execute it.
-better git merge
-
-
-Two options: can copy everything over to node, run on node, copy everything back
-or 
-just CD to node and use it to process everything that is currently on netapp
-
-Going with the second one. The downside is that output directory would be specific to the context -- i.e., if we 
-are on cluster we would use one way to get full output file (which would use the subdirectory 1/2/3 name) and if
-we are not, we would use pipelineDirectory/runName. Other downside is we have to explicitly delete certain output files
-on netapp so they don't take up too much space -- previously we just deleted everything on the node and copied back selectively.
-
-The main thing is that the cluster head node directory, assuming we are still using the same overall peptideTools / peptideRunner base code, will have 
-to implement a different way to do 'getFullOutputFile' on cluster anyway, which uses the job directory for the web server. So it doesn't make too much sense
-to have the node preserve the canonical way of doing things but have separate code for the headnode; better to have everything go through the netapp (input and output)
-
-however can also have the node's cluster run directory be fulldirectory/seqBatches and run name be the number, and that way can use existing code but still not have to copy anything around. Then the head node would have 'head_node' parameter (or something) so its output files can be in job directory.
-
-
-presumably the head node could have completely different code for managing cluster stuff, that could be a future refactoring. It is fairly distinct
-from actually running any PCSS code. But it still needs to know file names and a lot of the parameter values that the pcss code knows. 
+misc
+have subdirectory for training on cluster for organization purposes
+see if training annotation needs peptide length param or not
+everything in previous code, esp errors
 
 
 
@@ -156,6 +113,9 @@ a couple spot checks on svm model
 would be great to see if current svm model is the same as a previous model in the perl code
 See what is using 1GB when run on 80 seqs -- see if I can find profiler
 all contexts: no peptides parsed for all input sequences. don't think it is an issue but just in case
+
+ALL
+dynamically find config spec file in all runners or executables the same way I am doing it for cluster code
 
 REFACTORING
 consider moving svm classify command and svm learn command from internal to pcssConfig to avoid having to keep pcss_directory in that file
@@ -239,26 +199,6 @@ CONTEXT -- Training Annotation -- no input, all features output along with posit
 CONTEXT -- Training benchmarking -- input from file, output is the same as input. 
 	SUB CONTEXT: Single  CPU
 	SUB CONTEXT: Web Server phase 2, run on single cluster CPU
-
-Goals:
-Web server and cluster command line should get to the same point, not have to have any special code except input and output
-
-
-
-Cluster command line vs cluster web server
-cluster command line:
-run one script to prepare everything:
-1. divide sequences
-2. make cluster script
-3. make parameter file for the run on the node
-
-
-everything run out of bin, runs, lib
-
-
-
-
-
 
 CONTEXT -- Training benchmarking, peptides in memory -- no inpu, output is the same as above
 	SUB CONTEXT: Single CPU
@@ -350,7 +290,5 @@ make sure that features get peptides and proteins and fullproteins get protein s
 
 
 
-workflow:
-annotation
-	from server
+
 	

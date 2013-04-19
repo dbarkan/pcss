@@ -160,7 +160,6 @@ class PcssRunner:
     def setJobDirectory(self, directoryName):
         self.pdh.setJobDirectory(directoryName)
 
-
     def readProteins(self):
 
         peptideImporterType = self.pcssConfig["peptide_importer_type"]
@@ -216,9 +215,6 @@ class PcssRunner:
 class PcssApplicationClusterRunner(PcssRunner):
     def executePipeline(self):
         try:
-            
-            self.setJobDirectory(os.path.join(self.pcssConfig["run_directory"], "developClusterJob"))
-
             seqDivider = pcssCluster.SeqDivider(self)
 
             seqDivider.divideSeqsFromFasta()
@@ -265,9 +261,6 @@ class PcssTrainingBenchmarkClusterRunner(PcssRunner):
 class PcssTrainingAnnotationClusterRunner(PcssRunner):
     def executePipeline(self):
         try:
-            
-            self.setJobDirectory(os.path.join(self.pcssConfig["run_directory"], "trainingAnnotation"))
-
             seqDivider = pcssCluster.SeqDivider(self)
             
             seqDivider.divideSeqsFromFasta()
@@ -291,8 +284,6 @@ class FinalizeApplicationClusterRunner(PcssRunner):
     def executePipeline(self):
         try:
             
-            self.setJobDirectory(os.path.join(self.pcssConfig["run_directory"], "developClusterJob"))
-
             seqDivider = pcssCluster.SeqDivider(self)
 
             seqDivider.mergeSvmApplicationResults()
@@ -310,13 +301,12 @@ class FinalizeApplicationClusterRunner(PcssRunner):
             print e
             self.writeInternalErrorFile(e)
 
-
 class FinalizeTrainingAnnotationClusterRunner(PcssRunner):
     def executePipeline(self):
         try:
             seqDivider = pcssCluster.SeqDivider(self)
 
-            seqDivider.mergeSvmApplicationResults()
+            seqDivider.mergeTrainingAnnotationResults()
         
         except pcssErrors.PcssGlobalException as pge:
             print pge.msg
@@ -590,14 +580,17 @@ class PcssDirectoryHandler:
         where each variable specified in the parameter file. Thus if the user wants to run a program twice with different input, simply change
         the run_name parameter and nothing from previous runs will be overwritten
         """
-        if (not self.pcssConfig["on_cluster"]):  #consider changing to 'head_node'
+        if (not self.pcssConfig["using_web_server"]):  #consider changing to 'head_node'
             outputDir = self.pcssConfig["run_directory"]
             runName = self.pcssConfig["run_name"]
             fullOutputDir = os.path.join(outputDir, runName)
             self.fullOutputDir =  os.path.join(outputDir, runName)
             if (not os.path.exists(self.fullOutputDir)):
                 os.mkdir(self.fullOutputDir)
+        else:
+            self.fullOutputDir = self.pcssConfig["job_directory"]
 
+            
     def getJobDirectory(self):
         return self.jobDirectory
 
@@ -612,7 +605,7 @@ class PcssDirectoryHandler:
 
     def getFullOutputFile(self, fileName):
         """Return full path fileName where the path is the full run directory for this run"""
-        if (self.pcssConfig["on_cluster"]): #consider changing to head_node
+        if (self.pcssConfig["using_web_server"]): #consider changing to head_node
             return os.path.join(self.jobDirectory, fileName)
         else:
             return os.path.join(self.fullOutputDir, fileName)

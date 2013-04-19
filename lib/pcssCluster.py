@@ -18,7 +18,6 @@ class SeqDivider:
 
         self.pdh = pcssRunner.pdh
         self.pcssRunner = pcssRunner
-        self.pcssRunner.setJobDirectory(os.path.join(self.pcssRunner.pcssConfig["run_directory"], "developClusterJob"))
         self.subDirectories = []
         self.csg = ClusterScriptGenerator(pcssRunner)
 
@@ -101,7 +100,7 @@ class SeqDivider:
         pcssCopy["fasta_file"] =  self.getSeqBatchFileName(i)
         pcssCopy["run_name"] = str(i)
         pcssCopy["run_directory"] = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["seq_batch_directory"])
-        pcssCopy["on_cluster"] = False
+        pcssCopy["using_web_server"] = False
 
         subDirectoryName = self.getSeqBatchSubDirectoryName(i)
         pcssCopy.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_parameter_file_name"])
@@ -176,7 +175,7 @@ class ClusterScriptGenerator:
         pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
                 
         parameterFileName = self.pcssRunner.internalConfig["seq_batch_parameter_file_name"]
-        modelOutputFileName = self.pcssRunner.internalConfig["cluster_stdout_file"]
+        modelOutputFileName = self.pcssRunner.internalConfig["cluster_stdout_file"] 
         nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
         
         taskListString = " ".join(taskList)
@@ -210,14 +209,12 @@ rm -r $NODE_HOME_DIR/
 
         return script
 
-
-
     def makeBaseBenchmarkSgeScript(self):
 
         pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
                 
         parameterFileName = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["benchmark_parameter_file_name"])
-        modelOutputFileName = self.pcssRunner.internalConfig["cluster_stdout_file"]
+        modelOutputFileName = self.pcssRunner.internalConfig["cluster_stdout_file"] + "_training"
         nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
         commandName = self.pcssRunner.internalConfig["svm_training_benchmark_script_name"]
 
@@ -258,13 +255,18 @@ class ClusterBenchmarker:
     def __init__(self, pcssRunner):
         self.pdh = pcssRunner.pdh
         self.pcssRunner = pcssRunner
-        self.pcssRunner.setJobDirectory(os.path.join(self.pcssRunner.pcssConfig["run_directory"], "benchmarkClusterJob"))
         self.csg = ClusterScriptGenerator(pcssRunner)
 
     def prepareTrainingBenchmarkRun(self):
         pcssCopy = copy.deepcopy(self.pcssRunner.pcssConfig)
         print "running cluster with output file %s" % self.pcssRunner.pdh.getFullOutputFile("")
-        pcssCopy["on_cluster"] = False
+        pcssCopy["using_web_server"] = False
+        inputAnnotationFileName = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["annotation_output_file"])
+        if (not os.path.exists(inputAnnotationFileName)):
+            msg = "Did not find input annotation file name %s\n" % inputAnnotationFileName
+            msg += "Please make sure this is file is in the run directory for this training benchmark run"
+            raise pcssErrors.PcssGlobalException(msg)
+            
         pcssCopy["input_annotation_file_name"] = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["annotation_output_file"])
         pcssCopy.filename = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["benchmark_parameter_file_name"])
         pcssCopy.write()
