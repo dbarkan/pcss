@@ -73,7 +73,21 @@ class PcssRunner:
 
     def execute(self):
         self.checkForErrors()
-        self.executePipeline()
+        try:
+            self.executePipeline()
+        except pcssErrors.PcssGlobalException as pge:
+            print pge.msg
+            tb = traceback.format_exc()
+            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
+            self.writePcssErrorFile(pge.msg + "\n" + tb)
+
+        except pcssErrors.ErrorExistsException:
+            return
+        
+        except Exception as e:
+            print "WRITING INTERNAL EXCPETION"
+            print e
+            self.writeInternalErrorFile(e)
 
     def validateConfig(self, config):
         validator = Validator({'file': fileExists})
@@ -117,8 +131,6 @@ class PcssRunner:
         return featureOrderList
 
     def writePcssErrorFile(self, message):
-
-
         errorFile = self.pdh.getPcssErrorFile()
         errorFh = open(errorFile, 'w')
         errorFh.write(self.internalConfig["keyword_pcss_error"] + "\n")
@@ -171,7 +183,6 @@ class PcssRunner:
             
         self.proteins = peptideImporter.readInputFile(self.pcssConfig['fasta_file'])
 
-
     def handleConfigError(self, results):
         msg = ""
         print "An error occurred when validating a configuration file. Please check the log file for more details."
@@ -209,120 +220,38 @@ class PcssRunner:
         afw = pcssIO.AnnotationFileWriter(self)
         afw.writeAllOutput(self.proteins)
 
-
-
-
-class PcssApplicationClusterRunner(PcssRunner):
+class SvmApplicationClusterRunner(PcssRunner):
     def executePipeline(self):
-        try:
-            seqDivider = pcssCluster.SeqDivider(self)
 
-            seqDivider.divideSeqsFromFasta()
+        seqDivider = pcssCluster.SeqDivider(self)
         
-            seqDivider.makeFullSvmApplicationSgeScript()
-            
-        except pcssErrors.PcssGlobalException as pge:
-            print pge.msg
-            tb = traceback.format_exc()
-            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
-            self.writePcssErrorFile(pge.msg + "\n" + tb)
-
-        except pcssErrors.ErrorExistsException:
-            return
+        seqDivider.divideSeqsFromFasta()
         
-        except Exception as e:
-            print e
-            self.writeInternalErrorFile(e)
+        seqDivider.makeFullSvmApplicationSgeScript()
 
-class PcssTrainingBenchmarkClusterRunner(PcssRunner):
+class TrainingBenchmarkClusterRunner(PcssRunner):
 
     def executePipeline(self):
-        try:
-            tcb =  pcssCluster.ClusterBenchmarker(self)
+        tcb =  pcssCluster.ClusterBenchmarker(self)
             
-            tcb.prepareTrainingBenchmarkRun()
+        tcb.prepareTrainingBenchmarkRun()
             
-            tcb.makeFullTrainingBenchmarkScript()
-            
-        except pcssErrors.PcssGlobalException as pge:
-            print pge.msg
-            tb = traceback.format_exc()
-            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
-            self.writePcssErrorFile(pge.msg + "\n" + tb)
-
-        except pcssErrors.ErrorExistsException:
-            return
+        tcb.makeFullTrainingBenchmarkScript()
         
-        except Exception as e:
-            print e
-            self.writeInternalErrorFile(e)
-    
-
-class PcssTrainingAnnotationClusterRunner(PcssRunner):
+class TrainingAnnotationClusterRunner(PcssRunner):
     def executePipeline(self):
-        try:
-            seqDivider = pcssCluster.SeqDivider(self)
+        seqDivider = pcssCluster.SeqDivider(self)
             
-            seqDivider.divideSeqsFromFasta()
+        seqDivider.divideSeqsFromFasta()
             
-            seqDivider.makeFullTrainingAnnotationSgeScript()
+        seqDivider.makeFullTrainingAnnotationSgeScript()
             
-        except pcssErrors.PcssGlobalException as pge:
-            print pge.msg
-            tb = traceback.format_exc()
-            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
-            self.writePcssErrorFile(pge.msg + "\n" + tb)
-
-        except pcssErrors.ErrorExistsException:
-            return
-        
-        except Exception as e:
-            print e
-            self.writeInternalErrorFile(e)
-
 class FinalizeApplicationClusterRunner(PcssRunner):
     def executePipeline(self):
-        try:
-            
-            seqDivider = pcssCluster.SeqDivider(self)
+        seqDivider = pcssCluster.SeqDivider(self)
 
-            seqDivider.mergeSvmApplicationResults()
+        seqDivider.mergeSvmApplicationResults()
         
-        except pcssErrors.PcssGlobalException as pge:
-            print pge.msg
-            tb = traceback.format_exc()
-            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
-            self.writePcssErrorFile(pge.msg + "\n" + tb)
-
-        except pcssErrors.ErrorExistsException:
-            return
-        
-        except Exception as e:
-            print e
-            self.writeInternalErrorFile(e)
-
-class FinalizeTrainingAnnotationClusterRunner(PcssRunner):
-    def executePipeline(self):
-        try:
-            seqDivider = pcssCluster.SeqDivider(self)
-
-            seqDivider.mergeTrainingAnnotationResults()
-        
-        except pcssErrors.PcssGlobalException as pge:
-            print pge.msg
-            tb = traceback.format_exc()
-            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
-            self.writePcssErrorFile(pge.msg + "\n" + tb)
-
-        except pcssErrors.ErrorExistsException:
-            return
-        
-        except Exception as e:
-            print e
-            self.writeInternalErrorFile(e)
-
-
-
 class SvmApplicationRunner(PcssRunner):
     def runSvm(self):
         self.appSvm = pcssSvm.ApplicationSvm(self)
@@ -332,30 +261,15 @@ class SvmApplicationRunner(PcssRunner):
         self.appSvm.readResultFile()
         self.appSvm.addScoresToPeptides()
 
-
-
 class SvmApplicationInputRunner(SvmApplicationRunner):
 
     def executePipeline(self):
-        try:
-            self.readSvmApplicationInput()
 
-            self.runSvm()
+        self.readSvmApplicationInput()
+
+        self.runSvm()
         
-            self.writeOutput()
-
-        except pcssErrors.PcssGlobalException as pge:
-            print pge.msg
-            tb = traceback.format_exc()
-            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
-            self.writePcssErrorFile(pge.msg + "\n" + tb)
-
-        except pcssErrors.ErrorExistsException:
-            return
-        
-        except Exception as e:
-            print e
-            self.writeInternalErrorFile(e)
+        self.writeOutput()
         
     def readSvmApplicationInput(self):
         self.readAnnotationFile()
@@ -365,72 +279,32 @@ class SvmApplicationInputRunner(SvmApplicationRunner):
 class SvmApplicationFeatureRunner(SvmApplicationRunner):
 
     def executePipeline(self):
+
+        self.readProteins()
+
+        self.addPeptideFeatures()
+
+        self.runSvm()
         
-        try:
-            self.readProteins()
-
-            self.addPeptideFeatures()
-
-            self.runSvm()
+        self.writeOutput()
         
-            self.writeOutput()
-
-        except pcssErrors.PcssGlobalException as pge:
-            print pge.msg
-            self.writePcssErrorFile(pge.msg)
-
-        except pcssErrors.ErrorExistsException:
-            return
-        
-        except Exception as e:
-            print e
-            self.writeInternalErrorFile(e)
-        
-
 class AnnotationRunner(PcssRunner):
 
-    def handleInternalException(PcssRunner, e):
-        self.writeInternalErrorFile(e)
-
     def executePipeline(self):
-        try:
+        self.readProteins()
 
-            self.readProteins()
-
-            self.addPeptideFeatures()
-
-            self.writeOutput()
-
-        except pcssErrors.PcssGlobalException as pge:
-
-            self.writePcssErrorFile(pge.msg)
+        self.addPeptideFeatures()
         
-        except Exception as e:
-
-            self.writeInternalErrorFile(e)
-
+        self.writeOutput()
         
-class SvmTrainingRunner(PcssRunner):
+class TrainingBenchmarkRunner(PcssRunner):
     def executePipeline(self):
-        try:
-            self.readAnnotationFile()
+
+        self.readAnnotationFile()
         
-            self.benchmark()
+        self.benchmark()
             
-            self.writeOutput()
-
-        except pcssErrors.ErrorExistsException:
-            return
-
-        except pcssErrors.PcssGlobalException as pge:
-            print pge.msg
-
-            tb = "none"
-            self.writePcssErrorFile(pge.msg + "\n" + tb)      
-
-        except Exception as e:
-            print e
-            self.writeInternalErrorFile(e)
+        self.writeOutput()
       
     def benchmark(self):
         
@@ -444,7 +318,6 @@ class SvmTrainingRunner(PcssRunner):
             benchmarker.readBenchmarkResults() #read result file
 
         benchmarker.processAllResults()
-
 
 class PcssModelHandler:
 

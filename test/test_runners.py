@@ -52,7 +52,7 @@ class TestRunner(unittest.TestCase):
     def test_svm_training_pcss_error(self):
         self.pcssConfig["input_annotation_file_name"] = os.path.join(self.pcssConfig["home_test_directory"],
                                                                      "testInput/ioErrors/missingColumnsFile.txt")
-        self.runner = pcssTools.SvmTrainingRunner(self.pcssConfig)
+        self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
         
         self.clearErrorFiles()
         self.runner.execute()
@@ -92,7 +92,7 @@ class TestRunner(unittest.TestCase):
 
     def test_svm_training_input_internal_error(self):
 
-        self.runner = pcssTools.SvmTrainingRunner(self.pcssConfig)
+        self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
         self.pcssConfig["jackknife_fraction"] = "fake"
         self.clearErrorFiles()
         self.runner.execute()
@@ -160,7 +160,7 @@ class TestRunner(unittest.TestCase):
     def test_training_svm_runner(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
         self.pcssConfig["input_annotation_file_name"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "svmTrainingAnnotationInput.txt")
-        self.runner = pcssTools.SvmTrainingRunner(self.pcssConfig)
+        self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
         #self.runner.internalConfig["make_random_test_set"] = False
         self.clearErrorFiles()
         self.runner.internalConfig["make_random_test_set"] = False

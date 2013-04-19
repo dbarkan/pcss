@@ -1,6 +1,6 @@
 pcss_directory = /trombone1/home/dbarkan/pcss/
 run_directory = %(pcss_directory)s/runs/
-run_name = svmTraining
+run_name = trainingCluster
 fasta_file = %(pcss_directory)s/data/inputSequences/ffDefinedInputFasta.txt
 peptide_length = 8
 root_disopred_dir = %(pcss_directory)s/data/features/disopredResults/
@@ -13,7 +13,7 @@ model_directory = %(pcss_directory)s/data/features/dssp/
 model_run_info = %(pcss_directory)s/data/models/modelRunInfo.txt
 best_model_attribute = no35
 dssp_executable = %(pcss_directory)s/bin/dsspcmbi
-attribute_file_name = %(pcss_directory)s/data/context/svmTrainingAttributes.txt
+attribute_file_name = %(pcss_directory)s/data/context/trainingFileAttributes.txt
 user_config_spec_file = %(pcss_directory)s/data/config/userTrainingAnnotationConfigSpec.txt
 internal_config_file = %(pcss_directory)s/data/config/internalConfigFile.txt
 internal_config_spec_file = %(pcss_directory)s/data/config/internalConfigSpec.txt

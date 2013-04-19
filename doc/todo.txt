@@ -1,11 +1,43 @@
-next big things:
-make sure tests are working
-make sure I am where I think I am
-get it so it works out of the box
+Next:
+clean up everything 
+      review stuff below
+      make sure errors are working and caught, try on cluster
+      synch file names for cluster and standard terminology for different contexts
+      	    attributes, config, bin, runners, etc.
+      maybe clean up directory structure      
+      maybe clean up tests but deprioritize for now
 
-add more tests / continue on below work
-integrate into web server -- back end only
-web server front end refactor
+
+run with big random dataset, all steps
+document
+make it work out of the box
+put into webserver backend
+webserver frontend
+continue through anything else below
+
+name changes
+try to have names for runners and scripts all be the same -- ie, TrainingSvm and TrainingBenchmarker are the same but different for cluster vs runner nanme
+have seqBatchDirectory and seqBatchFilePrefix be the same as in previous
+maybe have subdirectories (1, 2, etc.) have seq batch prefix too -- was that the case before?
+
+cluster prep and finalize scripts should have more clear error notifications and maybe stack traces printed (maybe can do that form pcss runner)
+
+naming:
+annotation
+svmApplicationFeatures -- calculates features and applies model
+svmApplicationInput -- reads results of annotation
+trainingAnnotation -- calculates features
+trainingBenchmark -- does benchmarking
+
+append cluster where necessary
+
+Figure out how to name FinalizeApplicationClusterRunner
+
+
+rename config files for cluster to have cluster in them
+
+Other classes only write them -- I think these are reading previous annotation and then applying SVM results to it
+      eg test_write_svm_file, reads input annotation, applies SVM
 
 
 web server
@@ -18,16 +50,6 @@ web server front end
 test finalize svm application
 
 exception handling for pcss cluster errors
-
-name changes
-change "model_pipeline_script_name" param name, doesn't make any sense
-parameterize cluster script names
-better value name for model aoutput file than clusterOutput.txt
-try to have names for runners and scripts all be the same -- ie, TrainingSvm and TrainingBenchmarker are the same but different for cluster vs runner nanme
-take out 'script' from actual command name
-have seqBatchDirectory and seqBatchFilePrefix be the same as in previous
-maybe have subdirectories (1, 2, etc.) have seq batch prefix too -- was that the case before?
-
 
 refactoring
 consider refactor of clusterScriptGenerator; don't like having to pass so many parameters and don't know how useful it is to be shared across different contexts

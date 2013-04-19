@@ -42,7 +42,7 @@ class SeqDivider:
         
         fastaFile = self.pcssRunner.pcssConfig['fasta_file']
         seqGroupList = self.getFastaGroupList(fastaFile)
-
+        print "merging application results"
         seqBatchDirectory = self.pcssRunner.getSeqBatchDirectory()
         allProteins = []
         for (i, nextGroup) in enumerate(seqGroupList):
@@ -132,17 +132,21 @@ class SeqDivider:
         fh.close()
 
     def makeFullSvmApplicationSgeScript(self):
-        scriptName = self.pcssRunner.internalConfig["model_pipeline_script_name"]
-        self.makeFullAnnotationSgeScript(scriptName)
+        nodeScriptName = self.pcssRunner.internalConfig["svm_application_node_script"]
+        shellScriptName = self.pcssRunner.internalConfig["svm_application_shell_script"]
+        outputFileName = self.pcssRunner.internalConfig["svm_application_stdout_file"]
+        self.makeFullAnnotationSgeScript(nodeScriptName, shellScriptName, outputFileName)
 
     def makeFullTrainingAnnotationSgeScript(self):
-        scriptName = self.pcssRunner.internalConfig["svm_training_annotation_script_name"]
-        self.makeFullAnnotationSgeScript(scriptName)
+        nodeScriptName = self.pcssRunner.internalConfig["training_annotation_node_script"]
+        shellScriptName = self.pcssRunner.internalConfig["training_annotation_shell_script"]
+        outputFileName = self.pcssRunner.internalConfig["training_annotation_stdout_file"]
+        self.makeFullAnnotationSgeScript(nodeScriptName, shellScriptName, outputFileName)       
 
-    def makeFullAnnotationSgeScript(self, commandName):
+    def makeFullAnnotationSgeScript(self, nodeScriptName, shellScriptName, outputFileName):
         script = self.csg.makeClusterHeaderCommands(self.seqBatchCount)
-        script += self.csg.makeBaseAnnotationSgeScript(self.getSequenceTaskListString(), self.getSeqBatchDirectory(), commandName)
-        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile("develop_cluster_script.sh")
+        script += self.csg.makeBaseAnnotationSgeScript(self.getSequenceTaskListString(), self.getSeqBatchDirectory(), nodeScriptName, outputFileName)
+        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile(shellScriptName)
         scriptFh = open(scriptOutputFile, 'w')
         scriptFh.write(script)
         scriptFh.close()
@@ -170,12 +174,11 @@ class ClusterScriptGenerator:
 """ %locals()
         return script
 
-    def makeBaseAnnotationSgeScript(self, taskList, seqBatchDir, commandName):
+    def makeBaseAnnotationSgeScript(self, taskList, seqBatchDir, commandName, outputFileName):
 
         pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
                 
         parameterFileName = self.pcssRunner.internalConfig["seq_batch_parameter_file_name"]
-        modelOutputFileName = self.pcssRunner.internalConfig["cluster_stdout_file"] 
         nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
         
         taskListString = " ".join(taskList)
@@ -184,7 +187,7 @@ class ClusterScriptGenerator:
 
 set PCSS_BASE_DIRECTORY="%(pcssBaseDirectory)s"
 
-set MODEL_OUTPUT_FILE_NAME="%(modelOutputFileName)s"
+set MODEL_OUTPUT_FILE_NAME="%(outputFileName)s"
 
 set tasks=( %(taskListString)s )
 set input=$tasks[$SGE_TASK_ID]
@@ -214,9 +217,9 @@ rm -r $NODE_HOME_DIR/
         pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
                 
         parameterFileName = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["benchmark_parameter_file_name"])
-        modelOutputFileName = self.pcssRunner.internalConfig["cluster_stdout_file"] + "_training"
+        modelOutputFileName = self.pcssRunner.internalConfig["training_benchmark_stdout_file"]
         nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
-        commandName = self.pcssRunner.internalConfig["svm_training_benchmark_script_name"]
+        commandName = self.pcssRunner.internalConfig["training_benchmark_node_script"]
 
         headNodeOutputDirectory = self.pcssRunner.pdh.getFullOutputFile("")
         
@@ -274,7 +277,7 @@ class ClusterBenchmarker:
     def makeFullTrainingBenchmarkScript(self):
         script = self.csg.makeClusterHeaderCommands(1)
         script += self.csg.makeBaseBenchmarkSgeScript()
-        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile("parameterize_benchmark_script.sh")
+        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig("training_benchmark_shell_script"))
         scriptFh = open(scriptOutputFile, 'w')
         scriptFh.write(script)
         scriptFh.close()

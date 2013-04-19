@@ -1,8 +1,8 @@
 pcss_directory = /trombone1/home/dbarkan/pcss/
 run_directory = %(pcss_directory)s/runs/
-run_name = svmTraining
+run_name = trainingCluster
 peptide_length = 8
-attribute_file_name = %(pcss_directory)s/data/context/svmTrainingAttributes.txt
+attribute_file_name = %(pcss_directory)s/data/context/trainingFileAttributes.txt
 model_run_info = %(pcss_directory)s/data/models/modelRunInfo.txt
 user_config_spec_file = %(pcss_directory)s/data/config/userTrainingBenchmarkConfigSpec.txt
 internal_config_file = %(pcss_directory)s/data/config/internalConfigFile.txt
