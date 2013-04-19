@@ -1,4 +1,10 @@
 Next:
+see why I am manually setting attribute file names in run cluster scripts even though they are presumably in the config file? Try to have them in once place, see if it can be config
+run everything start to finish on cluster
+clean up tests at least to match new cluster logic
+continue with more clean up stuff
+
+
 clean up everything 
       review stuff below
       make sure errors are working and caught, try on cluster
@@ -49,7 +55,7 @@ web server front end
 
 test finalize svm application
 
-exception handling for pcss cluster errors
+exception handling for pcss cluster errors -- right now error files etc. not getting copied back
 
 refactoring
 consider refactor of clusterScriptGenerator; don't like having to pass so many parameters and don't know how useful it is to be shared across different contexts
