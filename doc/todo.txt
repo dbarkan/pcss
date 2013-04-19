@@ -25,6 +25,7 @@ name changes
 try to have names for runners and scripts all be the same -- ie, TrainingSvm and TrainingBenchmarker are the same but different for cluster vs runner nanme
 have seqBatchDirectory and seqBatchFilePrefix be the same as in previous
 maybe have subdirectories (1, 2, etc.) have seq batch prefix too -- was that the case before?
+change annotationOutput file, maybe more specific to context
 
 cluster prep and finalize scripts should have more clear error notifications and maybe stack traces printed (maybe can do that form pcss runner)
 

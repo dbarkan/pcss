@@ -277,7 +277,7 @@ class ClusterBenchmarker:
     def makeFullTrainingBenchmarkScript(self):
         script = self.csg.makeClusterHeaderCommands(1)
         script += self.csg.makeBaseBenchmarkSgeScript()
-        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig("training_benchmark_shell_script"))
+        scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["training_benchmark_shell_script"])
         scriptFh = open(scriptOutputFile, 'w')
         scriptFh.write(script)
         scriptFh.close()
