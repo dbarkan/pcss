@@ -13,7 +13,6 @@ class TestPcssInfrastructure(unittest.TestCase):
         configSpecFile = "testConfig/testConfigSpec.txt"        
         pcssConfig = configobj.ConfigObj(configFile, configspec=configSpecFile)
         
-
         self.pcssRunner = pcssTools.PcssRunner(pcssConfig)
 
     def test_copy_file(self):
@@ -26,7 +25,6 @@ class TestPcssInfrastructure(unittest.TestCase):
         os.remove(os.path.join(destinationDir, sourceFile))
         self.assertRaises(pcssErrors.PcssShutilError, self.pcssRunner.pdh.copyFile, sourceDir + "fake", sourceFile, destinationDir)
         
-
     def test_move_file(self):
 
         sourceDir = "testFileOutput/infrastructure/sourceDir/"

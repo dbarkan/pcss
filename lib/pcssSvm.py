@@ -13,6 +13,16 @@ import pcssFeatureHandlers
 import collections
             
 
+class CompleteSvmGenerator:
+    def __init__(self, pcssRunner):
+        self.pcssRunner = pcssRunner
+
+    def createSvmModel(self, peptides):
+        self.trainingSvm = TrainingSvm(self.pcssRunner)
+        self.trainingSvm.setPeptides(peptides)
+        modelFile = self.pcssRunner.pdh.getUserModelFileName()
+        self.trainingSvm.writePeptidesToFile(modelFile)
+        
 
 class LeaveOneOutBenchmarker:
     def __init__(self, pcssRunner):
@@ -67,8 +77,6 @@ class LeaveOneOutBenchmarker:
             outputList = [nextBpst.fpr, nextBpst.tpr, nextBpst.score,  nextBpst.peptide.getAttributeOutputString("status"), 
                           nextBpst.negativeCount, nextBpst.positiveCount]
             resultFh.write("%s\n" % "\t".join(str(x) for x in outputList))
-        
-
 
 class SvmBenchmarker:
     def __init__(self, pcssRunner):
@@ -85,7 +93,6 @@ class SvmBenchmarker:
         print "got %s peptides" % len(peptides)
         self.benchmarkHandler = TrainingBenchmarkHandler(self.pcssRunner, peptides)
         self.benchmarkHandler.makeTrainingAndTestSets()
-
 
         print "%s positive training set, %s positive test set, %s negative training set, %s negative test set" % (len(self.benchmarkHandler.positiveTrainingSet),
                                                                                                                   len(self.benchmarkHandler.positiveTestSet),

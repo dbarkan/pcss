@@ -296,16 +296,42 @@ class AnnotationRunner(PcssRunner):
         self.addPeptideFeatures()
         
         self.writeOutput()
+
+class CompleteSvmRunner(PcssRunner):
+    def executePipeline(self):
+        self.readAnnotationFile()
         
+        self.createSvmModel()
+
+    def createSvmModel(self):
+        generator = pcssSvm.CompleteSvmGenerator(self)
+
+        generator.createSvmModel(getAllPeptides(self.reader.getProteins(), False))
+
+class LeaveOneOutBenchmarkRunner(PcssRunner):
+    def executePipeline(self):
+        self.readAnnotationFile()
+        
+        self.benchmark()
+
+    def benchmark(self):
+        benchmarker = pcssSvm.LeaveOneOutBenchmarker(self)
+        peptideSet = getAllPeptides(self.reader.getProteins(), False)
+        for i in range(len(peptideSet)):
+            benchmarker.createTrainingAndTestSets(peptideSet)
+            benchmarker.trainAndApplyModel() 
+            benchmarker.readBenchmarkResults()
+
+        benchmarker.processAllResults()
+
+    
 class TrainingBenchmarkRunner(PcssRunner):
     def executePipeline(self):
 
         self.readAnnotationFile()
         
         self.benchmark()
-            
-        self.writeOutput()
-      
+              
     def benchmark(self):
         
         benchmarker = pcssSvm.SvmBenchmarker(self)
@@ -586,10 +612,12 @@ class PcssDirectoryHandler:
 
     def getFinalSvmApplicationResultFile(self):
         return self.getFullOutputFile
-                                           
-
+                      
     def getLeaveOneOutResultFileName(self):
         return self.getFullOutputFile("%s_%s" % (self.pcssConfig["run_name"], self.internalConfig["loo_result_file_suffix"]))
+
+    def getUserModelFileName(self):
+        return self.getFullOutputFile("%s_%s" % (self.pcssConfig["run_name"], self.internalConfig["user_model_suffix"]))
 
     def getSvmTestOutputFile(self):
         return self.getFullOutputFile(self.internalConfig["test_set_output_file_name"])

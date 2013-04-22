@@ -87,9 +87,9 @@ class SeqDivider:
 
             self.makeSeqBatchFile(i, nextGroup)
         
-            self.makeParameterFile(i)
+            self.makeConfigFile(i)
 
-    def makeParameterFile(self, i):
+    def makeConfigFile(self, i):
         pcssCopy = copy.deepcopy(self.pcssRunner.pcssConfig)
 
         if "run_name" in pcssCopy:
@@ -103,7 +103,7 @@ class SeqDivider:
         pcssCopy["using_web_server"] = False
 
         subDirectoryName = self.getSeqBatchSubDirectoryName(i)
-        pcssCopy.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_parameter_file_name"])
+        pcssCopy.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_node_config_file"])
         pcssCopy.write()
         
     def getSeqBatchSubDirectoryName(self, index):
@@ -160,8 +160,8 @@ class ClusterScriptGenerator:
         script = """
 #!/bin/tcsh
 #$ -S /bin/tcsh                    
-#$ -o clusterOutput.txt            
-#$ -e clusterError.txt             
+#$ -o sgeOutput.txt            
+#$ -e sgeError.txt             
 #$ -cwd                            
 #$ -r y                            
 #$ -j y                            
@@ -178,7 +178,7 @@ class ClusterScriptGenerator:
 
         pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
                 
-        parameterFileName = self.pcssRunner.internalConfig["seq_batch_parameter_file_name"]
+        configFileName = self.pcssRunner.internalConfig["seq_batch_node_config_file"]
         nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
         
         taskListString = " ".join(taskList)
@@ -200,10 +200,10 @@ date
 hostname
 pwd
 
-set PARAMETER_FILE_NAME="%(seqBatchDir)s/$input/%(parameterFileName)s"
+set CONFIG_FILE_NAME="%(seqBatchDir)s/$input/%(configFileName)s"
 
 setenv PYTHONPATH $PCSS_BASE_DIRECTORY/lib
-python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(commandName)s $PARAMETER_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
+python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(commandName)s $CONFIG_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
 
 cp $MODEL_OUTPUT_FILE_NAME "%(seqBatchDir)s/$input/"
 
@@ -216,7 +216,7 @@ rm -r $NODE_HOME_DIR/
 
         pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
                 
-        parameterFileName = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["benchmark_parameter_file_name"])
+        configFileName = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["training_benchmark_config_file"])
         modelOutputFileName = self.pcssRunner.internalConfig["training_benchmark_stdout_file"]
         nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
         commandName = self.pcssRunner.internalConfig["training_benchmark_node_script"]
@@ -240,10 +240,10 @@ date
 hostname
 pwd
 
-set PARAMETER_FILE_NAME="%(parameterFileName)s"
+set CONFIG_FILE_NAME="%(configFileName)s"
 
 setenv PYTHONPATH $PCSS_BASE_DIRECTORY/lib
-python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(commandName)s $PARAMETER_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
+python $PCSS_BASE_DIRECTORY/bin/clusterExe/%(commandName)s $CONFIG_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
 
 cp $MODEL_OUTPUT_FILE_NAME "%(headNodeOutputDirectory)s/"
 
@@ -251,7 +251,6 @@ rm -r $NODE_HOME_DIR/
 """ %locals()
 
         return script
-
 
 class ClusterBenchmarker:
 
@@ -271,7 +270,7 @@ class ClusterBenchmarker:
             raise pcssErrors.PcssGlobalException(msg)
             
         pcssCopy["input_annotation_file_name"] = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["annotation_output_file"])
-        pcssCopy.filename = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["benchmark_parameter_file_name"])
+        pcssCopy.filename = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["training_benchmark_config_file"])
         pcssCopy.write()
         
     def makeFullTrainingBenchmarkScript(self):

@@ -9,6 +9,7 @@ training_new_model_name = trainingSvmModel
 application_set_output_file_name = svmApplicationResults
 benchmark_result_file_suffix = benchmarkScores.txt
 loo_result_file_suffix = leaveOneOut.txt
+user_model_suffix = userCreatedModel.txt
 test_set_output_file_name = svmTestResults
 pcss_error_output_file = pcssErrors.out
 internal_error_output_file = internalErrors.out
@@ -25,8 +26,7 @@ seq_batch_size = 5
 seq_batch_directory = seqBatchList
 seq_batch_prefix = seqBatch
 seq_batch_input_fasta_file_name = inputFastaFile.txt
-seq_batch_parameter_file_name = seqBatchClusterConfig.txt
-benchmark_parameter_file_name = benchmarkClusterConfig.txt
+
 netapp_home_directory = /netapp/sali/dbarkan/pcss/
 netapp_bin_directory = %(netapp_home_directory)s/bin
 netapp_lib_directory = %(netapp_home_directory)s/lib
@@ -35,6 +35,9 @@ cluster_pipeline_directory = /scratch/peptide
 training_annotation_node_script = runTrainingAnnotationCluster.py
 training_annotation_shell_script = trainingAnnotationSubmit.sh
 training_annotation_stdout_file = trainingAnnotationStdout.txt
+
+seq_batch_node_config_file = seqBatchNodeClusterConfig.txt
+training_benchmark_config_file = trainingBenchmarkNodeClusterConfig.txt
 
 svm_application_node_script = runSvmApplicationCluster.py
 svm_application_shell_script = svmApplicationSubmit.sh

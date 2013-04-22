@@ -1,72 +1,62 @@
-Next:
-see why I am manually setting attribute file names in run cluster scripts even though they are presumably in the config file? Try to have them in once place, see if it can be config
-run everything start to finish on cluster
-clean up tests at least to match new cluster logic
-continue with more clean up stuff
+NEXT
+Go through list and see what has to be done before production. Don't include tests / refactor unless really useful
+put creation runner into runTrainingBenchmarkCluster
+git commit
+test out on cluster
 
+CLEANING
+Clean / refactor tests
+clean test directory structure
+clean bin directory?
+clean training run directory?
 
-clean up everything 
-      review stuff below
-      make sure errors are working and caught, try on cluster
-      synch file names for cluster and standard terminology for different contexts
-      	    attributes, config, bin, runners, etc.
-      maybe clean up directory structure      
-      maybe clean up tests but deprioritize for now
+RENAMING
+TrainingSvm / TrainingBenchmarker -- make names consistent with everything elesn
+check old server to make sure seqBatchDirectory and seqBatchFilePrefix are the same
+check old server to see if seq batch subdirectories had prefixes (1, 2, etc.)
+change annotationOutput.txt to be more context specific
+rename finalizeApplciationClusterRunner script
 
+PRODUCTION
+Leave one out 
+creation pipeline
+Run big dataset through
+make sure it works out of the box -- maybe clean install on mac
+document installation and test procedure
+document basic functionality -- order to run scripts
+consider how to make accessible -- git?
+compare user created model with old code vs new
+webserver backend
+webserver front end and refactor that too
 
-run with big random dataset, all steps
-document
-make it work out of the box
-put into webserver backend
-webserver frontend
-continue through anything else below
+ERROR HANDLING
+make sure errors are working in local and cluster
+if node throws an error, make sure it is handled somehow (not copied back currently)
+more clear error output when it does happen
+if there is an error in training annotation, make sure it is tracked by benchmark -- should be (and log it)
+error handling in leave one out / creation pipeline
+leave one out -- keep track of tested peptides and throw error if they were already tested once 
+check to make sure fpr for one test set result is always >= fpr in the next line
+check to make sure tp is always greater than tp in previous line
 
-name changes
-try to have names for runners and scripts all be the same -- ie, TrainingSvm and TrainingBenchmarker are the same but different for cluster vs runner nanme
-have seqBatchDirectory and seqBatchFilePrefix be the same as in previous
-maybe have subdirectories (1, 2, etc.) have seq batch prefix too -- was that the case before?
-change annotationOutput file, maybe more specific to context
-
-cluster prep and finalize scripts should have more clear error notifications and maybe stack traces printed (maybe can do that form pcss runner)
-
-naming:
-annotation
-svmApplicationFeatures -- calculates features and applies model
-svmApplicationInput -- reads results of annotation
-trainingAnnotation -- calculates features
-trainingBenchmark -- does benchmarking
-
-append cluster where necessary
-
-Figure out how to name FinalizeApplicationClusterRunner
-
-
-rename config files for cluster to have cluster in them
-
-Other classes only write them -- I think these are reading previous annotation and then applying SVM results to it
-      eg test_write_svm_file, reads input annotation, applies SVM
-
-
-web server
+WEB SERVER
 update job directory logic when get to web server; think we might have to change it across different steps of the server (preprocess vs run)
 factor out cluster header commands using on_web_server param after seeing what web server provides
 create good benchmark situation for web server regression
-web server back end -- see if I can get it to work without changing front end
-web server front end
 
-test finalize svm application
-
-exception handling for pcss cluster errors -- right now error files etc. not getting copied back
-
-refactoring
-consider refactor of clusterScriptGenerator; don't like having to pass so many parameters and don't know how useful it is to be shared across different contexts
+REFACTORING
 right now pcssRunner makes its own modelHandler, but that isn't needed for training benchmark. Can that be moved to things that need models only and then can take parameters out?
+consider refactor of both training benchmarkers to take peptide and handle iteration counts themselves
 
-testing / errros
+TESTING GENERAL
 have checks to make sure run_disopred_command has all files it needs. Split the command, and check for existence of the command itself and everhting after
 same for psipred
 had a case where I put the wrong run_disopred_Command lcoation in and the internalErrors.out wrote "no such file or directory" -- possible to get the actual name of the file it is looking for and put that in the error output too?
-merging:
+test for creation pipeine and leave one out if not done yet
+have test to make sure no peptide in training set is in the test set for all benchmarkers
+finish test for training svm runner (currently just runs but doesn't check anything)
+
+TESTING CLUSTER
 make sure we have column row as first row
 check for error file
 maybe check to make sure we got a result for all input
@@ -77,52 +67,28 @@ read back in sequences that were written to different directories and test they 
 have something that says if output directory isn't set, throw error -- need to figure out at which point to do that
 test "del pcssCopy["run_name"]" in pcssCluster.py -- cases where it does and does not have
 everywhere --- have recently added a lot of os.mkdir. Might need to add sleep until done.
+review previous cluster merging / seq batch code, especially errors (although deprioritize, think I can just start de novo or find errors in big datasets since so much has changed)
 
-misc
-have subdirectory for training on cluster for organization purposes
+CODE
 see if training annotation needs peptide length param or not
-everything in previous code, esp errors
+have peptide start position and protein be written out during leave one out
+critical points
+make sure peptides know their proteins in all instances -- allows for better error writing as well as benchmark reading / writing
+do context with peptides read in memory and then immediately to training / test -- do some profiling to see how long it takes
+creation pipeline, write model and benchmark file
 
 
-
-
-
-
-
+KNOWN ERRORS
 
 >modbase_no_peptides|Q12345|
 TTTTTTTTTT
 threw error since it couldn't unpack defined peptides -- make sure this is handled more cleanly
       same error for another peptide that just didn't have anything parsed from a previous scan import
 
-
-CREATION PIPELINE
-Find appropriate class to create it
-have it create trainingSvm, give it all peptides, call writeFullPeptideModelFile
-quick test for file equality
-
-LEAVE ONE OUT
-consider refactor of both benchmarkers to take peptide and handle iteration counts themselves
-see if there's anything in old version
-have peptide start position and protein also be written out
-handle global error in peptides (same as training)
-keep track of tested peptides and throw error if they were already tested once 
-
-MULTIPLE RUNS CODE
-make sure peptides know their proteins in all instances -- allows for better error writing as well as benchmark reading / writing
-do context with peptides read in memory and then immediately to training / test -- do some profiling to see how long it takes
-creation pipeline, write model and benchmark file
-check to make sure fpr for one test set result is always >= fpr in the next line
-check to make sure tp is always greater than tp in previous line
-critical points
-consider consolidating loo trainer and jackknife trainer, use parameter to switch between them
-have test to make sure no peptide in training set is in the test set for all benchmarkers
-
 TRAINING NEW CONTEXT
 decide on context for training -- see if we need two (both peptides in memory and read peptides from file) or can get away with one
 test full run, should be able to deterministically create tests -- test expected training result file
      just do svm test for now with two iterations, after looking at contexts can decide how to make the test for the full runner
-
 
 ANNOTATION
 consider having one feature error of each type in annotation output and anything that reads in an annotation file for all normal / runner processing 
@@ -147,6 +113,7 @@ ALL
 dynamically find config spec file in all runners or executables the same way I am doing it for cluster code
 
 REFACTORING
+consider consolidating loo trainer and jackknife trainer, use parameter to switch between them
 consider moving svm classify command and svm learn command from internal to pcssConfig to avoid having to keep pcss_directory in that file
 all internal config files should have explicit method from runner for retrieval rather than having whatever needs it being able to access the runner's internal config
     esp since they are usually in a special directory
