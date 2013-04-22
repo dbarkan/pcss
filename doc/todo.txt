@@ -54,7 +54,7 @@ make sure files are always closed
      also make sure these are closed when handling exception
 be sure to test what happens if there are so many peptide mismatches that there are more negatives than positives. is this checked before or after
 retrieving sequences?
-
+check to see behavior of error exists exception -- think right now it is unhandled
 
 ERROR FLOW
 svm application 

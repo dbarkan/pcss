@@ -89,6 +89,9 @@ class PcssRunner:
             print e
             self.writeInternalErrorFile(e)
 
+        except pcssErrors.InternalException as e:
+            self.writeInternalErrorFile(e.msg)
+
     def validateConfig(self, config):
         validator = Validator({'file': fileExists})
         results = config.validate(validator, preserve_errors=True)

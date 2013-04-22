@@ -47,8 +47,7 @@ class SeqDivider:
         allProteins = []
         for (i, nextGroup) in enumerate(seqGroupList):
             subDirName = self.getSeqBatchSubDirectoryName(i)
-            if (self.seqBatchErrorExists(subDirName)):
-                raise pcssErrors.PcssGlobalException("Seq batch error exists in directory %s" % subDirName)
+            self.checkForSeqBatchErrors(subDirName)
             subOutputFile = os.path.join(subDirName, self.pcssRunner.internalConfig["annotation_output_file"])
             if (not os.path.exists(subOutputFile)):
                 raise pcssErrors.PcssGlobalException("Seq batch error: did not get annotation output file in directory %s" % subDirName)
@@ -61,8 +60,14 @@ class SeqDivider:
         afw.writeAllOutput(allProteins)
 
     def seqBatchErrorExists(self, subDirName):
-        return os.path.exists(os.path.join(subDirName, self.pcssRunner.internalConfig["pcss_error_output_file"])) or
-                              os.path.exists(os.path.join(subDirName, self.pcssRunner.internalConfig["internal_error_output_file"]))
+        if (os.path.exists(os.path.join(subDirName, self.pcssRunner.internalConfig["pcss_error_output_file"]))):
+            errorInfo = pcssErrors.ErrorInfo(os.path.join(subDirName, self.pcssRunner.internalConfig["pcss_error_output_file"]))
+            raise pcssErrors.PcssGlobalException("Got pcss seq batch error %s\nin directory %s" % (errorInfo.msg, subDirName))
+
+        if (os.path.exists(os.path.join(subDirName, self.pcssRunner.internalConfig["internal_error_output_file"]))):
+            errorInfo = pcssErrors.ErrorInfo(os.path.join(subDirName, self.pcssRunner.internalConfig["internal_error_output_file"]))
+            raise InternalException("Got internal seq batch error %s\nin directory %s" % (errorInfo.msg, subDirName))
+
 
     def mergeTrainingAnnotationResults(self):
         

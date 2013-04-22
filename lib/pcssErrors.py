@@ -27,7 +27,17 @@ class ProteinException(Exception):
     def setProtein(self, pcssProtein):
         self.pcssProtein = pcssProtein
 
+class ErrorInfo:
+    def __init__(self, errorFile):
+        errorFh = open(errorFile, 'r')
+        errorLine = errorFh.readlines()[0]
+        self.msg = errorLine
+
 class ErrorExistsException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+class InternalException(Exception):
     def __init__(self, msg):
         self.msg = msg
 
