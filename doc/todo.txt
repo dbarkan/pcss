@@ -1,8 +1,8 @@
 NEXT
 Go through list and see what has to be done before production. Don't include tests / refactor unless really useful
-put creation runner into runTrainingBenchmarkCluster
-git commit
-test out on cluster
+come up with next few steps. Probably some stuff on monitoring errors through process (e.g. benchmark see if annotation through global error in cluster, etc.)
+get to big dataset step
+
 
 CLEANING
 Clean / refactor tests
@@ -18,8 +18,6 @@ change annotationOutput.txt to be more context specific
 rename finalizeApplciationClusterRunner script
 
 PRODUCTION
-Leave one out 
-creation pipeline
 Run big dataset through
 make sure it works out of the box -- maybe clean install on mac
 document installation and test procedure
@@ -28,6 +26,13 @@ consider how to make accessible -- git?
 compare user created model with old code vs new
 webserver backend
 webserver front end and refactor that too
+see if old version reports critical rate in final training file -- didn't see it in backend (maybe in LOO?)
+have DefinedPeptideImporter get max peptide length from input
+     frontend was doing this before, backend a better place? scan user has to set though, but might be OK if not symmetrical...think about it
+if running with SVM Annotation Input mode, need to link the fasta file for sequences with the original fasta file that was passed. 
+   functionality will be different depending on whether fasta file was scan or defined -- could be time to make specialized fasta readers
+   don't think I had to do this before since I was alwyas essentailly svm annotaiton features mode
+
 
 ERROR HANDLING
 make sure errors are working in local and cluster
@@ -38,81 +43,70 @@ error handling in leave one out / creation pipeline
 leave one out -- keep track of tested peptides and throw error if they were already tested once 
 check to make sure fpr for one test set result is always >= fpr in the next line
 check to make sure tp is always greater than tp in previous line
+in annotation mode, try to throw a global exception while annotation file is open to make sure it closes file correctly
+all contexts: no peptides parsed for all input sequences. don't think it is an issue but just in case
+validate runinfo
+validate pcssFileAttributes
+take out exception in getModelStyle,
+have tests for problems in rules file - same as in frontend
+fix test_sequence_long -- produces different result for the long sequence than previous (need to see if this is the same result on cluster)
+make sure files are always closed
+     also make sure these are closed when handling exception
+be sure to test what happens if there are so many peptide mismatches that there are more negatives than positives. is this checked before or after
+retrieving sequences?
+
+
+ERROR FLOW
+svm application 
+    standalone -- application features -- print if error occurs
+                  application input -- check for previous (think I do this) -- print if error occurs
+    cluster -- application input -- check each sub-directory for error files -- should just be copied back. cluster merger write error if occured on a node
+               cluster merger also write if don't have final annotation file
+    
+training annotation
+    stand-alone -- make sure good error message is printed
+    cluster -- same as svm application
+
+training benchmark
+    standalone -- check if previous error and print if occurs
+    cluster -- node should check for previous error as a matter of course (same code as standalone probably) but prepare script should also check
+
+all: print good error message and log
+check both types of error files 
+error exists should maybe say what the error was
+
+
+handle no peptides parsed for any sequences for different context orders -- also make sure it's being tested for
+
+
 
 WEB SERVER
 update job directory logic when get to web server; think we might have to change it across different steps of the server (preprocess vs run)
 factor out cluster header commands using on_web_server param after seeing what web server provides
 create good benchmark situation for web server regression
+consider whether to do jackknife fraction myself or let user enter it
+run through svm application mode and see if we get same or similar scores before and after
+also consider outputting these to annotation file. this will necessitate checking to make sure they aren't processed at each step
+maybe process sequences in increasing size. That way a long sequence won't time out and kill it for the rest of the sequences
+If one long sequence does kill it for the rest of the sequences (regardless of whether they were sorted in increasing size),
+see what the output looks like -- are there just feature errors for everything that didn't get processed but only one error 
+actually saying what happened for the one sequence? Could have an attribute for pcssProteins that says if the algorithm started 
+to run, that way we would know if it ran and had an error vs never ran because something else timed out. 
+In pcssFeatureHandler, make sure timeout feature exception message will work (the problem is that on the cluster, might be
+raising exceptions but they don't get caught because the whole code that is also processing exceptions dies during the timeout)
+see if I did anything with the peptides that said keyword sequence mismatch other than write to log file
+decide whether to always copy models every run or copy to a pcss directory and cache there. Decision should be based on speed. 
+Disopred caches but there is no sali lab disopred results AFAIK, while there is a salilab modbase result. for now will just copy to run directory
+will have to test different context flows to make sure if one has an error the other one skips it and proceeds as normal -- all combinations of contexts
+can't remember if I am requireing the user to have a keyword for application defined mode. if not, don't, and do it myself when I create the fasta file
+definedPeptideImporter should check the keyword (application)
+right now annotationFileAttributs has status with input only. Sort of a hack, but needed so that defined mode can set peptide status attribute.
+think of a better way to do this after writing more contexts.
+
 
 REFACTORING
 right now pcssRunner makes its own modelHandler, but that isn't needed for training benchmark. Can that be moved to things that need models only and then can take parameters out?
 consider refactor of both training benchmarkers to take peptide and handle iteration counts themselves
-
-TESTING GENERAL
-have checks to make sure run_disopred_command has all files it needs. Split the command, and check for existence of the command itself and everhting after
-same for psipred
-had a case where I put the wrong run_disopred_Command lcoation in and the internalErrors.out wrote "no such file or directory" -- possible to get the actual name of the file it is looking for and put that in the error output too?
-test for creation pipeine and leave one out if not done yet
-have test to make sure no peptide in training set is in the test set for all benchmarkers
-finish test for training svm runner (currently just runs but doesn't check anything)
-
-TESTING CLUSTER
-make sure we have column row as first row
-check for error file
-maybe check to make sure we got a result for all input
-deal wtih no peptides parsed, other protein error
-use annotatin file writer to get columns header?
-change annotation file writer to write to the file that I give it. right now jus changing its ouptut fh. 
-read back in sequences that were written to different directories and test they are 1:1 with what was originally written
-have something that says if output directory isn't set, throw error -- need to figure out at which point to do that
-test "del pcssCopy["run_name"]" in pcssCluster.py -- cases where it does and does not have
-everywhere --- have recently added a lot of os.mkdir. Might need to add sleep until done.
-review previous cluster merging / seq batch code, especially errors (although deprioritize, think I can just start de novo or find errors in big datasets since so much has changed)
-
-CODE
-see if training annotation needs peptide length param or not
-have peptide start position and protein be written out during leave one out
-critical points
-make sure peptides know their proteins in all instances -- allows for better error writing as well as benchmark reading / writing
-do context with peptides read in memory and then immediately to training / test -- do some profiling to see how long it takes
-creation pipeline, write model and benchmark file
-
-
-KNOWN ERRORS
-
->modbase_no_peptides|Q12345|
-TTTTTTTTTT
-threw error since it couldn't unpack defined peptides -- make sure this is handled more cleanly
-      same error for another peptide that just didn't have anything parsed from a previous scan import
-
-TRAINING NEW CONTEXT
-decide on context for training -- see if we need two (both peptides in memory and read peptides from file) or can get away with one
-test full run, should be able to deterministically create tests -- test expected training result file
-     just do svm test for now with two iterations, after looking at contexts can decide how to make the test for the full runner
-
-ANNOTATION
-consider having one feature error of each type in annotation output and anything that reads in an annotation file for all normal / runner processing 
-	 just need dssp, disopred, psipred -- working on disopred now
-         disopred error -- changed file ffef0e2dd621d6a5fc2851aef4341226MESAYTRS|Q16572 -- in disopred file changed position 484 from V (wildtype) to R (induced error)
-	 peptides different length -- sequence ffac1dc8985f57c80dd0b64a519b9adbMPNFVENT peptide at position 23 (FPRDPAR) has 7 residues instead of 8. this is only in test input
-	 svmTrainingAnnotationInput
-have error test to make sure all peptides have feature error when the first one gets it
-have test with annotaiton defined, one peptide that is different lengths than others
-handle no peptides parsed for any sequences
-have test for exception in pcssSvm.finalizeFeature()
-in annotation mode, try to throw a global exception while annotation file is open to make sure it closes file correctly
-
-LARGER DATA:
-make sure bestModel still works when have multiple models (currently sorted works, but only two models)
-a couple spot checks on svm model
-would be great to see if current svm model is the same as a previous model in the perl code
-See what is using 1GB when run on 80 seqs -- see if I can find profiler
-all contexts: no peptides parsed for all input sequences. don't think it is an issue but just in case
-
-ALL
-dynamically find config spec file in all runners or executables the same way I am doing it for cluster code
-
-REFACTORING
 consider consolidating loo trainer and jackknife trainer, use parameter to switch between them
 consider moving svm classify command and svm learn command from internal to pcssConfig to avoid having to keep pcss_directory in that file
 all internal config files should have explicit method from runner for retrieval rather than having whatever needs it being able to access the runner's internal config
@@ -134,19 +128,45 @@ have every pcss global exception have an error code that the test can check to m
      or have them all be pcss global exception subclasses
 all tests subclass pcssTest
 
-LOGGING
-be very explicit about config file errors; make sure that the actual config file that failed is named (internal vs user)
 
-ERRORS / TESTING
-validate runinfo
-validate pcssFileAttributes
-take out exception in getModelStyle,
-have tests for problems in rules file - same as in frontend
-fix test_sequence_long -- produces different result for the long sequence than previous (need to see if this is the same result on cluster)
-make sure files are always closed
-     also make sure these are closed when handling exception
+TESTING GENERAL
+have checks to make sure run_disopred_command has all files it needs. Split the command, and check for existence of the command itself and everhting after
+same for psipred
+had a case where I put the wrong run_disopred_Command lcoation in and the internalErrors.out wrote "no such file or directory" -- possible to get the actual name of the file it is looking for and put that in the error output too?
+test for creation pipeine and leave one out if not done yet
+have test to make sure no peptide in training set is in the test set for all benchmarkers
+finish test for training svm runner (currently just runs but doesn't check anything)
+consider having one feature error of each type in annotation output and anything that reads in an annotation file for all normal / runner processing 
+	 just need dssp, disopred, psipred -- working on disopred now
+         disopred error -- changed file ffef0e2dd621d6a5fc2851aef4341226MESAYTRS|Q16572 -- in disopred file changed position 484 from V (wildtype) to R (induced error)
+	 peptides different length -- sequence ffac1dc8985f57c80dd0b64a519b9adbMPNFVENT peptide at position 23 (FPRDPAR) has 7 residues instead of 8. this is only in test input
+	 svmTrainingAnnotationInput
+have error test to make sure all peptides have feature error when the first one gets it
+have test with annotaiton defined, one peptide that is different lengths than others
+have test for exception in pcssSvm.finalizeFeature()
+
+
+TESTING CLUSTER
+test two exceptions in mergeSvmApplicationResutls -- will have to figure out how to do seq batch directory structure (can do when refactoring tests)
+make sure we have column row as first row
+check for error file
+maybe check to make sure we got a result for all input
+deal wtih no peptides parsed, other protein error
+use annotatin file writer to get columns header?
+change annotation file writer to write to the file that I give it. right now jus changing its ouptut fh. 
+read back in sequences that were written to different directories and test they are 1:1 with what was originally written
+have something that says if output directory isn't set, throw error -- need to figure out at which point to do that
+test "del pcssCopy["run_name"]" in pcssCluster.py -- cases where it does and does not have
+everywhere --- have recently added a lot of os.mkdir. Might need to add sleep until done.
+review previous cluster merging / seq batch code, especially errors (although deprioritize, think I can just start de novo or find errors in big datasets since so much has changed)
 
 CODE
+see if training annotation needs peptide length param or not
+have peptide start position and protein be written out during leave one out
+critical points
+make sure peptides know their proteins in all instances -- allows for better error writing as well as benchmark reading / writing
+do context with peptides read in memory and then immediately to training / test -- do some profiling to see how long it takes
+creation pipeline, write model and benchmark file
 If I have an error for a feature for one peptide, it applies for all peptides in the protein. should I keep it that way or have it be specific to that peptide only?
 attribute file names / locations shold be internal keywords (maybe)
 consider having sorted peptide list in ClassifySvm be finalized or constant so it can't be resorted, or some other way to keep those peptides
@@ -161,6 +181,26 @@ template pdb
 other features (model url)
 change acc call to letters
 change secondary structure styel to be like amino acids: three features per call, set the feature that is my call to 1
+
+
+KNOWN ERRORS
+
+>modbase_no_peptides|Q12345|
+TTTTTTTTTT
+threw error since it couldn't unpack defined peptides -- make sure this is handled more cleanly
+      same error for another peptide that just didn't have anything parsed from a previous scan import
+
+LARGER DATA:
+make sure bestModel still works when have multiple models (currently sorted works, but only two models)
+would be great to see if current svm model is the same as a previous model in the perl code
+See what is using 1GB when run on 80 seqs -- see if I can find profiler
+
+ALL
+dynamically find config spec file in all runners or executables the same way I am doing it for cluster code
+
+LOGGING
+be very explicit about config file errors; make sure that the actual config file that failed is named (internal vs user)
+
 
 SEQUENCE FEATURES:
 explore using different blast database besides nr (maybe nr95?)
@@ -231,49 +271,8 @@ svm learn
 svm classify
 
 
-PRODUCTION
-see if training ROC plot result file name (created by test set tracker) uses run name in old version and if it's returned. Think it is but no run name. Consider adding run name since user gets it
-see if old version reports critical rate in final training file -- didn't see it in backend (maybe in LOO?)
-check memory profile
-have DefinedPeptideImporter get max peptide length from input
-     frontend was doing this before, backend a better place? scan user has to set though, but might be OK if not symmetrical...think about it
-consider whether to have parameters specific to certain contexts or to have one for all contexts
-	 one factor is that it will be harder to validate that everything was set in the config file if I have one global file. keep it global for now.
-if running with SVM Annotation Input mode, need to link the fasta file for sequences with the original fasta file that was passed. 
-   functionality will be different depending on whether fasta file was scan or defined -- could be time to make specialized fasta readers
-   don't think I had to do this before since I was alwyas essentailly svm annotaiton features mode
 
 WEB SERVER:
-run an svm classification file through web server in run through svm application mode, same model file, same benchmark file,  
-    and see if we get same or similar scores before and after (not really multiple runs issue but do it at the same time)
-
-consider whether to do jackknife fraction myself or let user enter it
-run through svm application mode and see if we get same or similar scores before and after
-be sure to test what happens if there are so many peptide mismatches that there are more negatives than positives. is this checked before or after
-retrieving sequences?
-also consider outputting these to annotation file. this will necessitate checking to make sure they aren't processed at each step
-
-maybe process sequences in increasing size. That way a long sequence won't time out and kill it for the rest of the sequences
-If one long sequence does kill it for the rest of the sequences (regardless of whether they were sorted in increasing size),
-see what the output looks like -- are there just feature errors for everything that didn't get processed but only one error 
-actually saying what happened for the one sequence? Could have an attribute for pcssProteins that says if the algorithm started 
-to run, that way we would know if it ran and had an error vs never ran because something else timed out. 
-
-In pcssFeatureHandler, make sure timeout feature exception message will work (the problem is that on the cluster, might be
-raising exceptions but they don't get caught because the whole code that is also processing exceptions dies during the timeout)
-
-see if I did anything with the peptides that said keyword sequence mismatch other than write to log file
-
-decide whether to always copy models every run or copy to a pcss directory and cache there. Decision should be based on speed. 
-Disopred caches but there is no sali lab disopred results AFAIK, while there is a salilab modbase result. for now will just copy to run directory
-
-will have to test different context flows to make sure if one has an error the other one skips it and proceeds as normal -- all combinations of contexts
-
-can't remember if I am requireing the user to have a keyword for application defined mode. if not, don't, and do it myself when I create the fasta file
-definedPeptideImporter should check the keyword (application)
-
-right now annotationFileAttributs has status with input only. Sort of a hack, but needed so that defined mode can set peptide status attribute.
-think of a better way to do this after writing more contexts.
 
 Exception guidelines
 if I am expecting a source file that I am copying or moving to exist, check to make sure it does and throw feature/protein exception if not; then run shutil (don't rely on that for exception)

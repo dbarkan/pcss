@@ -15,8 +15,8 @@ pcssConfig = configobj.ConfigObj(configFileName, configspec=configSpec)
 runner = pcssTools.TrainingBenchmarkRunner(pcssConfig)
 runner.execute()
 
-runner = pcssTools.LeaveOneOutBenchmarkRunner(self.pcssConfig)
+runner = pcssTools.LeaveOneOutBenchmarkRunner(pcssConfig)
 runner.execute()
 
-runner = pcssTools.CompleteSvmRunner(self.pcssConfig)
+runner = pcssTools.CompleteSvmRunner(pcssConfig)
 runner.execute()

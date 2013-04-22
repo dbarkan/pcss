@@ -47,7 +47,11 @@ class SeqDivider:
         allProteins = []
         for (i, nextGroup) in enumerate(seqGroupList):
             subDirName = self.getSeqBatchSubDirectoryName(i)
+            if (self.seqBatchErrorExists(subDirName)):
+                raise pcssErrors.PcssGlobalException("Seq batch error exists in directory %s" % subDirName)
             subOutputFile = os.path.join(subDirName, self.pcssRunner.internalConfig["annotation_output_file"])
+            if (not os.path.exists(subOutputFile)):
+                raise pcssErrors.PcssGlobalException("Seq batch error: did not get annotation output file in directory %s" % subDirName)
             reader = pcssIO.AnnotationFileReader(self.pcssRunner)
             reader.readAnnotationFile(subOutputFile)
             proteins = reader.getProteins()
@@ -55,6 +59,10 @@ class SeqDivider:
         
         afw = pcssIO.AnnotationFileWriter(self.pcssRunner)
         afw.writeAllOutput(allProteins)
+
+    def seqBatchErrorExists(self, subDirName):
+        return os.path.exists(os.path.join(subDirName, self.pcssRunner.internalConfig["pcss_error_output_file"])) or
+                              os.path.exists(os.path.join(subDirName, self.pcssRunner.internalConfig["internal_error_output_file"]))
 
     def mergeTrainingAnnotationResults(self):
         
