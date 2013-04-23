@@ -150,6 +150,12 @@ class SeqDivider:
         outputFileName = self.pcssRunner.internalConfig["svm_application_stdout_file"]
         self.makeFullAnnotationSgeScript(nodeScriptName, shellScriptName, outputFileName)
 
+    def makeRunDisopredSgeScript(self):
+        nodeScriptName = self.pcssRunner.internalConfig["disopred_standalone_node_script"]
+        shellScriptName = self.pcssRunner.internalConfig["disopred_standalone_shell_script"]
+        outputFileName = self.pcssRunner.internalConfig["disopred_standalone_stdout_file"]
+        self.makeFullAnnotationSgeScript(nodeScriptName, shellScriptName, outputFileName)
+        
     def makeFullTrainingAnnotationSgeScript(self):
         nodeScriptName = self.pcssRunner.internalConfig["training_annotation_node_script"]
         shellScriptName = self.pcssRunner.internalConfig["training_annotation_shell_script"]

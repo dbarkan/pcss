@@ -46,3 +46,7 @@ svm_application_stdout_file = svmApplicationStdout.txt
 training_benchmark_node_script = runTrainingBenchmarkCluster.py
 training_benchmark_shell_script = trainingBenchmarkSubmit.sh
 training_benchmark_stdout_file = trainingBenchmarkStdout.txt
+
+disopred_standalone_node_script = runDisopredStandAlone.py
+disopred_standalone_shell_script = disopredStandAloneSubmit.sh
+disopred_standalone_stdout_file = disopredStandAloneStdout.txt

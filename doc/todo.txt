@@ -23,6 +23,8 @@ check old server to make sure seqBatchDirectory and seqBatchFilePrefix are the s
 check old server to see if seq batch subdirectories had prefixes (1, 2, etc.)
 change annotationOutput.txt to be more context specific
 rename finalizeApplciationClusterRunner script
+change all runner that prepare cluster to have 'prepare' in their run name
+maybe change disopred standalone config spec param name back to user_standalone_config_spec
 
 PRODUCTION
 Run big dataset through

@@ -8,9 +8,9 @@ import configobj
 
 configFileName = sys.argv[1]
 tempPcssConfig = configobj.ConfigObj(configFileName)
-configSpecFile = tempPcssConfig["user_config_spec_file"]
+configSpecFile = tempPcssConfig["disopred_standalone_config_spec_file"]
 
 pcssConfig = configobj.ConfigObj(configFileName, configspec=configSpecFile)
-runner = pcssTools.PrepareSvmApplicationClusterRunner(pcssConfig)
+runner = pcssTools.PrepareDisopredClusterRunner(pcssConfig)
 
 runner.execute()

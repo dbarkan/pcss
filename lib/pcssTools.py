@@ -233,6 +233,14 @@ class PcssRunner:
         afw = pcssIO.AnnotationFileWriter(self)
         afw.writeAllOutput(self.proteins)
 
+class PrepareDisopredClusterRunner(PcssRunner):
+    def executePipeline(self):
+        seqDivider = pcssCluster.SeqDivider(self)
+        
+        seqDivider.divideSeqsFromFasta()
+
+        seqDivider.makeRunDisopredSgeScript()
+
 class DisopredStandaloneRunner(PcssRunner):
     
     def executePipeline(self):

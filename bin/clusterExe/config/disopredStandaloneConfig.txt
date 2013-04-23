@@ -1,0 +1,12 @@
+pcss_directory = /trombone1/home/dbarkan/pcss/
+run_directory = %(pcss_directory)s/runs/
+run_name = disopredStandalone
+fasta_file = %(pcss_directory)s/data/inputSequences/inputSequenceSingletonTruncated.txt
+root_disopred_dir = %(pcss_directory)s/data/features/disopredResults/
+run_disopred_command = %(pcss_directory)s/bin/runDisopred/rundisopred /trombone1/home/dbarkan/nr/uniprot90 /salilab/diva1/programs/x86_64linux/blast-2.2.13/bin %(pcss_directory)s/bin/runDisopred/bin %(pcss_directory)s/bin/runDisopred/data
+disopred_standalone_config_spec_file = %(pcss_directory)s/data/config/disopredStandaloneConfigSpec.txt
+internal_config_file = %(pcss_directory)s/data/config/internalConfigFile.txt
+internal_config_spec_file = %(pcss_directory)s/data/config/internalConfigSpec.txt
+peptide_importer_type = full
+using_web_server = False
+attribute_file_name = %(pcss_directory)s/data/context/annotationFileAttributes.txt
