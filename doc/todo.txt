@@ -44,6 +44,7 @@ if running with SVM Annotation Input mode, need to link the fasta file for seque
 
 
 ERROR HANDLING
+got a disopred error on the cluster (couldn't find uniprot file) and didn't appear to write the internal error file and proceed as normal, check on that
 leave one out -- keep track of tested peptides and throw error if they were already tested once 
 check to make sure fpr for one test set result is always >= fpr in the next line
 check to make sure tp is always greater than tp in previous line
