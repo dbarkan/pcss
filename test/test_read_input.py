@@ -27,7 +27,7 @@ class TestReadInput(unittest.TestCase):
         configSpecFile = "testConfig/testConfigSpec.txt"
         self.pcssConfig = configobj.ConfigObj(configFile, configspec=configSpecFile)
 
-        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        self.runner = pcssTools.ModelRunner(self.pcssConfig)
         self.spi = pcssIO.ScanPeptideImporter(self.runner)
 
           
@@ -123,13 +123,11 @@ class TestReadInput(unittest.TestCase):
         reader.readAnnotationFile(annotationFileName)
         newProteins = reader.getProteins()
 
-
         for newProtein in newProteins:
 
             oldProtein = self.getProtein(newProtein.modbaseSequenceId)
             self.assertTrue(oldProtein.isEqual(newProtein))
         
-
     def test_read_feature_error(self):
         reader = pcssIO.AnnotationFileReader(self.runner)
         reader.readAnnotationFile("testInput/ioErrors/annotationOutputFeatureError.txt")

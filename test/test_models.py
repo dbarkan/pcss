@@ -27,7 +27,7 @@ class TestModels(unittest.TestCase):
 
         self.pcssConfig = configobj.ConfigObj(configFile, configspec=configSpecFile)
 
-        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        self.runner = pcssTools.ModelRunner(self.pcssConfig)
         
         spi = pcssIO.ScanPeptideImporter(self.runner)
         self.proteins = spi.readInputFile(self.runner.pcssConfig['fasta_file'])

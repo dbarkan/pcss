@@ -29,13 +29,17 @@ class ProteinException(Exception):
 
 class ErrorInfo:
     def __init__(self, errorFile):
-        errorFh = open(errorFile, 'r')
-        errorLine = errorFh.readlines()[0]
+        reader = pcssTools.PcssFileReader(errorFile)
+        lines = reader.getLines()
+        self.errorType = lines[0]
+        errorLine = lines[1]
         self.msg = errorLine
 
+
 class ErrorExistsException(Exception):
-    def __init__(self, msg):
+    def __init__(self, msg, fileName):
         self.msg = msg
+        self.fileName = fileName
 
 class InternalException(Exception):
     def __init__(self, msg):

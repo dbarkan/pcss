@@ -43,8 +43,9 @@ class DisopredFileHandler(SequenceFeatureFileHandler):
         return self.name
 
     def getCommandException(self, msg):
-        return pcssErrors.DisopredCommandException(msg)
-
+        #return pcssErrors.DisopredCommandException(msg)
+        return pcssErrors.PcssGlobalException(msg)
+    
 class PsipredFileHandler(SequenceFeatureFileHandler):
     """Class providing Psipred-specific data for running algorithm and processing results"""
     def __init__(self, pcssConfig, pdh):
@@ -60,7 +61,8 @@ class PsipredFileHandler(SequenceFeatureFileHandler):
         return self.name
 
     def getCommandException(self, msg):
-        return pcssErrors.PsipredCommandException(msg)
+        #return pcssErrors.PsipredCommandException(msg)
+        return pcssErrors.PcssGlobalException(msg)
 
 class SequenceFeatureRunner:
     
@@ -81,7 +83,9 @@ class SequenceFeatureRunner:
         except pcssErrors.ProteinException as e:
             tempDirectory.changeBack()
             raise e
-
+        except pcssErrors.PcssGlobalException as e:
+            tempDirectory.changeBack()
+            raise e
         outputFile = self.getSequenceFeatureOutputFile(pcssProtein)
         destinationDir = self.makeSeqFeatureDirectory(pcssProtein)
         

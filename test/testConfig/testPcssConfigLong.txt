@@ -7,8 +7,8 @@ rules_file = %(home_test_directory)s/testInput/peptideRulesFile
 peptide_length = 8
 root_disopred_dir = %(pcss_directory)s/test/testFileOutput/disopredResults/
 root_psipred_dir = %(pcss_directory)s/test/testFileOutput/psipredResults/
-run_disopred_command = %(pcss_directory)s/bin/runDisopred/rundisopred
-run_psipred_command = %(pcss_directory)s/bin/runPsipred/runpsipred
+run_disopred_command = %(pcss_directory)s/bin/runDisopred/rundisopred /trombone1/home/dbarkan/nr/uniprot90 /salilab/diva1/programs/x86_64linux/blast-2.2.13/bin %(pcss_directory)s/bin/runDisopred/bin %(pcss_directory)s/bin/runDisopred/data
+run_psipred_command = %(pcss_directory)s/bin/runPsipred/runpsipred /trombone1/home/dbarkan/nr/uniprot90 /salilab/diva1/programs/x86_64linux/blast-2.2.13/bin %(pcss_directory)s/bin/runPsipred/bin %(pcss_directory)s/bin/runPsipred/data
 model_table_column_file = %(pcss_directory)s/data/models/modelColumnOrder.txt
 model_table_file = %(pcss_directory)s/data/models/human2008ModelTableTruncated.txt
 model_directory = %(pcss_directory)s/data/features/dssp/
@@ -26,5 +26,5 @@ training_iterations = 1
 jackknife_fraction = .1
 svm_training_gamma = 0.01
 svm_training_c = 10
-
+using_web_server = False
 

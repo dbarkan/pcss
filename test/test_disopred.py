@@ -16,12 +16,13 @@ logging.root.setLevel(logging.DEBUG)
 class TestDisopred(pcssTests.TestSequenceFeatures):
 
     def setUp(self):
+
         self.globalSetup("testConfig/testPcssConfig.txt")
         self.seqData = pcssTests.DisopredData()
         self.fileHandler = pcssFeatureHandlers.DisopredFileHandler(self.pcssConfig, self.runner.pdh)
         self.sequenceFeatureReader = pcssFeatureHandlers.DisopredReader(self.fileHandler)
         self.sequenceFeatureRunner = pcssFeatureHandlers.SequenceFeatureRunner(self.fileHandler)
-
+        
 
     def getSeqFeatureCallMethod(self):
         return self.proteins[0].disorderProteinCalls.getSequenceFeatureCall
@@ -40,7 +41,6 @@ class TestDisopred(pcssTests.TestSequenceFeatures):
         return self.proteins[0].processDisopred
 
     def processResultFile(self):
-        print "running process result file"
         self.proteins[0].processDisopred(self.sequenceFeatureReader, self.sequenceFeatureRunner)
         
 

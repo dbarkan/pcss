@@ -62,7 +62,7 @@ class TestSvm(unittest.TestCase):
         except pcssErrors.PcssGlobalException as e:
             print e.msg
     def test_train_svm(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -76,7 +76,7 @@ class TestSvm(unittest.TestCase):
         self.assertEquals(len(benchmarker.benchmarkHandler.negativeTestSet), 73)
         
     def test_train_and_test_svm(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -93,7 +93,7 @@ class TestSvm(unittest.TestCase):
         self.assertEquals(float(firstTuple.fpr), 0.0136986301369863)
         
     def test_leave_one_out(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -111,7 +111,7 @@ class TestSvm(unittest.TestCase):
         self.compareFiles(expectedFile, observedOutputFile)
 
     def test_leave_one_out_internal_count_error(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -123,7 +123,7 @@ class TestSvm(unittest.TestCase):
         self.assertRaises(pcssErrors.PcssGlobalException, self.throwBadCountError, benchmarker, peptideSet)
 
     def test_leave_one_out_test_set_error(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -146,7 +146,7 @@ class TestSvm(unittest.TestCase):
 
 
     def test_multiple_iteration_normal_output(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         tsrt = pcssSvm.TestSetResultTracker(self.runner)
         reader = pcssIO.AnnotationFileReader(self.runner)
@@ -179,7 +179,7 @@ class TestSvm(unittest.TestCase):
         
 
     def test_tracker_average(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -223,7 +223,7 @@ class TestSvm(unittest.TestCase):
 
     def countMismatch(self, keyword, peptidesToRemoveCount):
         
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -262,7 +262,7 @@ class TestSvm(unittest.TestCase):
         return tsrt
             
     def test_bad_status(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -289,7 +289,7 @@ class TestSvm(unittest.TestCase):
 
 
     def test_bad_svm_training_command(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -303,7 +303,7 @@ class TestSvm(unittest.TestCase):
         self.assertRaises(pcssErrors.PcssGlobalException, svm.trainModel)
 
     def test_more_positives_than_negatives(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -314,7 +314,7 @@ class TestSvm(unittest.TestCase):
         self.assertRaises(pcssErrors.PcssGlobalException, benchmarker.createTrainingAndTestSets, peptides)
 
     def test_no_test_set_positives(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 
@@ -338,7 +338,7 @@ class TestSvm(unittest.TestCase):
         self.assertRaises(pcssErrors.PcssGlobalException, appSvm.classifySvm)
 
     def test_missing_training_model(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmTrainingAttributes.txt")
+        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.runner = pcssTools.PcssRunner(self.pcssConfig)
         reader = pcssIO.AnnotationFileReader(self.runner)
 

@@ -71,12 +71,23 @@ class LeaveOneOutBenchmarker:
         resultFile = self.pcssRunner.pdh.getLeaveOneOutResultFileName()
         resultFh = open(resultFile, 'w')
         size = self.looTsr.getSize()
+        foundCriticalPoint = False
         for i in range(size):
             nextBpst = self.looTsr.getBenchmarkTuple(i)
             #add petpides start position and modbase seq id
             outputList = [nextBpst.fpr, nextBpst.tpr, nextBpst.score,  nextBpst.peptide.getAttributeOutputString("status"), 
                           nextBpst.negativeCount, nextBpst.positiveCount]
+            
             resultFh.write("%s\n" % "\t".join(str(x) for x in outputList))
+            if (nextBpst.fpr + nextBpst.tpr > 1.0 and foundCriticalPoint == False):
+                self.criticalTpr = nextBpst.tpr
+                self.criticalFpr = nextBpst.fpr
+                self.criticalScore = nextBpst.score
+                foundCriticalPoint = True
+        resultFh.write("Critical True Positive Rate: %s\n" % str(round(self.criticalTpr, 3)))
+        resultFh.write("Critical False Positive Rate: %s\n" % str(round(self.criticalFpr, 3)))
+        resultFh.write("Score at critical point: %s\n" % str(round(self.criticalScore, 3)))
+
 
 class SvmBenchmarker:
     def __init__(self, pcssRunner):
@@ -445,7 +456,6 @@ class TestSetResultTracker:
         if (tsr.getFinalNegativeCount() != self.referenceNegativeCount):
             raise pcssErrors.PcssGlobalException("Error: test set did not have same number of negatives (%s) as the reference (%s)" % (tsr.getFinalNegativeCount(),
                                                                                                                                        self.referenceNegativeCount))
-        
     def finalize(self):
         tprCountsToTuples = {}
         self.referencePositiveCount = self.allTestSetResults[0].getFinalPositiveCount()
@@ -459,12 +469,18 @@ class TestSetResultTracker:
                 tprCountsToTuples[tprTuple.tpr].append(tprTuple)
             #assert same FPR?
         self.testSetTprAveragesList = []
+        foundCriticalPoint = False
         for tpr, bpstList in sorted(tprCountsToTuples.iteritems()):
 
             fprAverage = self.average(list(x.fpr for x in bpstList))
             fprStdev = self.stddev(list(x.fpr for x in bpstList))
             scoreAverage = self.average(list(x.score for x in bpstList))
             self.testSetTprAveragesList.append(self.TestSetTprAveragesTuple(tpr, fprAverage, scoreAverage, fprStdev))
+            if (fprAverage + tpr > 1.0 and foundCriticalPoint == False):
+                self.criticalTpr = tpr
+                self.criticalFpr = fprAverage
+                self.criticalScore = scoreAverage
+                foundCriticalPoint = True
 
     def getBenchmarkTuple(self, i):
         return self.testSetTprAveragesList[i]
@@ -493,7 +509,9 @@ class TestSetResultTracker:
             outputList = [averagesTuple.fpr, averagesTuple.tpr, averagesTuple.score, averagesTuple.fprStdev]
             resultFh.write("%s\n" % "\t".join(str(round(x, 3)) for x in outputList))
         resultFh.write("%s\n" % "\t".join(finalOutputList))
-
+        resultFh.write("Critical True Positive Rate: %s\n" % str(round(self.criticalTpr, 3)))
+        resultFh.write("Critical False Positive Rate: %s\n" % str(round(self.criticalFpr, 3)))
+        resultFh.write("Score at critical point: %s\n" % str(round(self.criticalScore, 3)))
 
 class ApplicationSvm(ClassifySvm):
 

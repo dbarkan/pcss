@@ -45,17 +45,17 @@ class ScanPeptideImporter(PeptideImporter):
     def __init__(self, pcssRunner):
 
         self.rules = ParsingRules(pcssRunner.pcssConfig['rules_file'])
-        self.peptideLength = pcssRunner.pcssConfig.as_int('peptide_length')
         self.pcssRunner = pcssRunner
-        
+        self.pcssRunner.setPeptideLength(pcssRunner.pcssConfig.as_int('peptide_length'))
+
     def parseFastaSequence(self, seqRecord):
         """Use user-defined rules to read protein sequence, parse peptides, and return a list of those that conform to rules"""
         seqLength = len(seqRecord.seq)
         pcssPeptideList = []
-        for i in range(0, seqLength - self.peptideLength + 1):
-            nextPeptide = str(seqRecord.seq[i:i+self.peptideLength])
+        for i in range(0, seqLength - self.pcssRunner.getPeptideLength() + 1):
+            nextPeptide = str(seqRecord.seq[i:i+self.pcssRunner.getPeptideLength()])
             if (self.rules.isValidPeptide(nextPeptide)):
-                pcssPeptideList.append(pcssPeptide.PcssPeptide(nextPeptide, i, i + self.peptideLength - 1, self.pcssRunner))
+                pcssPeptideList.append(pcssPeptide.PcssPeptide(nextPeptide, i, i + self.pcssRunner.getPeptideLength() - 1, self.pcssRunner))
         
         return pcssPeptideList
 
@@ -75,7 +75,6 @@ class DefinedPeptideImporter(PeptideImporter):
 
     def __init__(self, pcssRunner):
 
-        
         self.pcssRunner = pcssRunner
 
     def readInputFile(self, proteinFastaFile):
@@ -90,6 +89,7 @@ class DefinedPeptideImporter(PeptideImporter):
             
             pcssProtein = self.parseFastaHeader(seqRecord)
             pcssProtein.setProteinSequence(seqRecord.seq)
+            
             pcssProtein.validatePeptideSequences()
             pcssProteins.append(pcssProtein)
 
@@ -102,21 +102,26 @@ class DefinedPeptideImporter(PeptideImporter):
         uniprotId = cols[1]
         seq = pcssPeptide.PcssProtein(modbaseSeqId, self.pcssRunner)
         seq.setUniprotId(uniprotId)
-    
+        maxPeptideLength = 0
         peptideList = []
         print "making all peptides from seq id %s" % modbaseSeqId
         for col in cols[2:len(cols)]:
-            nextPeptide = self.makePeptideFromCode(col)
+            nextPeptide = self.makePeptideFromCode(col, modbaseSeqId)
+
             if (nextPeptide is not None):
                 peptideList.append(nextPeptide)
-        
+                if (len(nextPeptide.sequence) > maxPeptideLength):
+                    maxPeptideLenght = nextPeptide.sequence
         if (len(peptideList) < 1):
-            raise pcssErrors.PcssGlobalException("Protein %s has no peptides" % modbaseSeqId)
+            raise pcssErrors.PcssGlobalException("Protein %s has no peptides; expected at least one non-mismatch peptide" % modbaseSeqId)
         seq.setPeptides(peptideList)
+        self.pcssRunner.setPeptideLength(maxPeptideLength)
         return seq
 
-    def makePeptideFromCode(self, peptideCode):
+    def makePeptideFromCode(self, peptideCode, modbaseSeqId):
         print "making peptide from %s" % peptideCode
+        if (len(peptideCode.split('_')) != 3):
+            raise pcssErrors.PcssGlobalException("Peptide code %s from protein %s is not proper form of peptideStart_peptideSequence_status" % (peptideCode, modbaseSeqId))
         [peptideStart, peptideSequence, status] = peptideCode.split('_')
         if (peptideSequence == self.pcssRunner.internalConfig["keyword_peptide_sequence_mismatch"]):
             return None
@@ -150,9 +155,18 @@ class AnnotationFileReader:
                     attribute.setValueFromFile(self.getValueForAttributeName(attribute.name, cols), 
                                                pcssProtein, 
                                                int(self.getValueForAttributeName("peptide_start", cols)))
-        
+        self.setPeptideLength()
         if (len(self.proteins) == 0):
             raise pcssErrors.PcssGlobalException("Did not read any proteins from annotation file")
+
+    def setPeptideLength(self):
+        refLength = 0
+        for protein in self.proteins.values():
+            for peptide in protein.peptides.values():
+                length = len(peptide.sequence)
+                if (length > refLength):
+                    refLength = length
+        self.pcssRunner.setPeptideLength(refLength)
 
     def readProteinSequences(self, fastaFileName):
         fh = open(fastaFileName, 'r')

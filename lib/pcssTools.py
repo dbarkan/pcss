@@ -72,15 +72,16 @@ class PcssRunner:
         #self.modelHandler = PcssModelHandler(pcssConfig, self.pdh)
         self.parser = PDB.PDBParser(QUIET=True)
         self.pfa = pcssIO.PcssFileAttributes(pcssConfig)
-
+        self.peptideLength = None
         self.initSubclass()
 
     def initSubclass(self):
         return
 
     def execute(self):
-        self.checkForErrors()
+
         try:
+            self.checkForErrors()
             self.executePipeline()
         except pcssErrors.PcssGlobalException as pge:
             print pge.msg
@@ -88,7 +89,11 @@ class PcssRunner:
             print "WRITING EXCEPTION " + pge.msg + "\n" + tb
             self.writePcssErrorFile(pge.msg + "\n" + tb)
 
-        except pcssErrors.ErrorExistsException:
+        except pcssErrors.ErrorExistsException as e:
+            print "A previous run in the same job directory finished with the following error"
+            errorInfo = pcssErrors.ErrorInfo(e.fileName)
+            print errorInfo.msg
+            
             return
 
         except pcssErrors.InternalException as e:
@@ -107,10 +112,10 @@ class PcssRunner:
             self.handleConfigError(results)
             
     def checkForErrors(self):
-        if (os.path.exists(self.pdh.getPcssErrorFile()) or 
-            os.path.exists(self.pdh.getInternalErrorFile())):
-            raise pcssErrors.ErrorExistsException("Previous error exists")
-
+        if (os.path.exists(self.pdh.getPcssErrorFile())):
+            raise pcssErrors.ErrorExistsException("Previous error exists", self.pdh.getPcssErrorFile())
+        if (os.path.exists(self.pdh.getInternalErrorFile())):
+            raise pcssErrors.ErrorExistsException("Previous error exists", self.pdh.getInternalErrorFile())
 
     def validatePeptideCodeStatus(self, status, peptideCode):
         try:
@@ -134,6 +139,14 @@ class PcssRunner:
                                                                                                               self.getNegativeKeyword()))
         return status
 
+    def setPeptideLength(self, peptideLength):
+        self.peptideLength = peptideLength
+
+    def getPeptideLength(self):
+        if (self.peptideLength is None):
+            raise pcssErrors.PcssGlobalException("Error: Peptide Length was never set; please make sure it is set when reading input")
+        return self.peptideLength
+
     def getBioParser(self):
         return self.parser
 
@@ -156,6 +169,18 @@ class PcssRunner:
         errorFh.write(str(e) + "\n")
         tb = traceback.format_exc()
         errorFh.write(tb + "\n")
+
+    def getErrorFileInfo(self):
+        if (os.path.exists(self.pdh.getInternalErrorFile())):
+            errorInfo = pcssErrors.ErrorInfo(self.pdh.getInternalErrorFile())
+            return errorInfo
+
+        elif (os.path.exists(self.pdh.getPcssErrorFile())):
+            errorInfo = pcssErrors.ErrorInfo(self.pdh.getPcssErrorFile())
+            return errorInfo
+        else:
+            return None
+
 
     def getPositiveKeyword(self):
         return self.internalConfig["keyword_positive_status"]
@@ -533,7 +558,6 @@ class PcssDirectoryHandler:
                 os.mkdir(self.fullOutputDir)
         else:
             self.fullOutputDir = self.pcssConfig["job_directory"]
-
             
     def getJobDirectory(self):
         return self.jobDirectory
@@ -545,8 +569,11 @@ class PcssDirectoryHandler:
 
     def getStructureDirectory(self):
         """Return full path of directory where models are stored and copied to"""
-        return self.pcssConfig["model_directory"]
-
+        if (not os.path.exists(self.getFullOutputFile("structures"))):
+            os.mkdir(self.getFullOutputFile("structures"))
+        return self.getFullOutputFile("structures")
+    #def getStructureDirectory(self):
+    #    return self.pcssConfig["model_directory"]
     def getFullOutputFile(self, fileName):
         """Return full path fileName where the path is the full run directory for this run"""
         if (not self.pcssConfig["using_web_server"]):  #consider changing to 'head_node'
