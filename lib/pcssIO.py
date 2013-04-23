@@ -12,16 +12,13 @@ import pcssFeatures
 import pcssFeatureHandlers
 log = logging.getLogger("pcssPeptide")
 
-
-class ScanPeptideImporter:
-
-    """Class to read a fasta sequence and parse peptides from the actual sequence according to defined rules"""
-
-    def __init__(self, pcssRunner):
-
-        self.rules = ParsingRules(pcssRunner.pcssConfig['rules_file'])
-        self.peptideLength = pcssRunner.pcssConfig.as_int('peptide_length')
-        self.pcssRunner = pcssRunner
+class PeptideImporter:
+    def parseFastaHeader(self, seqRecord):
+        """Return PcssProtein by reading fasta header. Header is of format <modbaseId|uniprotId>"""
+        [modbaseId, uniprotId] = seqRecord.id.split('|')
+        seq = pcssPeptide.PcssProtein(modbaseId, self.pcssRunner)
+        seq.setUniprotId(uniprotId)
+        return seq
 
     def readInputFile(self, proteinFastaFile):
         """Read input fasta file, parse headers to create PcssProteins and parse sequence to create PcssPeptides"""
@@ -38,16 +35,19 @@ class ScanPeptideImporter:
 
             pcssProteins.append(pcssProtein)
         
-        log.info("ScanPeptideImporter: read %s proteins from input file" % len(pcssProteins))
+        log.info("PeptideImporter: read %s proteins from input file" % len(pcssProteins))
         return pcssProteins
-        
-    def parseFastaHeader(self, seqRecord):
-        """Return PcssProtein by reading fasta header. Header is of format <modbaseId|uniprotId>"""
-        [modbaseId, uniprotId] = seqRecord.id.split('|')
-        seq = pcssPeptide.PcssProtein(modbaseId, self.pcssRunner)
-        seq.setUniprotId(uniprotId)
-        return seq
 
+class ScanPeptideImporter(PeptideImporter):
+
+    """Class to read a fasta sequence and parse peptides from the actual sequence according to defined rules"""
+
+    def __init__(self, pcssRunner):
+
+        self.rules = ParsingRules(pcssRunner.pcssConfig['rules_file'])
+        self.peptideLength = pcssRunner.pcssConfig.as_int('peptide_length')
+        self.pcssRunner = pcssRunner
+        
     def parseFastaSequence(self, seqRecord):
         """Use user-defined rules to read protein sequence, parse peptides, and return a list of those that conform to rules"""
         seqLength = len(seqRecord.seq)
@@ -56,10 +56,20 @@ class ScanPeptideImporter:
             nextPeptide = str(seqRecord.seq[i:i+self.peptideLength])
             if (self.rules.isValidPeptide(nextPeptide)):
                 pcssPeptideList.append(pcssPeptide.PcssPeptide(nextPeptide, i, i + self.peptideLength - 1, self.pcssRunner))
+        
         return pcssPeptideList
 
+class FullProteinImporter(PeptideImporter):
+    def __init__(self, pcssRunner):
+        self.pcssRunner = pcssRunner
 
-class DefinedPeptideImporter:
+    def parseFastaSequence(self, seqRecord):
+        pcssPeptideList = []
+        firstPeptide = str(seqRecord.seq[0:1])
+        pcssPeptideList.append(pcssPeptide.PcssPeptide(firstPeptide, 0, 1, self.pcssRunner))
+        return pcssPeptideList
+
+class DefinedPeptideImporter(PeptideImporter):
 
     """Class to read a fasta file where peptides to process are defined in the header for each sequence"""
 

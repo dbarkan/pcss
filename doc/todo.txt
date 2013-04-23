@@ -1,7 +1,13 @@
 NEXT
 Go through list and see what has to be done before production. Don't include tests / refactor unless really useful
-come up with next few steps. Probably some stuff on monitoring errors through process (e.g. benchmark see if annotation through global error in cluster, etc.)
 get to big dataset step
+
+big dataset --
+biggest issue is long disopred / psipred sequences. 
+-- if it doesn't finish right now, will throw error that annotation file isnt' created
+-- solutions -- benchmark time it takes and see if I can increase time requested on cluster
+   see what the length distribution is for the human proteome to get a general idea
+clean up model info loading that was commented out, make disopred config spec that doesn't break and can take out using web server hack
 
 
 CLEANING
@@ -9,6 +15,7 @@ Clean / refactor tests
 clean test directory structure
 clean bin directory?
 clean training run directory?
+I think the cluster run scripts can be used for command line run scripts too; consider moving and making universal
 
 RENAMING
 TrainingSvm / TrainingBenchmarker -- make names consistent with everything elesn
@@ -35,11 +42,6 @@ if running with SVM Annotation Input mode, need to link the fasta file for seque
 
 
 ERROR HANDLING
-make sure errors are working in local and cluster
-if node throws an error, make sure it is handled somehow (not copied back currently)
-more clear error output when it does happen
-if there is an error in training annotation, make sure it is tracked by benchmark -- should be (and log it)
-error handling in leave one out / creation pipeline
 leave one out -- keep track of tested peptides and throw error if they were already tested once 
 check to make sure fpr for one test set result is always >= fpr in the next line
 check to make sure tp is always greater than tp in previous line
@@ -57,28 +59,8 @@ retrieving sequences?
 check to see behavior of error exists exception -- think right now it is unhandled
 
 ERROR FLOW
-svm application 
-    standalone -- application features -- print if error occurs
-                  application input -- check for previous (think I do this) -- print if error occurs
-    cluster -- application input -- check each sub-directory for error files -- should just be copied back. cluster merger write error if occured on a node
-               cluster merger also write if don't have final annotation file
-    
-training annotation
-    stand-alone -- make sure good error message is printed
-    cluster -- same as svm application
-
-training benchmark
-    standalone -- check if previous error and print if occurs
-    cluster -- node should check for previous error as a matter of course (same code as standalone probably) but prepare script should also check
-
-all: print good error message and log
-check both types of error files 
-error exists should maybe say what the error was
-
-
+print better exception messages for cluster errors -- put them in log and maybe to screen, think about what is best
 handle no peptides parsed for any sequences for different context orders -- also make sure it's being tested for
-
-
 
 WEB SERVER
 update job directory logic when get to web server; think we might have to change it across different steps of the server (preprocess vs run)
@@ -149,7 +131,6 @@ have test for exception in pcssSvm.finalizeFeature()
 TESTING CLUSTER
 test two exceptions in mergeSvmApplicationResutls -- will have to figure out how to do seq batch directory structure (can do when refactoring tests)
 make sure we have column row as first row
-check for error file
 maybe check to make sure we got a result for all input
 deal wtih no peptides parsed, other protein error
 use annotatin file writer to get columns header?
@@ -166,7 +147,6 @@ have peptide start position and protein be written out during leave one out
 critical points
 make sure peptides know their proteins in all instances -- allows for better error writing as well as benchmark reading / writing
 do context with peptides read in memory and then immediately to training / test -- do some profiling to see how long it takes
-creation pipeline, write model and benchmark file
 If I have an error for a feature for one peptide, it applies for all peptides in the protein. should I keep it that way or have it be specific to that peptide only?
 attribute file names / locations shold be internal keywords (maybe)
 consider having sorted peptide list in ClassifySvm be finalized or constant so it can't be resorted, or some other way to keep those peptides

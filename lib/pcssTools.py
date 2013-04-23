@@ -24,6 +24,7 @@ import shutil
 import traceback
 from Bio import PDB
 log = logging.getLogger("pcssTools")
+
 #tr = tracker.SummaryTracker()
 def getOneLetterFromBioResidue(residueObject):
     return PDB.Polypeptide.three_to_one(residueObject)
@@ -61,15 +62,21 @@ class PcssRunner:
     def __init__(self, pcssConfig):
         """Create new PTP runner. Initialization creates PCSS Directory Handler"""
         self.pcssConfig = pcssConfig
-        self.validateConfig(pcssConfig)
+        if (pcssConfig.configspec is not None):
+            self.validateConfig(pcssConfig)
         self.internalConfig = configobj.ConfigObj(pcssConfig["internal_config_file"], configspec=pcssConfig["internal_config_spec_file"])
         self.validateConfig(self.internalConfig)
 
         self.pdh = PcssDirectoryHandler(pcssConfig, self.internalConfig)
         self.pdh.createOutputDirectory()
-        self.modelHandler = PcssModelHandler(pcssConfig, self.pdh)
+        #self.modelHandler = PcssModelHandler(pcssConfig, self.pdh)
         self.parser = PDB.PDBParser(QUIET=True)
         self.pfa = pcssIO.PcssFileAttributes(pcssConfig)
+
+        self.initSubclass()
+
+    def initSubclass(self):
+        return
 
     def execute(self):
         self.checkForErrors()
@@ -83,14 +90,15 @@ class PcssRunner:
 
         except pcssErrors.ErrorExistsException:
             return
+
+        except pcssErrors.InternalException as e:
+            self.writeInternalErrorFile(e.msg)
         
         except Exception as e:
             print "WRITING INTERNAL EXCPETION"
             print e
             self.writeInternalErrorFile(e)
 
-        except pcssErrors.InternalException as e:
-            self.writeInternalErrorFile(e.msg)
 
     def validateConfig(self, config):
         validator = Validator({'file': fileExists})
@@ -181,9 +189,11 @@ class PcssRunner:
         peptideImporter = None
         if (peptideImporterType == "scan"):
             peptideImporter = pcssIO.ScanPeptideImporter(self)
-        else:
-            peptideImporter = pcssIO.DefinedPeptideImporter(self)
+        elif(peptideImporterType == "defined"):
             
+            peptideImporter = pcssIO.DefinedPeptideImporter(self)
+        else:
+            peptideImporter = pcssIO.FullProteinImporter(self)
         self.proteins = peptideImporter.readInputFile(self.pcssConfig['fasta_file'])
 
     def handleConfigError(self, results):
@@ -223,6 +233,29 @@ class PcssRunner:
         afw = pcssIO.AnnotationFileWriter(self)
         afw.writeAllOutput(self.proteins)
 
+class DisopredStandaloneRunner(PcssRunner):
+    
+    def executePipeline(self):
+
+        self.readProteins()
+
+        self.runDisopred()
+
+    def runDisopred(self):
+
+        disopredFileHandler = pcssFeatureHandlers.DisopredFileHandler(self.pcssConfig, self.pdh)
+        disopredReader = pcssFeatureHandlers.DisopredReader(disopredFileHandler)
+        disopredRunner = pcssFeatureHandlers.SequenceFeatureRunner(disopredFileHandler)
+
+        for protein in self.proteins:
+            log.debug("begin processing disopred for protein %s" % protein.modbaseSequenceId)
+            protein.processDisopred(disopredReader, disopredRunner)
+            log.debug("done processing disopred for protein %s" % protein.modbaseSequenceId)
+
+class ModelRunner(PcssRunner):
+    def initSubclass(self):
+        self.modelHandler = PcssModelHandler(self.pcssConfig, self.pdh)
+
 class SvmApplicationClusterRunner(PcssRunner):
     def executePipeline(self):
 
@@ -255,7 +288,7 @@ class FinalizeApplicationClusterRunner(PcssRunner):
 
         seqDivider.mergeSvmApplicationResults()
         
-class SvmApplicationRunner(PcssRunner):
+class SvmApplicationRunner(ModelRunner):
     def runSvm(self):
         self.appSvm = pcssSvm.ApplicationSvm(self)
         self.appSvm.setProteins(self.proteins)
@@ -291,7 +324,7 @@ class SvmApplicationFeatureRunner(SvmApplicationRunner):
         
         self.writeOutput()
         
-class AnnotationRunner(PcssRunner):
+class AnnotationRunner(ModelRunner):
 
     def executePipeline(self):
         self.readProteins()
@@ -360,6 +393,7 @@ class PcssModelHandler:
 
     def loadRunInfo(self):
         """Load PcssModelRunInfo object which provide data specific to differen modpipe runs"""
+        
         self._runInfo = {}
         runInfoFile  = self.pcssConfig["model_run_info"]
         runInfoConfig = configobj.ConfigObj(runInfoFile)
@@ -507,10 +541,10 @@ class PcssDirectoryHandler:
 
     def getFullOutputFile(self, fileName):
         """Return full path fileName where the path is the full run directory for this run"""
-        if (self.pcssConfig["using_web_server"]): #consider changing to head_node
-            return os.path.join(self.jobDirectory, fileName)
-        else:
+        if (not self.pcssConfig["using_web_server"]):  #consider changing to 'head_node'
             return os.path.join(self.fullOutputDir, fileName)
+        else:
+            return os.path.join(self.jobDirectory, fileName)
 
     def getFullModelFileFromId(self, modelId):
         """Return full path model file name for this modelId"""

@@ -47,7 +47,7 @@ class SeqDivider:
         allProteins = []
         for (i, nextGroup) in enumerate(seqGroupList):
             subDirName = self.getSeqBatchSubDirectoryName(i)
-            self.checkForSeqBatchErrors(subDirName)
+            self.seqBatchErrorExists(subDirName)
             subOutputFile = os.path.join(subDirName, self.pcssRunner.internalConfig["annotation_output_file"])
             if (not os.path.exists(subOutputFile)):
                 raise pcssErrors.PcssGlobalException("Seq batch error: did not get annotation output file in directory %s" % subDirName)
