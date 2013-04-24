@@ -5,15 +5,11 @@ import pcssErrors
 import pcssIO
 import pcssPeptide
 import os
+import pcssTests
 
-class TestPcssInfrastructure(unittest.TestCase):
-    def setUp(self):
-        configFile = "testConfig/testPcssConfig.txt"
-
-        configSpecFile = "testConfig/testConfigSpec.txt"        
-        pcssConfig = configobj.ConfigObj(configFile, configspec=configSpecFile)
-        
-        self.pcssRunner = pcssTools.PcssRunner(pcssConfig)
+class TestPcssInfrastructure(pcssTests.PcssTest):
+    def setupSpecificTest(self):
+        self.pcssRunner = pcssTools.PcssRunner(self.pcssConfig)
 
     def test_copy_file(self):
         sourceDir = "testFileOutput/infrastructure/sourceDir/"

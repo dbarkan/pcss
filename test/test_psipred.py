@@ -9,17 +9,27 @@ import pcssErrors
 import logging
 import sys
 import pcssTests
-logging.basicConfig(stream=sys.stdout)
-logging.root.setLevel(logging.DEBUG)
+
+
+class PsipredData:
+    def __init__(self):
+        self.stringFeatureValue = "AAAAAAAA"
+        self.scoreFeatureValue =  "0.454, 0.624, 0.122, 0.017, 0.01, 0.004, 0.002, 0.004"
+
+    def getExpectedFullStringResult(self):
+        return "LLLAAAAAAAAAAAAAAAAAAAAAAAAAAAALLLLLLLLAAAAAAAAAAAAAALLLAAAAAAAAAAAAAAALLLLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALLLLLLLLLLBBBAAAAAAAAAAAAAAALLLLAAAAAAAAAAAAAAAAAAAAAAALLLLLAAAAAAAAAAAAAAAAALLLAAAAAAAAAAAAAAAAAAAAALLLAAAAAAAAAAAAAAAAAAALLLLLLLLLLLLLLLLLLLLLLLLL"
 
 class TestPsipred(pcssTests.TestSequenceFeatures):
 
-    def setUp(self):
-        self.globalSetup("testConfig/testPcssConfig.txt")
+    def setupSpecificTest(self):
+        self.readProteins()
+        self.seqData = PsipredData()
         self.fileHandler = pcssFeatureHandlers.PsipredFileHandler(self.pcssConfig, self.runner.pdh)
         self.sequenceFeatureReader = pcssFeatureHandlers.PsipredReader(self.fileHandler)
         self.sequenceFeatureRunner = pcssFeatureHandlers.SequenceFeatureRunner(self.fileHandler)
-        self.seqData = pcssTests.PsipredData()
+
+        self.errorDirName = "psipredErrors"
+        self.name = "psipred"
 
     def getSeqFeatureCall(self, position):
         self.proteins[0].psipredProteinCalls.getSequenceFeatureCall(position)
@@ -27,13 +37,9 @@ class TestPsipred(pcssTests.TestSequenceFeatures):
     def getSeqFeatureCallMethod(self):
         return self.proteins[0].psipredProteinCalls.getSequenceFeatureCall
         
-
     def setBadCommandData(self):
-        self.fileHandler.rootDataDir = os.path.join(self.pcssConfig["home_test_directory"], 
-                                                            "testInput/psipredErrors/badCommand/psipredResults/")
-
-        self.fileHandler.sequenceCmd = os.path.join(self.pcssConfig["home_test_directory"], 
-                                                            "testInput/psipredErrors/badCommand/runPsipred/runpsipred")
+        self.pcssConfig["root_psipred_dir"] = os.path.join(self.getErrorInputFile("badCommand"), "psipredResults")
+        self.fileHandler.sequenceCmd = os.path.join(self.getErrorInputFile("badCommand"), "runPsipred", "runpsipred")
 
     def getCallString(self):
         return self.proteins[0].psipredProteinCalls.makeFullCallString()
@@ -43,6 +49,11 @@ class TestPsipred(pcssTests.TestSequenceFeatures):
 
     def processResultFile(self):
         self.proteins[0].processPsipred(self.sequenceFeatureReader, self.sequenceFeatureRunner)
+
+    def setupLongRootDir(self):
+        self.pcssConfig["root_psipred_dir"] = "%(pcss_directory)s/test/testFileOutput/psipredResults/"
+
+        
 
 if __name__ == '__main__':
     unittest.main()

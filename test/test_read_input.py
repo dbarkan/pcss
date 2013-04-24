@@ -10,54 +10,30 @@ import pcssFeatureHandlers
 import pcssFeatures
 import os
 import sys
+import pcssTests
 
-logging.basicConfig(stream=sys.stdout)
-logging.root.setLevel(logging.DEBUG)
-
-
-class TestReadInput(unittest.TestCase):
-
-    def getProtein(self, proteinId):
-        for protein in self.proteins:
-            if (protein.modbaseSequenceId == proteinId):
-                return protein
-
-    def setUp(self):
-        configFile = "testConfig/testPcssConfig.txt"
-        configSpecFile = "testConfig/testConfigSpec.txt"
-        self.pcssConfig = configobj.ConfigObj(configFile, configspec=configSpecFile)
-
+class TestReadInput(pcssTests.PcssTest):
+    def setupSpecificTest(self):
+        
         self.runner = pcssTools.ModelRunner(self.pcssConfig)
         self.spi = pcssIO.ScanPeptideImporter(self.runner)
-
+        self.errorDirName = "ioErrors"
+        self.testName = "io"
           
-    def test_bad_annotation_file(self):
-        annotationFileName = os.path.join(self.pcssConfig["home_test_directory"],
-                                          "testInput/ioErrors/missingColumnsFile.txt")
+    def processBadAnnotationFileTest(self, annotationFileName):
         reader = pcssIO.AnnotationFileReader(self.runner)
         with self.assertRaises(pcssErrors.PcssGlobalException) as e:
             reader.readAnnotationFile(annotationFileName)
         print e.exception.msg
 
-        annotationFileName = os.path.join(self.pcssConfig["home_test_directory"], "fake")
-        self.assertRaises(pcssErrors.PcssGlobalException, reader.readAnnotationFile, annotationFileName)
+    def test_bad_annotation_file(self):
+        self.processBadAnnotationFileTest(self.getErrorInputFile("missingColumnsFile.txt"))
+        self.processBadAnnotationFileTest("fake")
+        self.processBadAnnotationFileTest(self.getErrorInputFile("missingInputColumn.txt"))
+        self.processBadAnnotationFileTest(self.getErrorInputFile("extraInputColumn.txt"))
         
-        annotationFileName = os.path.join(self.pcssConfig["home_test_directory"],
-                                          "testInput/ioErrors/missingInputColumn.txt")
-        with self.assertRaises(pcssErrors.PcssGlobalException) as e:
-            reader.readAnnotationFile(annotationFileName)
-        print e.exception.msg
-
-        annotationFileName = os.path.join(self.pcssConfig["home_test_directory"],
-                                          "testInput/ioErrors/extraInputColumn.txt")
-        with self.assertRaises(pcssErrors.PcssGlobalException) as e:
-            reader.readAnnotationFile(annotationFileName)
-        print e.exception.msg
-
-
     def test_empty_rules_file(self):
-        self.pcssConfig["rules_file"] = "testInput/emptyPeptideRulesFile"
-
+        self.pcssConfig["rules_file"] = self.getErrorInputFile("emptyPeptideRulesFile")
         spi = pcssIO.ScanPeptideImporter(self.runner)
         proteins = spi.readInputFile(self.runner.pcssConfig['fasta_file'])
         firstProtein = proteins[0]
@@ -96,7 +72,7 @@ class TestReadInput(unittest.TestCase):
         self.proteins = self.spi.readInputFile(self.runner.pcssConfig['fasta_file'])
         modelColumns = pcssModels.PcssModelTableColumns(self.pcssConfig)
         self.modelTable = pcssModels.PcssModelTable(self.runner, modelColumns)
-        pcssProtein = self.getProtein("76c3a409540532138c6b44bde9e4d248MDDRDENQ")
+        pcssProtein = self.getProtein("76c3a409540532138c6b44bde9e4d248MDDRDENQ", self.proteins)
 
         disopredFileHandler = pcssFeatureHandlers.DisopredFileHandler(self.pcssConfig, self.runner.pdh)
         disopredReader = pcssFeatureHandlers.DisopredReader(disopredFileHandler)
@@ -111,12 +87,9 @@ class TestReadInput(unittest.TestCase):
         pcssProtein.addModels(self.modelTable)        
         pcssProtein.processDssp()
         rankedModels = pcssProtein.getRankedModels()
-        try:
-            afw = pcssIO.AnnotationFileWriter(self.runner)
-            afw.writeAllOutput(self.proteins)
-        except Exception as e:
-            print e
-            print e.msg
+
+        afw = pcssIO.AnnotationFileWriter(self.runner)
+        afw.writeAllOutput(self.proteins)
 
         annotationFileName = self.runner.pdh.getFullOutputFile("annotationOutput.txt")
         reader = pcssIO.AnnotationFileReader(self.runner)
@@ -125,30 +98,26 @@ class TestReadInput(unittest.TestCase):
 
         for newProtein in newProteins:
 
-            oldProtein = self.getProtein(newProtein.modbaseSequenceId)
+            oldProtein = self.getProtein(newProtein.modbaseSequenceId, self.proteins)
             self.assertTrue(oldProtein.isEqual(newProtein))
         
     def test_read_feature_error(self):
         reader = pcssIO.AnnotationFileReader(self.runner)
-        reader.readAnnotationFile("testInput/ioErrors/annotationOutputFeatureError.txt")
+        reader.readAnnotationFile(self.getErrorInputFile("annotationOutputFeatureError.txt"))
         firstProtein = reader.getProteins()[0]
         firstPeptide = firstProtein.peptides.values()[0]
         self.assertEqual("peptide_error_no_source_model", firstPeptide.getAttributeOutputString("dssp_structure"))
 
     def test_no_peptides_parsed(self):
-        self.runner.pcssConfig['fasta_file'] = os.path.join(self.pcssConfig["home_test_directory"],
-                                                            "testInput/ioErrors/noPeptidesParsedFasta.txt")
-
+        self.runner.pcssConfig['fasta_file'] = self.getErrorInputFile("noPeptidesParsedFasta.txt")
         self.proteins = self.spi.readInputFile(self.runner.pcssConfig['fasta_file'])
         self.assertEqual(self.proteins[0].getAttributeOutputString("protein_errors"), "no_peptides_parsed")
-        afw = pcssIO.AnnotationFileWriter(self.runner)
-        self.runner.pfa.setAllOptional()
-
+        
     def test_annotation_no_sequences(self):
-        self.runner.pcssConfig['fasta_file'] = os.path.join(self.pcssConfig["home_test_directory"],
-                                                            "testInput/ioErrors/annotationMissingSequence.txt")
+
+        self.runner.pcssConfig['fasta_file'] = self.getErrorInputFile("annotationMissingSequence.txt")
         reader = pcssIO.AnnotationFileReader(self.runner)
-        reader.readAnnotationFile("testInput/ioErrors/normalAnnotationFile.txt")
+        reader.readAnnotationFile("testInput/svmApplicationAnnotationInput.txt")
         self.assertRaises(pcssErrors.PcssGlobalException, reader.readProteinSequences, self.runner.pcssConfig['fasta_file'])
 
     def test_scan_peptides(self):
@@ -161,11 +130,6 @@ class TestReadInput(unittest.TestCase):
         self.assertEqual(len(self.proteins[0].peptides.values()), 19)
         
 
-    def test_defined_peptide_mismatch(self):
-        self.runner.pcssConfig['fasta_file'] = "testInput/ioErrors/peptideMismatchFasta.txt"
-        dpi = pcssIO.DefinedPeptideImporter(self.runner)
-        self.assertRaises(pcssErrors.PcssGlobalException, dpi.readInputFile, self.runner.pcssConfig['fasta_file'])
-        
     def test_defined_peptides(self):
         self.runner.pcssConfig['fasta_file'] = "testInput/inputSequenceDefined.txt"
         dpi = pcssIO.DefinedPeptideImporter(self.runner)
@@ -178,21 +142,21 @@ class TestReadInput(unittest.TestCase):
         self.assertEqual(self.proteins[0].peptides.values()[0].endPosition, 9)
         self.assertEqual(self.proteins[0].peptides.values()[0].sequence, "DREDLVYQ")
 
-    def test_bad_status_fasta(self):
-        self.runner.pcssConfig['fasta_file'] = "testInput/ioErrors/badStatusFasta.txt"
+    def processBadDefinedFastaTest(self, fileName):
         dpi = pcssIO.DefinedPeptideImporter(self.runner)
         
-        self.assertRaises(pcssErrors.PcssGlobalException, dpi.readInputFile, self.runner.pcssConfig['fasta_file'])
+        self.assertRaises(pcssErrors.PcssGlobalException, dpi.readInputFile, self.getErrorInputFile(fileName))
 
-        self.runner.pcssConfig['fasta_file'] = "testInput/ioErrors/noPeptidesFasta.txt"
-        self.assertRaises(pcssErrors.PcssGlobalException, dpi.readInputFile, self.runner.pcssConfig['fasta_file'])
-    
-        self.runner.pcssConfig['fasta_file'] = "testInput/ioErrors/onlyMismatchFasta.txt"
-        self.assertRaises(pcssErrors.PcssGlobalException, dpi.readInputFile, self.runner.pcssConfig['fasta_file'])
+    def test_bad_defined_fasta(self):
+        
+        self.processBadDefinedFastaTest("badStatusFasta.txt")
+        self.processBadDefinedFastaTest("noPeptidesFasta.txt")
+        self.processBadDefinedFastaTest("onlyMismatchFasta.txt")
+        self.processBadDefinedFastaTest("peptideMismatchFasta.txt")
 
     def test_no_annotation_proteins(self):
         reader = pcssIO.AnnotationFileReader(self.runner)
-        self.assertRaises(pcssErrors.PcssGlobalException, reader.readAnnotationFile, "testInput/ioErrors/noAnnotationProteins.txt")
+        self.assertRaises(pcssErrors.PcssGlobalException, reader.readAnnotationFile, self.getErrorInputFile("noAnnotationProteins.txt"))
         
     def read_write_annotation_file(self, inputFile):
         reader = pcssIO.AnnotationFileReader(self.runner)
@@ -204,27 +168,10 @@ class TestReadInput(unittest.TestCase):
                           self.runner.pdh.getFullOutputFile(self.runner.internalConfig["annotation_output_file"]), True)
         
     def test_read_write_normal_annotation_file(self):    
-        self.read_write_annotation_file("testInput/ioErrors/normalAnnotationFile.txt")
+        self.read_write_annotation_file("testInput/svmApplicationAnnotationInput.txt")
 
     def test_read_write_feature_error_file(self):
-        self.read_write_annotation_file("testInput/ioErrors/annotationOutputFeatureError.txt")
-        
-
-    def compareFiles(self, firstFile, secondFile, sortLines=False):
-        firstReader = pcssTools.PcssFileReader(firstFile)
-        secondReader = pcssTools.PcssFileReader(secondFile)
-        if (sortLines):
-            firstLines =  sorted(firstReader.getLines())
-            secondLines = sorted(secondReader.getLines())
-        else:
-            firstLines =  sorted(firstReader.getLines())
-            secondLines = sorted(secondReader.getLines())
-
-        for (i, firstLine) in enumerate(firstLines):
-
-            secondLine = secondLines[i]
-            self.assertEquals(firstLine, secondLine)
-
+        self.read_write_annotation_file(self.getErrorInputFile("annotationOutputFeatureError.txt"))
 
 if __name__ == '__main__':
     unittest.main()

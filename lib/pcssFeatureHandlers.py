@@ -24,7 +24,7 @@ class SequenceFeatureFileHandler:
 
     def getSequenceFeatureDir(self, modbaseSeqId):
         """Return the full path directory where input sequence id results will be written"""
-        return os.path.join(self.rootDataDir, self.pdh.getTwoLetterOutputDir(modbaseSeqId))
+        return os.path.join(self.getRootDataDir(), self.pdh.getTwoLetterOutputDir(modbaseSeqId))
 
     def outputFileExists(self, modbaseSeqId):
         return os.path.exists(self.getSequenceFeatureFile(modbaseSeqId))
@@ -33,35 +33,36 @@ class DisopredFileHandler(SequenceFeatureFileHandler):
     """Class providing Disopred-specific data for running algorithm and processing results"""
     def __init__(self, pcssConfig, pdh):
         self.outputFileSuffix = "diso"
-        self.rootDataDir = pcssConfig["root_disopred_dir"]
         self.sequenceCmd = pcssConfig["run_disopred_command"]
         self.pdh = pdh
         self.pcssConfig = pcssConfig
         self.name = "disopred"
 
+    def getRootDataDir(self):
+        return self.pcssConfig["root_disopred_dir"]
+
     def getName(self):
         return self.name
 
     def getCommandException(self, msg):
-        #return pcssErrors.DisopredCommandException(msg)
         return pcssErrors.PcssGlobalException(msg)
     
 class PsipredFileHandler(SequenceFeatureFileHandler):
     """Class providing Psipred-specific data for running algorithm and processing results"""
     def __init__(self, pcssConfig, pdh):
         self.outputFileSuffix = "ss2"
-        self.rootDataDir = pcssConfig["root_psipred_dir"]
         self.sequenceCmd = pcssConfig["run_psipred_command"]
         self.pdh = pdh
         self.pcssConfig = pcssConfig
         self.name = "psipred"
-        
 
+    def getRootDataDir(self):
+        return self.pcssConfig["root_psipred_dir"]
+                
     def getName(self):
         return self.name
 
     def getCommandException(self, msg):
-        #return pcssErrors.PsipredCommandException(msg)
         return pcssErrors.PcssGlobalException(msg)
 
 class SequenceFeatureRunner:

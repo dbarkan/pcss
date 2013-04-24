@@ -10,29 +10,35 @@ import logging
 import sys
 import pcssTests
 
-logging.basicConfig(stream=sys.stdout)
-logging.root.setLevel(logging.DEBUG)
+class DisopredData:
+    def __init__(self):
+
+        self.stringFeatureValue = "OOOOOOOO"
+        self.scoreFeatureValue = "0.014, 0.007, 0.007, 0.005, 0.007, 0.003, 0.003, 0.003"
+                
+    def getExpectedFullStringResult(self):
+        return "DDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDDDDDDDDDDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOODDDDDDDDDDDDDOOOOOOOOOOOOOOODDDDDDDDDDDDDDDDDDDDDDDDD"
 
 class TestDisopred(pcssTests.TestSequenceFeatures):
 
-    def setUp(self):
-
-        self.globalSetup("testConfig/testPcssConfig.txt")
-        self.seqData = pcssTests.DisopredData()
+    def setupSpecificTest(self):
+        self.readProteins()
+        self.seqData = DisopredData()
         self.fileHandler = pcssFeatureHandlers.DisopredFileHandler(self.pcssConfig, self.runner.pdh)
         self.sequenceFeatureReader = pcssFeatureHandlers.DisopredReader(self.fileHandler)
         self.sequenceFeatureRunner = pcssFeatureHandlers.SequenceFeatureRunner(self.fileHandler)
-        
+        self.errorDirName = "disopredErrors"
+        self.name = "disopred"
 
     def getSeqFeatureCallMethod(self):
         return self.proteins[0].disorderProteinCalls.getSequenceFeatureCall
 
     def setBadCommandData(self):
-        self.fileHandler.rootDataDir = os.path.join(self.pcssConfig["home_test_directory"], 
-                                                            "testInput/disopredErrors/badCommand/disopredResults/")
+        self.pcssConfig["root_disopred_dir"] = os.path.join(self.getErrorInputFile("badCommand"), "disopredResults")
+        self.fileHandler.sequenceCmd = os.path.join(self.getErrorInputFile("badCommand"), "runDisopred", "rundisopred")
 
-        self.fileHandler.sequenceCmd = os.path.join(self.pcssConfig["home_test_directory"], 
-                                                            "testInput/disopredErrors/badCommand/runDisopred/rundisopred")
+    def setupLongRootDir(self):
+        self.pcssConfig["root_disopred_dir"] = "%(pcss_directory)s/test/testFileOutput/disopredResults/"
 
     def getCallString(self):
         return self.proteins[0].disopredProteinCalls.makeFullCallString()
@@ -42,7 +48,6 @@ class TestDisopred(pcssTests.TestSequenceFeatures):
 
     def processResultFile(self):
         self.proteins[0].processDisopred(self.sequenceFeatureReader, self.sequenceFeatureRunner)
-        
 
 if __name__ == '__main__':
     unittest.main()

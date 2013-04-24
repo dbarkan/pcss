@@ -1,6 +1,4 @@
 NEXT
-clean error output
-refactor tests
 un-essential refactoring and cleaning
 other features, e.g model url
 
@@ -14,9 +12,6 @@ either run all psipred / disopred with standalone or run as part of big dataset
 clean up current web service, start test
 integrate into backend
 create regression web backend
-
-
-
 
 
 big dataset --
@@ -80,13 +75,7 @@ have tests for problems in rules file - same as in frontend
 fix test_sequence_long -- produces different result for the long sequence than previous (need to see if this is the same result on cluster)
 make sure files are always closed
      also make sure these are closed when handling exception
-
-
-ERROR HANDLING
-* print better exception messages for cluster errors -- put them in log and maybe to screen, think about what is best
-  --especially where do they get written -- log? cluster stdout? both?
-* General exception output format, make consistent across everything -- decide on stack trace, where to get written, what if anything is printed to screen. 
-  handle in uniform way -- say something like 'see log message for details'
+take out pcss runner check for config spec -- should always be there
 
 WEB SERVER 
 * update job directory logic when get to web server; think we might have to change it across different steps of the server (preprocess vs run)
@@ -109,6 +98,8 @@ WEB SERVER
 
 
 REFACTORING
+consider having only one inpout file parameter for training svm modes and application modes, will cut down on number of parameters. might not b epossible though.
+pcssTest has getProtein method, is that needed anywhere else? a little clunky
 on cluster, have something dynamically generate file names for stdout / script / etc. instead of having duplicates in parameter file
 consider refactor of both training benchmarkers to take peptide and handle iteration counts themselves
 consider consolidating loo trainer and jackknife trainer, use parameter to switch between them
@@ -128,18 +119,39 @@ change references to model to be homology model and svm model to be svm model to
 have pcss check for operating system and run svm type accordingly
 have every pcss global exception have an error code that the test can check to make sure the right error is being thrown -- will have a lot, consider if worth it
      or have them all be pcss global exception subclasses
+
+
+TEST REFACTOR
+test_models has process exception where it just checks for error in feature column. See if that can be generalized in other tests
+maybe write all exceptions to screen to check for clean output
+create cluster test and seq batch directories; test InternalException filename (they are the only ones who throw it)
+finish test for training svm runner (currently just runs but doesn't check anything)
 all tests subclass pcssTest
+put common methods in pcss test
+change run name from develop
+automatic discovery of file names? probably not
+maybe methods for getting input instead of hardcoding them
+change testFileOutput to testData
+fix todo in pcssTest seq features
+empty run dir before starting
+test for training benchmarker
+figure out something for relative directories and home test directory in config
+do test disopred / psipred last, see if they can be refined
+possible to run everything in a try block somehow?
+think of a way to streamline reading input annotation. Tough because different things have different runners.
+      also see if can streamline runner creation
+      can grep for testInput, can help to see what reads annotation      
+svmAppFeatures and svmAppInput both have same expected output, is that supposed to be the case?
 
 TESTING GENERAL
+have a test for error exists exception
 testing for run disopred standalone and cluster
 test for exception if not set peptide length in pcssTools (might be tough)
 test for exception in makepeptidefromcode
 have checks to make sure run_disopred_command has all files it needs. Split the command, and check for existence of the command itself and everhting after
 same for psipred
 had a case where I put the wrong run_disopred_Command lcoation in and the internalErrors.out wrote "no such file or directory" -- possible to get the actual name of the file it is looking for and put that in the error output too?
-test for creation pipeine and leave one out if not done yet
 have test to make sure no peptide in training set is in the test set for all benchmarkers
-finish test for training svm runner (currently just runs but doesn't check anything)
 consider having one feature error of each type in annotation output and anything that reads in an annotation file for all normal / runner processing 
 	 just need dssp, disopred, psipred -- working on disopred now
          disopred error -- changed file ffef0e2dd621d6a5fc2851aef4341226MESAYTRS|Q16572 -- in disopred file changed position 484 from V (wildtype) to R (induced error)
@@ -167,7 +179,6 @@ Consider having gaps as input in peptides
 * rename peptide and protein basic attributes to be standardized; have try to take out all the input people having to say 'proteins.values()' or change to getProteinDict()
 * make sure peptides know their proteins in all instances -- allows for better error writing as well as benchmark reading / writing 
 * have peptide start position and protein be written out during leave one out
-
 consider interpolating at critical point, see how web server does is
 do context with peptides read in memory and then immediately to training / test -- do some profiling to see how long it takes
 If I have an error for a feature for one peptide, it applies for all peptides in the protein. should I keep it that way or have it be specific to that peptide only?
@@ -175,7 +186,7 @@ attribute file names / locations shold be internal keywords (maybe)
 consider having sorted peptide list in ClassifySvm be finalized or constant so it can't be resorted, or some other way to keep those peptides
 	 sorted in that order
 explicit vs implicit zeroes for sequence feature
-figure out something for relative directories and home test directory in config
+
 soon will have to come up with parameters for different contexts. e.g. application SVM should have model file  / benchmark scores as config (and there need to decide internal vs user); training should have them as output (probably internal). Same thing for annotation output file
 move annotationOutput file to internal cofnig
 total model count
@@ -206,7 +217,6 @@ psipred and disopred standalone script (probably cluster) and SOP
 PLOW
 git commit
 logging / stats
-log all exception messages as error
 go through peptide pipeline to see if i missed anything
 
 LIST OF CONTEXTS

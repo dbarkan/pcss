@@ -29,7 +29,6 @@ log = logging.getLogger("pcssTools")
 def getOneLetterFromBioResidue(residueObject):
     return PDB.Polypeptide.three_to_one(residueObject)
 
-
 def getProteinErrorCodePrefix():
     return "protein_error_"
 
@@ -42,7 +41,6 @@ def isPeptideErrorValue(value):
 def getAllPeptides(proteins, ignoreProteinErrors):
     allPeptides = []
     for protein in proteins:
-        print protein.getAttributeOutputString("protein_errors")
         if (ignoreProteinErrors or not protein.hasErrors()):
             allPeptides = allPeptides + protein.peptides.values()
     return allPeptides
@@ -69,11 +67,17 @@ class PcssRunner:
 
         self.pdh = PcssDirectoryHandler(pcssConfig, self.internalConfig)
         self.pdh.createOutputDirectory()
-        #self.modelHandler = PcssModelHandler(pcssConfig, self.pdh)
+
         self.parser = PDB.PDBParser(QUIET=True)
         self.pfa = pcssIO.PcssFileAttributes(pcssConfig)
         self.peptideLength = None
+        
+        logFileName = self.pdh.getFullOutputFile("%s.log" % self.pcssConfig["run_name"])
+        logging.basicConfig(filename=self.pdh.getFullOutputFile("%s.log" % self.pcssConfig["run_name"]), level=logging.DEBUG,
+                            filemode="w", format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
         self.initSubclass()
+
 
     def initSubclass(self):
         return
@@ -83,26 +87,18 @@ class PcssRunner:
         try:
             self.checkForErrors()
             self.executePipeline()
-        except pcssErrors.PcssGlobalException as pge:
-            print pge.msg
-            tb = traceback.format_exc()
-            print "WRITING EXCEPTION " + pge.msg + "\n" + tb
-            self.writePcssErrorFile(pge.msg + "\n" + tb)
 
-        except pcssErrors.ErrorExistsException as e:
-            print "A previous run in the same job directory finished with the following error"
-            errorInfo = pcssErrors.ErrorInfo(e.fileName)
-            print errorInfo.msg
-            
-            return
+        except pcssErrors.PcssGlobalException as pge:
+            self.handlePcssGlobalException(pge)
+
+        except pcssErrors.ErrorExistsException as eee:
+            self.handleErrorExistsException(eee)
 
         except pcssErrors.InternalException as e:
-            self.writeInternalErrorFile(e.msg)
+            self.handleInternalException(e)
         
         except Exception as e:
-            print "WRITING INTERNAL EXCPETION"
-            print e
-            self.writeInternalErrorFile(e)
+            self.handlePythonException(e)
 
 
     def validateConfig(self, config):
@@ -128,7 +124,7 @@ class PcssRunner:
         status = status.lower()
         if (not (status == self.getPositiveKeyword() or status == self.getNegativeKeyword() or status == self.getApplicationKeyword())):
             raise pcssErrors.PcssGlobalException("Peptide status %s not valid status (needs to be %s, %s, %s" % (status, self.getPositiveKeyword(), 
-                                                                                                                 self.getNegativeKeyword, self.getApplicationKeyword))
+                                                                                                                 self.getNegativeKeyword(), self.getApplicationKeyword()))
         return status
 
     def validatePeptideTrainingStatus(self, status):
@@ -154,21 +150,35 @@ class PcssRunner:
         featureOrderList = self.internalConfig["feature_order"]
         return featureOrderList
 
-    def writePcssErrorFile(self, message):
-        errorFile = self.pdh.getPcssErrorFile()
-        errorFh = open(errorFile, 'w')
-        errorFh.write(self.internalConfig["keyword_pcss_error"] + "\n")
+    def writeErrorFile(self, errorType, message, fileName):
+        errorFh = open(fileName, 'w')
+        errorFh.write(errorType + "\n")
         errorFh.write(message + "\n")
         tb = traceback.format_exc()
         errorFh.write(tb + "\n")
+        print message
+        print tb
+        log.error(message)
+        log.error(tb)
 
-    def writeInternalErrorFile(self, e):
+    def handlePcssGlobalException(self, pge):
+        errorFile = self.pdh.getPcssErrorFile()
+        self.writeErrorFile(self.internalConfig["keyword_pcss_error"], "PCSS ERROR: " + pge.msg, errorFile)
+
+    def handleErrorExistsException(self, eee):
+        errorInfo = pcssErrors.ErrorInfo(eee.fileName)
+        msg = "EXISTING ERROR: A previous run in the same job directory finished with the following error\n"
+        msg += errorInfo.msg
+        print msg
+        log.error(msg)
+
+    def handleInternalErrorFile(self, e):
         errorFile = self.pdh.getInternalErrorFile()
-        errorFh = open(errorFile, 'w')
-        errorFh.write(self.internalConfig["keyword_internal_error"] + "\n")
-        errorFh.write(str(e) + "\n")
-        tb = traceback.format_exc()
-        errorFh.write(tb + "\n")
+        self.writeErrorFile(self.internalConfig["keyword_internal_error"], "INTERNAL ERROR: " + e.msg, errorFile)
+
+    def handlePythonException(self, e):
+        errorFile = self.pdh.getInternalErrorFile()
+        self.writeErrorFile(self.internalConfig["keyword_internal_error"], "INTERNAL ERROR: " + str(e), errorFile)
 
     def getErrorFileInfo(self):
         if (os.path.exists(self.pdh.getInternalErrorFile())):
@@ -222,8 +232,7 @@ class PcssRunner:
         self.proteins = peptideImporter.readInputFile(self.pcssConfig['fasta_file'])
 
     def handleConfigError(self, results):
-        msg = ""
-        print "An error occurred when validating a configuration file. Please check the log file for more details."
+        msg = "CONFIGURATION ERROR\n"
         for (section_list, key, _) in flatten_errors(self.pcssConfig, results):
             if key is not None:
                 msg +=  'The "%s" key in the section "%s" failed validation\n' % (key, ', '.join(section_list))
@@ -289,7 +298,7 @@ class ModelRunner(PcssRunner):
     def initSubclass(self):
         self.modelHandler = PcssModelHandler(self.pcssConfig, self.pdh)
 
-class SvmApplicationClusterRunner(PcssRunner):
+class PrepareSvmApplicationClusterRunner(PcssRunner):
     def executePipeline(self):
 
         seqDivider = pcssCluster.SeqDivider(self)

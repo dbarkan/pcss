@@ -282,6 +282,9 @@ class ClassifySvm:
                     peptides.append(peptide)
         self.setPeptides(peptides)
 
+    def getProteins(self):
+        return self.proteins
+
     def setPeptides(self, peptides):
         self.peptides = peptides
         print "set peptides; have %s total" % len(self.peptides)
