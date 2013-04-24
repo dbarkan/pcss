@@ -23,7 +23,7 @@ class SeqDivider:
 
     def getFastaGroupList(self, fastaFile):
         fh = open(fastaFile, 'r')
-        fastaList = list(SeqIO.FastaIO.FastaIterator(fh))
+        fastaList = sorted(list(SeqIO.FastaIO.FastaIterator(fh)), key=lambda x: x.id)
         seqBatchSize = int(self.pcssRunner.internalConfig["seq_batch_size"])
 
         print "seq batch size: %s" % seqBatchSize

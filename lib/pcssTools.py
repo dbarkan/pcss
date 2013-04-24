@@ -655,6 +655,7 @@ class PcssDirectoryHandler:
 
     def fileDoesNotExist(self, fileName):
         """Simple predicate that returns true if fileName doesn't exist in file system"""
+        
         return not os.path.exists(fileName)
 
     def fileExists(self, fileName):

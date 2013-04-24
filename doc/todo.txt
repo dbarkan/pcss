@@ -62,8 +62,10 @@ if running with SVM Annotation Input mode, need to link the fasta file for seque
    don't think I had to do this before since I was alwyas essentailly svm annotaiton features mode
 
 
+** seq batch of 10 looks like it is messed up in task list
 ERROR HANDLING
-
+change validate to say what exactly failed -- look at ptPhage
+when reading existing error, make sure the message (line 1) is printed out from the previous error -- might be printing the error type (line 0)
 leave one out -- keep track of tested peptides and throw error if they were already tested once 
 check to make sure fpr for one test set result is always >= fpr in the next line
 check to make sure tp is always greater than tp in previous line
@@ -122,6 +124,15 @@ have every pcss global exception have an error code that the test can check to m
 
 
 TEST REFACTOR
+change compareFiles so that can sort when want to
+in cluster script generator, remove all double slashes
+maybe should run everything on cluster and make sure there are no errors
+run prepare, finalize everything
+copy to trombone
+change run names to develop, change netapp to trombone
+normal test refactoring
+
+
 test_models has process exception where it just checks for error in feature column. See if that can be generalized in other tests
 maybe write all exceptions to screen to check for clean output
 create cluster test and seq batch directories; test InternalException filename (they are the only ones who throw it)
@@ -142,8 +153,11 @@ think of a way to streamline reading input annotation. Tough because different t
       also see if can streamline runner creation
       can grep for testInput, can help to see what reads annotation      
 svmAppFeatures and svmAppInput both have same expected output, is that supposed to be the case?
+move all needed input to test directory -- especially internal config (seq batch count will cause trouble)
+
 
 TESTING GENERAL
+
 have a test for error exists exception
 testing for run disopred standalone and cluster
 test for exception if not set peptide length in pcssTools (might be tough)
@@ -162,6 +176,7 @@ have test with annotaiton defined, one peptide that is different lengths than ot
 have test for exception in pcssSvm.finalizeFeature()
 
 TESTING CLUSTER
+test for correct number of directories made by seq batch splitter
 test two exceptions in mergeSvmApplicationResutls -- will have to figure out how to do seq batch directory structure (can do when refactoring tests)
 make sure we have column row as first row
 maybe check to make sure we got a result for all input

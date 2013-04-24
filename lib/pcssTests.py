@@ -34,14 +34,14 @@ class PcssTest(unittest.TestCase):
     def setTrainingFileAttributes(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
 
-    def compareToExpectedOutput(self, observedFileName, expectedFileName, compareAlmostEqual=False):
+    def compareToExpectedOutput(self, observedFileName, expectedFileName, sortLines=False, compareAlmostEqual=False):
         fullExpectedFileName = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "expectedOutput", 
                                             self.testName, "%s_expectedOutput.txt" % expectedFileName)
         print "compare %s and %s" % (observedFileName, fullExpectedFileName)
         if (compareAlmostEqual):
-            self.compareFilesAlmostEqual(observedFileName, fullExpectedFileName)
+            self.compareFilesAlmostEqual(observedFileName, fullExpectedFileName, sortLines)
         else:
-            self.compareFiles(observedFileName, fullExpectedFileName, True)
+            self.compareFiles(observedFileName, fullExpectedFileName, sortLines)
 
     def setupSpecificTest(self):
         return
