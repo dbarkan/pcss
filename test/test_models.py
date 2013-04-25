@@ -14,10 +14,10 @@ from Bio import PDB
 
 class TestModels(pcssTests.PcssTest):
 
-    def processException(self, exceptionCode, function, args):
-        function(*args)
+    def processModelException(self, exceptionCode, function):
+
         peptide = self.proteins[0].peptides.values()[0]
-        self.assertEquals(peptide.getAttributeOutputString("dssp_structure"), exceptionCode)
+        self.processFeatureException(peptide, "dssp_structure", exceptionCode, function)
 
     def setupSpecificTest(self):
         self.runner = pcssTools.ModelRunner(self.pcssConfig)
@@ -40,27 +40,31 @@ class TestModels(pcssTests.PcssTest):
         pcssProtein = self.addModelsToTestProtein()
         bestModel = pcssProtein.getRankedModels()[0]
         bestModel.setAttribute("model_id", "fake")
-        self.processException("peptide_error_no_source_model", pcssProtein.processDssp, [])
+        self.processModelException("peptide_error_no_source_model", pcssProtein.processDssp)
 
     def test_invalid_model_range(self):
         self.pcssConfig['model_table_column_file'] = "testInput/dsspErrors/modelColumnOrderBadRange.txt"            
         pcssProtein = self.createTestProtein()
-        self.assertRaises(pcssErrors.PcssGlobalException, pcssProtein.addModels, self.modelTable)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            pcssProtein.addModels(self.modelTable)
+        self.handleTestException(pge)
 
     def test_dssp_error(self):
         pcssProtein = self.addModelsToTestProtein()
         self.pcssConfig['dssp_executable'] = "fake"
-        self.processException("peptide_error_dssp_error", pcssProtein.processDssp, [])
+        self.processModelException("peptide_error_dssp_error", pcssProtein.processDssp)
 
     def test_dssp_peptide_mismatch(self):
         pcssProtein = self.addModelsToTestProtein()
         pcssProtein.peptides[2].sequence = "FAKEFAKE"
-        self.processException("peptide_error_dssp_mismatch", pcssProtein.processDssp, [])
+        self.processModelException("peptide_error_dssp_mismatch", pcssProtein.processDssp)
 
     def test_column_count_mismatch(self):
         self.pcssConfig['model_table_column_file'] = "testInput/dsspErrors/modelColumnOrderShort.txt"    
         modelColumns = pcssModels.PcssModelTableColumns(self.pcssConfig)
-        self.assertRaises(pcssErrors.PcssGlobalException, pcssModels.PcssModelTable, self.runner, modelColumns)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            pcssModels.PcssModelTable(self.runner, modelColumns)
+        self.handleTestException(pge)
 
     def test_read_model_table(self):
 
@@ -82,7 +86,10 @@ class TestModels(pcssTests.PcssTest):
         peptide = pcssProtein.peptides[2]
         self.assertEquals(peptide.bestModel.getId(), pcssModel.getId())
 
-        self.assertRaises(pcssErrors.PcssGlobalException, pcssModel.getAttributeValue, "fake")
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            pcssModel.getAttributeValue("fake")
+        self.handleTestException(pge)
+
         self.assertTrue(os.path.exists(self.runner.pdh.getFullModelFile(pcssModel)))
 
         self.assertEquals(peptide.attributes["dssp_structure"].getValueString(), "AAAAAAAA")

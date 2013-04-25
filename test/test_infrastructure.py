@@ -37,12 +37,13 @@ class TestPcssInfrastructure(pcssTests.PcssTest):
     def test_subprocess_error(self):
         with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
             self.pcssRunner.pdh.unzipFile("fake.gz")
-            
+        self.handleTestException(pge)
         self.assertTrue(pge.exception.msg.startswith("Got subprocess error"))
         
     def test_gunzip_error(self):
         with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
             self.pcssRunner.pdh.unzipFile("fake") 
+        self.handleTestException(pge)
         #unzipFile raises no .gz in file name before it raises can't find file, so
         #this test relies on that order being maintained
             

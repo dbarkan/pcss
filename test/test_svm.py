@@ -116,7 +116,9 @@ class TestSvm(pcssTests.PcssTest):
 
         benchmarker = self.getLeaveOneOutBenchmarker()
         peptideSet = pcssTools.getAllPeptides(self.reader.getProteins(), False)[0:20]
-        self.assertRaises(pcssErrors.PcssGlobalException, self.throwBadCountError, benchmarker, peptideSet)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            self.throwBadCountError(benchmarker, peptideSet)
+        self.handleTestException(pge)
 
     def test_leave_one_out_test_set_error(self):
 
@@ -126,7 +128,9 @@ class TestSvm(pcssTests.PcssTest):
         fakeTestSvm = pcssSvm.TestSvm(self.runner)
         fakeTestSvm.setPeptides(pcssTools.getAllPeptides(self.reader.getProteins(), False)[21:23])
         benchmarker.testSvm = fakeTestSvm
-        self.assertRaises(pcssErrors.PcssGlobalException, benchmarker.trainAndApplyModel)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            benchmarker.trainAndApplyModel()
+        self.handleTestException(pge)
 
     def throwBadCountError(self, benchmarker, peptideSet):
         badCount = len(peptideSet) + 1
@@ -185,6 +189,7 @@ class TestSvm(pcssTests.PcssTest):
         tsrt = self.countMismatch(runner.getPositiveKeyword(), 8)
         with self.assertRaises(pcssErrors.PcssGlobalException) as e:
             tsrt.finalize()
+        self.handleTestException(e)
         self.assertTrue(runner.getPositiveKeyword().lower() in e.exception.msg)
 
     def test_test_sets_count_negative_mismatch(self):
@@ -192,6 +197,7 @@ class TestSvm(pcssTests.PcssTest):
         tsrt = self.countMismatch(runner.getNegativeKeyword(), 1)
         with self.assertRaises(pcssErrors.PcssGlobalException) as e:
             tsrt.finalize()
+        self.handleTestException(e)
         self.assertTrue(runner.getNegativeKeyword().lower() in e.exception.msg)
 
     def countMismatch(self, keyword, peptidesToRemoveCount):
@@ -229,38 +235,55 @@ class TestSvm(pcssTests.PcssTest):
         peptide = self.reader.getProteins()[0].peptides.values()[0]
         peptide.addStringAttribute("status", "fake")
         svm = pcssSvm.TrainingSvm(self.runner)
-        self.assertRaises(pcssErrors.PcssGlobalException, svm.setPeptides, pcssTools.getAllPeptides(self.reader.getProteins(), False))
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            svm.setPeptides(pcssTools.getAllPeptides(self.reader.getProteins(), False))
+        self.handleTestException(pge)
 
     def test_bad_svm_training_command(self):
         self.readStandardTrainingAnnotationInputFile()
         svm = pcssSvm.TrainingSvm(self.runner)
         self.runner.internalConfig["training_set_file_name"] = self.getErrorInputFile("badCommandTrainingSet")
 
-        self.assertRaises(pcssErrors.PcssGlobalException, svm.trainModel)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            svm.trainModel()
+        self.handleTestException(pge)
+
         self.runner.internalConfig["training_set_file_name"] = "fake"
-        self.assertRaises(pcssErrors.PcssGlobalException, svm.trainModel)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            svm.trainModel()
+        self.handleTestException(pge)
 
     def test_more_positives_than_negatives(self):
         self.readTrainingAnnotationInputFile(self.getErrorInputFile("trainingMorePositives.txt"))
         peptides = pcssTools.getAllPeptides(self.reader.getProteins(), False)
         benchmarker = pcssSvm.SvmBenchmarker(self.runner)
-        self.assertRaises(pcssErrors.PcssGlobalException, benchmarker.createTrainingAndTestSets, peptides)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            benchmarker.createTrainingAndTestSets(peptides)
+        self.handleTestException(pge)
 
     def test_no_test_set_positives(self):
         self.readTrainingAnnotationInputFile(self.getErrorInputFile("trainingNoTestSetPositives.txt"))
         peptides = pcssTools.getAllPeptides(self.reader.getProteins(), False)
         benchmarker = pcssSvm.SvmBenchmarker(self.runner)
-        self.assertRaises(pcssErrors.PcssGlobalException, benchmarker.createTrainingAndTestSets, peptides)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            benchmarker.createTrainingAndTestSets(peptides)
+        self.handleTestException(pge)
 
     def test_bad_svm_app_command(self):
 
         appSvm = self.getApplicationSvm()
         appSvm.writeClassificationFile()
         self.runner.internalConfig["application_set_file_name"] = self.getErrorInputFile("badCommandApplicationSet")
-        self.assertRaises(pcssErrors.PcssGlobalException, appSvm.classifySvm)
+
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            appSvm.classifySvm()
+        self.handleTestException(pge)
 
         self.runner.internalConfig["application_set_file_name"] = "fake"
-        self.assertRaises(pcssErrors.PcssGlobalException, appSvm.classifySvm)
+
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            appSvm.classifySvm()
+        self.handleTestException(pge)
 
     def test_missing_training_model(self):
         self.readStandardTrainingAnnotationInputFile()
@@ -270,21 +293,31 @@ class TestSvm(pcssTests.PcssTest):
         testSvm.writeClassificationFile()
 
         self.runner.internalConfig["training_new_model_name"] = "fake"
-        self.assertRaises(pcssErrors.PcssGlobalException, testSvm.classifySvm)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            testSvm.classifySvm()
+        self.handleTestException(pge)
 
     def test_bad_app_output_files(self):
         appSvm = self.getApplicationSvm()
         appSvm.writeClassificationFile()
         
         self.runner.internalConfig["application_set_output_file_name"] = self.getErrorInputFile("countMismatchApplicationSet")
-        self.assertRaises(pcssErrors.PcssGlobalException, appSvm.readResultFile)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            appSvm.readResultFile()
+        self.handleTestException(pge)
+        
         self.runner.internalConfig["application_set_output_file_name"] = "fake"
-        self.assertRaises(pcssErrors.PcssGlobalException, appSvm.readResultFile)
+        
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            appSvm.readResultFile()
+        self.handleTestException(pge)
 
     
     def processInvalidBenchmarkFile(self, fileName):
         br = pcssSvm.BenchmarkResults()        
-        self.assertRaises(pcssErrors.PcssGlobalException, br.readBenchmarkFile, fileName)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            br.readBenchmarkFile(fileName)
+        self.handleTestException(pge)
 
     def test_all_invalid_benchmark_files(self):
         self.processInvalidBenchmarkFile(self.getErrorInputFile("invalidBenchmarkFile.txt"))
@@ -296,13 +329,17 @@ class TestSvm(pcssTests.PcssTest):
         appSvm = pcssSvm.ApplicationSvm(self.runner)
         proteins = self.reader.getProteins()
         appSvm.setProteins(self.reader.getProteins())
-        self.assertRaises(pcssErrors.PcssGlobalException, appSvm.writeClassificationFile)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            appSvm.writeClassificationFile()
+        self.handleTestException(pge)
 
     def test_invalid_svm_feature(self):
 
         appSvm = self.getApplicationSvm()
         self.runner.internalConfig["feature_order"][1] = "disorped_score_feature"
-        self.assertRaises(pcssErrors.PcssGlobalException, appSvm.writeClassificationFile)
+        with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
+            appSvm.writeClassificationFile()
+        self.handleTestException(pge)
 
 if __name__ == '__main__':
     unittest.main()

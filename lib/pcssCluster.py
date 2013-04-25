@@ -193,15 +193,13 @@ class ClusterScriptGenerator:
 """ %locals()
         return script
 
-    def makeBaseAnnotationSgeScript(self, taskList, seqBatchDir, commandName, outputFileName):
+    def makeBaseAnnotationSgeScript(self, taskListString, seqBatchDir, commandName, outputFileName):
 
         pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
                 
         configFileName = self.pcssRunner.internalConfig["seq_batch_node_config_file"]
         nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
         
-        taskListString = " ".join(taskList)
-
         script = """
 
 set PCSS_BASE_DIRECTORY="%(pcssBaseDirectory)s"
