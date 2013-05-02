@@ -50,9 +50,33 @@ class PcssTest(unittest.TestCase):
     def setTrainingFileAttributes(self):
         self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
 
-    def compareToExpectedOutput(self, observedFileName, expectedFileName, sortLines=False, compareAlmostEqual=False):
+    def getFullExpectedOutputFile(self, shortName):
         fullExpectedFileName = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "expectedOutput", 
-                                            self.testName, "%s_expectedOutput.txt" % expectedFileName)
+                                            self.testName, "%s_expectedOutput.txt" % shortName)
+        return fullExpectedFileName
+
+    def createNewExpectedOutputFiles(self, observedFileName, shortExpectedFileName):
+        expectedFileName = "%s_expectedOutput.txt" % shortExpectedFileName
+        fullExpectedFileName = self.getFullExpectedOutputFile(shortExpectedFileName)
+
+        outputDir = os.path.join(self.pcssConfig["home_test_directory"], "newExpectedOutputFiles")
+        if (not os.path.exists(outputDir)):
+            os.mkdir(outputDir)
+            self.runner.sleepUntilDone(outputDir, predicate=pcssTools.pcssRunner.fileDoesNotExist)
+        
+        #copy observed file to temporary directory for holding new expected output files
+        shutil.copy(observedFileName, os.path.join(outputDir, expectedFileName))
+
+        #write command for copying file in temporary directory to expected output directory in test
+        copyFh = open(os.path.join(outputDir, "copyFile.sh"), 'a')
+        sourceFile = os.path.join(outputDir, expectedFileName)
+        destinationFile = fullExpectedFileName
+        copyFh.write("cp %s %s\n" % (sourceFile, destinationFile))
+
+    def compareToExpectedOutput(self, observedFileName, shortExpectedFileName, sortLines=False, compareAlmostEqual=False):
+        fullExpectedFileName = self.getFullExpectedOutputFile(shortExpectedFileName)
+        
+        #self.createNewExpectedOutputFiles(observedFileName, shortExpectedFileName)
         if (compareAlmostEqual):
             self.compareFilesAlmostEqual(observedFileName, fullExpectedFileName, sortLines)
         else:

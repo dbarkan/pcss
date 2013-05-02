@@ -12,5 +12,6 @@ disopred_string_feature	peptide	False	Disorder Calls	DisorderStringFeature	input
 disopred_score_feature	peptide	False	Disopred Scores	DisorderScoreFeature	input,output
 psipred_string_feature	peptide	False	Psipred Calls	PsipredStringFeature	input,output
 psipred_score_feature	peptide	False	Psipred Scores	PsipredScoreFeature	input,output
+model_url	model	True	Model URL	string	input,output
 protein_errors	protein	False	Protein Errors	string	input,output
 peptide_errors	peptide	False	Peptide Errors	PeptideErrorFeature	input,output

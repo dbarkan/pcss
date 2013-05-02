@@ -25,6 +25,7 @@ class TestReadInput(pcssTests.PcssTest):
         with self.assertRaises(pcssErrors.PcssGlobalException) as e:
             reader.readAnnotationFile(annotationFileName)
         self.handleTestException(e)
+        print "annotation file name: %s exception msg: %s" % (annotationFileName, e.exception.msg)
 
     def test_bad_annotation_file(self):
         self.processBadAnnotationFileTest(self.getErrorInputFile("missingColumnsFile.txt"))
@@ -103,7 +104,9 @@ class TestReadInput(pcssTests.PcssTest):
         
     def test_read_feature_error(self):
         reader = pcssIO.AnnotationFileReader(self.runner)
+
         reader.readAnnotationFile(self.getErrorInputFile("annotationOutputFeatureError.txt"))
+        
         firstProtein = reader.getProteins()[0]
         firstPeptide = firstProtein.peptides.values()[0]
         self.assertEqual("peptide_error_no_source_model", firstPeptide.getAttributeOutputString("dssp_structure"))
@@ -164,6 +167,7 @@ class TestReadInput(pcssTests.PcssTest):
         with self.assertRaises(pcssErrors.PcssGlobalException) as e:
             reader.readAnnotationFile(self.getErrorInputFile("noAnnotationProteins.txt"))
         self.handleTestException(e)
+        print "no annotation proteins: msg %s" % e.exception.msg
 
     def read_write_annotation_file(self, inputFile):
         reader = pcssIO.AnnotationFileReader(self.runner)
@@ -178,7 +182,9 @@ class TestReadInput(pcssTests.PcssTest):
         self.read_write_annotation_file("testInput/svmApplicationAnnotationInput.txt")
 
     def test_read_write_feature_error_file(self):
+        
         self.read_write_annotation_file(self.getErrorInputFile("annotationOutputFeatureError.txt"))
+                    
 
 if __name__ == '__main__':
     unittest.main()

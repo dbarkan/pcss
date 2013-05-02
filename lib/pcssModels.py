@@ -54,6 +54,7 @@ class PcssModelTable:
         for line in lines:
             pcssModel = PcssModel(pcssRunner)
             pcssModel.initFromModelTableLine(line, modelTableColumns)
+            
             self.addModel(pcssModel)
 
     def addModel(self, pcssModel):
@@ -234,7 +235,10 @@ class PcssModel:
     def calculateCoverage(self, proteinSeqLength):
         """Calculate the fraction of thep protein that is covered by this model"""
         self.setAttribute("coverage", float(self.getLength()) / float(proteinSeqLength))
-                             
+    
+    def setModelUrl(self, modelUrl):
+        self.setAttribute("model_url", modelUrl)
+
     def getLength(self):
         targetEnd = int(self.getAttributeValue("target_end"))
         targetBegin = int(self.getAttributeValue("target_beg"))

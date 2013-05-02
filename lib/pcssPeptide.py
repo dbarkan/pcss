@@ -174,6 +174,7 @@ class PcssProtein(object):
         self._pcssModels = {}
         for model in modelList:
             model.calculateCoverage(self.getSequenceLength())
+            model.setModelUrl(self.pcssRunner.getModelUrl(model.getId()))
             self._pcssModels[model.getAttributeValue("model_id")] = model
 
     def processDssp(self):

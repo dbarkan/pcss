@@ -99,7 +99,7 @@ class TestSvm(pcssTests.PcssTest):
         self.runner.internalConfig["make_random_test_set"] = False
         pstList = self.getSvmBenchmarkTestSetResult(benchmarker, pcssTools.getAllPeptides(self.reader.getProteins(), False))
         firstTuple = pstList.getBenchmarkTuple(0)
-        self.assertEquals(float(firstTuple.score), -4.8898455)
+        self.assertEquals(float(firstTuple.score), -3.9027991)
         self.assertEquals(float(firstTuple.fpr), 0.0136986301369863)
         
     def test_leave_one_out(self):
@@ -262,7 +262,10 @@ class TestSvm(pcssTests.PcssTest):
         self.handleTestException(pge)
 
     def test_no_test_set_positives(self):
-        self.readTrainingAnnotationInputFile(self.getErrorInputFile("trainingNoTestSetPositives.txt"))
+        try:
+            self.readTrainingAnnotationInputFile(self.getErrorInputFile("trainingNoTestSetPositives.txt"))
+        except pcssErrors.PcssGlobalException as e:
+            print e.msg
         peptides = pcssTools.getAllPeptides(self.reader.getProteins(), False)
         benchmarker = pcssSvm.SvmBenchmarker(self.runner)
         with self.assertRaises(pcssErrors.PcssGlobalException) as pge:

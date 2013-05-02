@@ -1,24 +1,38 @@
 NEXT
-un-essential refactoring and cleaning
-other features, e.g model url
+clean up the mess i made in tests; copied some observed output files to input for the next level of test
+(e.g. copied annotation output to svmApplicationInput_annotationInput -- or whatever the name was)
+Think tests are working except for training SVM which throws a value error
+but make sure they really are working, since it's the first time I've done this.
+main questions: 
+2. why am I getting value error? The input might be in git so can test against that, but also see the root cause so can handle error ahead of time
+3. quick check of output files to make sure they make sense, maybe one svm score check
+4. write flow of what output gets copied to what input. Don't think there is too much so fine to do manually each time data is updated (write full protocol for this)
+5. keep working on expected output automatic copy; that takes more time and here automation is useful
 
+
+other features, e.g model url
+un-essential refactoring and cleaning
 memory profile
 
-run two long sequences individually to get final times
-psipred standalone runner
-estimate chances of timeout by looking at times for long sequence runs 
 either run all psipred / disopred with standalone or run as part of big dataset
+       if get timeout, will have logs and can adjust accordingly
 
 clean up current web service, start test
 integrate into backend
 create regression web backend
 
+MEMORY PROFILE
+for both svmApplication and training
+   figure out what the command is to get max memory -- should be in docking
+   first runs-- ask for extra memory; more than 1GB for sure
+training: do small number of peptides a small number of iterations
+	  do large number of peptides a small number of iterations
+	  etc.
 
-big dataset --
-biggest issue is long disopred / psipred sequences. 
--- if it doesn't finish right now, will throw error that annotation file isnt' created
--- solutions -- benchmark time it takes and see if I can increase time requested on cluster
-   see what the length distribution is for the human proteome to get a general idea
+svm application
+    do small number of peptides
+    do larger number of peptides
+    more controlled by seq batch than peptide size so should be safer
 
 CLEANING
 clean bin directory?
@@ -59,8 +73,6 @@ if running with SVM Annotation Input mode, need to link the fasta file for seque
    functionality will be different depending on whether fasta file was scan or defined -- could be time to make specialized fasta readers
    don't think I had to do this before since I was alwyas essentailly svm annotaiton features mode
 
-
-** seq batch of 10 looks like it is messed up in task list
 ERROR HANDLING
 change validate to say what exactly failed -- look at ptPhage
 when reading existing error, make sure the message (line 1) is printed out from the previous error -- might be printing the error type (line 0)
@@ -98,6 +110,7 @@ WEB SERVER
 
 
 REFACTORING
+modelTable logic (with PcssModel and PcssModelSequence) is a little confusing, see if I can clean it up -- good practice for databases
 in training mode, dont' need peptide importer type parameter
 consider having only one inpout file parameter for training svm modes and application modes, will cut down on number of parameters. might not b epossible though.
 pcssTest has getProtein method, is that needed anywhere else? a little clunky
@@ -169,11 +182,12 @@ everywhere --- have recently added a lot of os.mkdir. Might need to add sleep un
 review previous cluster merging / seq batch code, especially errors (although deprioritize, think I can just start de novo or find errors in big datasets since so much has changed)
 
 CODE
+psipred standalone runner
 Consider having gaps as input in peptides
  make a python script to make fasta defined input from normal input file. For now can just use perl script, and factor it out from db
-* rename peptide and protein basic attributes to be standardized; have try to take out all the input people having to say 'proteins.values()' or change to getProteinDict()
-* make sure peptides know their proteins in all instances -- allows for better error writing as well as benchmark reading / writing 
-* have peptide start position and protein be written out during leave one out
+ rename peptide and protein basic attributes to be standardized; have try to take out all the input people having to say 'proteins.values()' or change to getProteinDict()
+ make sure peptides know their proteins in all instances -- allows for better error writing as well as benchmark reading / writing 
+ have peptide start position and protein be written out during leave one out
 consider interpolating at critical point, see how web server does is
 do context with peptides read in memory and then immediately to training / test -- do some profiling to see how long it takes
 If I have an error for a feature for one peptide, it applies for all peptides in the protein. should I keep it that way or have it be specific to that peptide only?
@@ -305,4 +319,40 @@ However does do validation on more negatives than positives and test set positiv
 
 Status: either positive, negative, or application. In Annotatin, file attribute is set to 'none' so that there isn't a non-sensible status column written out
 but it can still be set as a feature
+
+
+50 sequences
+25000 = 500 runs / directories
+50 sequence * 1 hour for disopred + 1 hour for psipred
+4 hours for longest one, 3 hours for second longest
+
+
+
+
+
+
+
+runners:
+make sure old test is working
+test_runners -- test_annotation_runner, copy output to testInput/svmApplicationAnnotationInput.txt
+test_runners -- test_training_annotation_runner, copy output to testInput/svmTrainingAnnotationInput.txt
+test all runners, uncomment pcssTests.compareToExpectedOutput line self.createNewExpectedOutputFiles
+in newExpectedOutputFiles directory, run copy script to copy to exepcted output
+comment createNewExpectedOutputFiles again
+final test
+
+svm:
+copy annotation output file to svmErrors/nonStandardAaAnnotation.txt; change one peptide to X
+copy training annotation output file to svmErrors/trainingMorePositives.txt; do emacs find and replace to create more positives than negatives
+copy training annotatin output file to svmErrors/trainingNoTestSetPositives.txt; count through 8 positives and at least as many negatives, truncate the rest of the file
+there are also two expected output files for test_svm that need to be re-created using copyFile.sh
+
+readInput:
+missingInputColumn.txt -- should be fine no matter what changes because looks for missing ModbaseSequenceID
+extraInputColumn.txt -- copy annotation output file to ioErrors/extraInputColumn.txt; open, add fake column name and tab somewhere, close
+noAnnotationProteins.txt -- copy annotation output file to ioErrors/noAnnotationProteins.txt and delete everything below column header
+annotationOutputFeatureError.txt -- this one is tough since everything has to be 'no_source_model' -- think here it's best just to change it in excel to add the extra
+column, or some other manual way depending on where the column is. Probably usually have to add values for the columns too or read / write will complain, even if there is
+something in the error column.
+
 

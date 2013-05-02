@@ -92,6 +92,8 @@ class TestModels(pcssTests.PcssTest):
 
         self.assertTrue(os.path.exists(self.runner.pdh.getFullModelFile(pcssModel)))
 
+        self.assertEquals(self.runner.getModelUrl("MYMODELID"), "http://salilab.org/modbase/search?modelID=MYMODELID&displaymode=moddetail")
+
         self.assertEquals(peptide.attributes["dssp_structure"].getValueString(), "AAAAAAAA")
         self.assertEquals(peptide.attributes["dssp_accessibility"].getValueString(), 
                           "0.589, 0.234, 0.763, 0.515, 0.189, 0.162, 0.658, 0.374")

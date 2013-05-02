@@ -79,8 +79,6 @@ class DefinedPeptideImporter(PeptideImporter):
 
     def readInputFile(self, proteinFastaFile):
         """Read input fasta file, parse headers to create PcssProteins and parse sequence to create PcssPeptides"""
-        print "DEFINED: Reading input %s" % proteinFastaFile
-        
         fh = open(proteinFastaFile, 'r')
         fastaIterator = SeqIO.FastaIO.FastaIterator(fh)
         pcssProteins = []
@@ -104,7 +102,7 @@ class DefinedPeptideImporter(PeptideImporter):
         seq.setUniprotId(uniprotId)
         maxPeptideLength = 0
         peptideList = []
-        print "making all peptides from seq id %s" % modbaseSeqId
+
         for col in cols[2:len(cols)]:
             nextPeptide = self.makePeptideFromCode(col, modbaseSeqId)
 
@@ -119,7 +117,6 @@ class DefinedPeptideImporter(PeptideImporter):
         return seq
 
     def makePeptideFromCode(self, peptideCode, modbaseSeqId):
-        print "making peptide from %s" % peptideCode
         if (len(peptideCode.split('_')) != 3):
             raise pcssErrors.PcssGlobalException("Peptide code %s from protein %s is not proper form of peptideStart_peptideSequence_status" % (peptideCode, modbaseSeqId))
         [peptideStart, peptideSequence, status] = peptideCode.split('_')
@@ -209,10 +206,9 @@ class AnnotationFileReader:
             peptide = self.getPeptideFromLine(cols)
             model = self.getModelFromLine(cols)
             protein.setPeptide(peptide)
+
             peptide.bestModel = model
-        
-        
-                        
+                                
         return protein
 
     def getModelFromLine(self, cols):

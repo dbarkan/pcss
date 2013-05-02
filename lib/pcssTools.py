@@ -212,6 +212,12 @@ class PcssRunner:
             os.mkdir(directoryName)
         return directoryName
         
+    def getModelUrl(self, modelId):
+        modelUrlInitial = self.internalConfig["model_url"]
+        wildCard = self.internalConfig["wild_card"]
+        modelUrlFinal = modelUrlInitial.replace(wildCard, modelId)
+        return modelUrlFinal
+
     def getJobDirectory(self):
         return self.pdh.getJobDirectory()
 

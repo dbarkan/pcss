@@ -22,7 +22,6 @@ class CompleteSvmGenerator:
         self.trainingSvm.setPeptides(peptides)
         modelFile = self.pcssRunner.pdh.getUserModelFileName()
         self.trainingSvm.writePeptidesToFile(modelFile)
-        
 
 class LeaveOneOutBenchmarker:
     def __init__(self, pcssRunner):
@@ -466,6 +465,7 @@ class TestSetResultTracker:
         for testSetResult in self.allTestSetResults:
             self.validateTestSetResult(testSetResult)
             tprTuples = testSetResult.getIncrementedTprTuples()
+            
             for tprTuple in tprTuples:
                 if (not tprTuple.tpr in tprCountsToTuples):
                     tprCountsToTuples[tprTuple.tpr] = []
@@ -474,7 +474,6 @@ class TestSetResultTracker:
         self.testSetTprAveragesList = []
         foundCriticalPoint = False
         for tpr, bpstList in sorted(tprCountsToTuples.iteritems()):
-
             fprAverage = self.average(list(x.fpr for x in bpstList))
             fprStdev = self.stddev(list(x.fpr for x in bpstList))
             scoreAverage = self.average(list(x.score for x in bpstList))
@@ -499,7 +498,9 @@ class TestSetResultTracker:
         return average
 
     def stddev(self, list):
-        stddev = math.sqrt((float(sum(x * x for x in list)) / float(len(list))) - (float(self.average(list)) * float(self.average(list))))
+        topPart = (float(sum(x * x for x in list)) / float(len(list)))
+        bottomPart =  (float(self.average(list)) * float(self.average(list)))
+        stddev = math.sqrt(round(topPart, 12) - round(bottomPart, 12))
         return stddev
     
 
