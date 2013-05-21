@@ -1,0 +1,44 @@
+Reading model...OK. (819 support vectors read)
+Classifying test examples..done
+Runtime (without IO) in cpu-seconds: 0.02
+file exists: checking for file /netapp/sali/dbarkan/pcss/
+file exists: checking for file /netapp/sali/dbarkan/pcss//runs/svmApplicationCluster/seqBatchList
+file exists: checking for file /netapp/sali/dbarkan/pcss//runs/svmApplicationCluster/seqBatchList/2/inputFastaFile.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/features/disopredResults/
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/features/psipredResults/
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/models/modelColumnOrder.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/models/human2008ModelTableTruncated.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/features/dssp/
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/models/modelRunInfo.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//bin/dsspcmbi
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/context/svmApplicationClusterFileAttributes.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/benchmark/grbBenchmarkScores.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/benchmark/grbCreateModel_svmModelFile
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/config/internalConfigFile.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/config/internalConfigSpec.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//bin/svm_classify_x64
+caught exception Disopred mismatch between result file (R) and protein sequence (V) at position 484
+next peptide 483 process excpetion
+next peptide 421 process excpetion
+next peptide 198 process excpetion
+next peptide 519 process excpetion
+next peptide 520 process excpetion
+next peptide 170 process excpetion
+next peptide 491 process excpetion
+next peptide 143 process excpetion
+next peptide 189 process excpetion
+next peptide 515 process excpetion
+next peptide 148 process excpetion
+next peptide 117 process excpetion
+next peptide 406 process excpetion
+next peptide 55 process excpetion
+next peptide 504 process excpetion
+next peptide 251 process excpetion
+next peptide 284 process excpetion
+next peptide 42 process excpetion
+next peptide 394 process excpetion
+next peptide 479 process excpetion
+got model squence; <pcssModels.PcssModelSequence instance at 0x30e6440>
+model list length: 0
+set peptides; have 20 total
+adding scores to peptides

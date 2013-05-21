@@ -1,0 +1,31 @@
+Reading model...OK. (819 support vectors read)
+Classifying test examples..100..done
+Runtime (without IO) in cpu-seconds: 0.18
+file exists: checking for file /netapp/sali/dbarkan/pcss/
+file exists: checking for file /netapp/sali/dbarkan/pcss//runs/svmApplicationCluster/seqBatchList
+file exists: checking for file /netapp/sali/dbarkan/pcss//runs/svmApplicationCluster/seqBatchList/0/inputFastaFile.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/features/disopredResults/
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/features/psipredResults/
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/models/modelColumnOrder.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/models/human2008ModelTableTruncated.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/features/dssp/
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/models/modelRunInfo.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//bin/dsspcmbi
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/context/svmApplicationClusterFileAttributes.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/benchmark/grbBenchmarkScores.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/benchmark/grbCreateModel_svmModelFile
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/config/internalConfigFile.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/config/internalConfigSpec.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//bin/svm_classify_x64
+got model squence; <pcssModels.PcssModelSequence instance at 0x20706c8>
+model list length: 0
+got model squence; <pcssModels.PcssModelSequence instance at 0x2076ea8>
+model list length: 0
+got model squence; <pcssModels.PcssModelSequence instance at 0x216c1b8>
+model list length: 0
+got model squence; <pcssModels.PcssModelSequence instance at 0x219bbd8>
+model list length: 0
+got model squence; <pcssModels.PcssModelSequence instance at 0x2291b90>
+model list length: 0
+set peptides; have 101 total
+adding scores to peptides

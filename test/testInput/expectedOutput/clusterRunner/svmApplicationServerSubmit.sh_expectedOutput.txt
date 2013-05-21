@@ -1,0 +1,25 @@
+
+
+set PCSS_BASE_DIRECTORY="/netapp/sali/peptide/"
+
+set MODEL_OUTPUT_FILE_NAME="svmApplicationStdout.txt"
+
+set tasks=( 0 1 2 )
+set input=$tasks[$SGE_TASK_ID]
+
+set NODE_HOME_DIR="/scratch/peptide/$input"
+mkdir -p $NODE_HOME_DIR
+cd $NODE_HOME_DIR
+
+date
+hostname
+pwd
+
+set CONFIG_FILE_NAME="/netapp/sali/peptide//live/preprocess/develop/seqBatchList/$input/seqBatchNodeClusterConfig.txt"
+
+setenv PYTHONPATH $PCSS_BASE_DIRECTORY/lib
+python $PCSS_BASE_DIRECTORY/bin/clusterExe/runSvmApplicationCluster.py $CONFIG_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
+
+cp $MODEL_OUTPUT_FILE_NAME "/netapp/sali/peptide//live/preprocess/develop/seqBatchList/$input/"
+
+rm -r $NODE_HOME_DIR/

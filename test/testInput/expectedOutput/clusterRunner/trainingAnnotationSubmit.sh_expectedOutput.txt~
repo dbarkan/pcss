@@ -1,0 +1,39 @@
+
+#!/bin/tcsh
+#$ -S /bin/tcsh                    
+#$ -o sgeOutput.txt            
+#$ -e sgeError.txt             
+#$ -cwd                            
+#$ -r y                            
+#$ -j y                            
+#$ -l mem_free=1G                  
+#$ -l arch=linux-x64               
+#$ -l netapp=1G,scratch=1G         
+#$ -l h_rt=24:00:00                
+#$ -t 1-2
+
+
+
+set PCSS_BASE_DIRECTORY="/trombone1/home/dbarkan/pcss/"
+
+set MODEL_OUTPUT_FILE_NAME="trainingAnnotationStdout.txt"
+
+set tasks=( 0   1 )
+set input=$tasks[$SGE_TASK_ID]
+
+set NODE_HOME_DIR="/scratch/peptide/$input"
+mkdir -p $NODE_HOME_DIR
+cd $NODE_HOME_DIR
+
+date
+hostname
+pwd
+
+set CONFIG_FILE_NAME="/trombone1/home/dbarkan/pcss//test//runs/develop/seqBatchList/$input/seqBatchNodeClusterConfig.txt"
+
+setenv PYTHONPATH $PCSS_BASE_DIRECTORY/lib
+python $PCSS_BASE_DIRECTORY/bin/clusterExe/runTrainingAnnotationCluster.py $CONFIG_FILE_NAME > & $MODEL_OUTPUT_FILE_NAME
+
+cp $MODEL_OUTPUT_FILE_NAME "/trombone1/home/dbarkan/pcss//test//runs/develop/seqBatchList/$input/"
+
+rm -r $NODE_HOME_DIR/

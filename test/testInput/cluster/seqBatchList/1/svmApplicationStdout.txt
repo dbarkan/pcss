@@ -1,0 +1,29 @@
+Reading model...OK. (819 support vectors read)
+Classifying test examples..done
+Runtime (without IO) in cpu-seconds: 0.06
+file exists: checking for file /netapp/sali/dbarkan/pcss/
+file exists: checking for file /netapp/sali/dbarkan/pcss//runs/svmApplicationCluster/seqBatchList
+file exists: checking for file /netapp/sali/dbarkan/pcss//runs/svmApplicationCluster/seqBatchList/1/inputFastaFile.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/features/disopredResults/
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/features/psipredResults/
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/models/modelColumnOrder.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/models/human2008ModelTableTruncated.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/features/dssp/
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/models/modelRunInfo.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//bin/dsspcmbi
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/context/svmApplicationClusterFileAttributes.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/benchmark/grbBenchmarkScores.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/benchmark/grbCreateModel_svmModelFile
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/config/internalConfigFile.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//data/config/internalConfigSpec.txt
+file exists: checking for file /netapp/sali/dbarkan/pcss//bin/svm_classify_x64
+got model squence; <pcssModels.PcssModelSequence instance at 0x1b8cc68>
+model list length: 0
+got model squence; <pcssModels.PcssModelSequence instance at 0x1c6d8c0>
+model list length: 0
+got model squence; <pcssModels.PcssModelSequence instance at 0x1c8ec20>
+model list length: 0
+got model squence; <pcssModels.PcssModelSequence instance at 0x1c897a0>
+model list length: 0
+set peptides; have 80 total
+adding scores to peptides
