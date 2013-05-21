@@ -29,9 +29,6 @@ seq_batch_directory = seqBatchList
 seq_batch_prefix = seqBatch
 seq_batch_input_fasta_file_name = inputFastaFile.txt
 
-netapp_home_directory = /netapp/sali/dbarkan/pcss/
-netapp_bin_directory = %(netapp_home_directory)s/bin
-netapp_lib_directory = %(netapp_home_directory)s/lib
 cluster_pipeline_directory = /scratch/peptide
 
 training_annotation_node_script = runTrainingAnnotationCluster.py
@@ -52,3 +49,17 @@ training_benchmark_stdout_file = trainingBenchmarkStdout.txt
 disopred_standalone_node_script = runDisopredStandAlone.py
 disopred_standalone_shell_script = disopredStandAloneSubmit.sh
 disopred_standalone_stdout_file = disopredStandAloneStdout.txt
+
+server_input_fasta_file_name = serverInputFasta.txt
+server_input_rules_file_name = serverInputRules.txt
+
+server_svm_application_base_config = %(pcss_directory)s/data/config/server/svmApplicationConfig.txt
+netapp_server_base_directory = /netapp/sali/peptide/
+netapp_server_run_directory = %(netapp_server_base_directory)s/live/preprocess
+
+svm_application_cluster_attribute_file = %(pcss_directory)s/data/context/svmApplicationClusterFileAttributes.txt
+svm_application_attribute_file = %(pcss_directory)s/data/context/svmApplicationFileAttributes.txt
+annotation_attribute_file = %(pcss_directory)s/data/context/annotationFileAttributes.txt
+training_attribute_file =  %(pcss_directory)s/data/context/trainingFileAttributes.txt
+
+benchmark_model_map_file_name = %(pcss_directory)s/data/benchmark/availableModelMap.txt

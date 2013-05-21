@@ -378,13 +378,9 @@ class PcssFileAttributes:
 
     """Class for managing a set of file attributes"""
 
-    def __init__(self, pcssConfig):
-        self.pcssConfig = pcssConfig
-        self.readAttributeFile()
-
-    def readAttributeFile(self):
+    def __init__(self, fileName):
         """Read attribute table from input file. The order in which attributes are listed in the file are their output order"""
-        reader = pcssTools.PcssFileReader(self.pcssConfig["attribute_file_name"])
+        reader = pcssTools.PcssFileReader(fileName)
         lines = reader.getLines()
         self._attributes = {}
         inputCounter = 0

@@ -83,6 +83,7 @@ class TestRunner(pcssTests.PcssTest):
         self.checkErrorThrown("internalError")
 
     def dtest_svm_training_input_internal_error(self):
+        self.pcssConfig["input_annotation_file_name"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "svmTrainingAnnotationInput.txt")
         self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
         self.pcssConfig["jackknife_fraction"] = "fake"
         self.clearErrorFiles()
@@ -98,29 +99,26 @@ class TestRunner(pcssTests.PcssTest):
         self.handleTestException(pge)
 
     def dtest_svm_application_features_runner(self):
-        self.setSvmApplicationFileAttributes()        
+        
         self.executeRunnerTest(self.getLargeFastaFile(), pcssTools.SvmApplicationFeatureRunner, "svmApplication")
 
     def dtest_svm_application_input_runner(self):
-        self.setSvmApplicationFileAttributes()        
+        
         self.executeRunnerTest(self.getLargeFastaFile(), pcssTools.SvmApplicationInputRunner, "svmApplication")
 
     def dtest_annotation_runner(self):
-        self.setAnnotationFileAttributes()
+        
         self.executeRunnerTest(self.getLargeFastaFile(), pcssTools.AnnotationRunner, "annotation")
 
-    def dtest_training_annotation_runner(self):
-        self.setTrainingFileAttributes()
+    def test_training_annotation_runner(self):
         self.pcssConfig["peptide_importer_type"] = "defined"
-        self.executeRunnerTest(self.getLargeDefinedFastaFile(), pcssTools.AnnotationRunner, "trainingAnnotation")
+        self.executeRunnerTest(self.getLargeDefinedFastaFile(), pcssTools.TrainingAnnotationRunner, "trainingAnnotation")
 
-    def test_create_model_runner(self):
-        self.setTrainingFileAttributes()
+    def dtest_create_model_runner(self):
         self.runner = pcssTools.CompleteSvmRunner(self.pcssConfig)
         self.executeTrainingRunnerTest(self.runner.pdh.getUserModelFileName(), "userModel")
 
     def dtest_leave_one_out_runner(self):
-        self.setTrainingFileAttributes()
         self.runner = pcssTools.LeaveOneOutBenchmarkRunner(self.pcssConfig)
         self.executeTrainingRunnerTest(self.runner.pdh.getLeaveOneOutResultFileName(), "trainingLoo")
 
@@ -144,7 +142,7 @@ class TestRunner(pcssTests.PcssTest):
         self.compareToExpectedOutput(observedOutputFile, runnerType, True)
 
     def dtest_training_svm_runner(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
+        #self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.pcssConfig["input_annotation_file_name"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "svmTrainingAnnotationInput.txt")
         self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
         self.clearErrorFiles()

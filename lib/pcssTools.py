@@ -3,10 +3,12 @@ from validate import ValidateError
 import os
 import re
 from Bio import SeqIO
+import collections
 import pcssIO
 import pcssCluster
 import tempfile
 import configobj
+import copy
 import subprocess
 import time
 import logging
@@ -18,14 +20,10 @@ import pcssModels
 import pcssFeatures
 import pcssFeatureHandlers
 import shutil
-#from pympler import summary
-#from pympler import muppy
-#from pympler import tracker
 import traceback
 from Bio import PDB
 log = logging.getLogger("pcssTools")
 
-#tr = tracker.SummaryTracker()
 def getOneLetterFromBioResidue(residueObject):
     return PDB.Polypeptide.three_to_one(residueObject)
 
@@ -62,32 +60,37 @@ class PcssRunner:
         self.pcssConfig = pcssConfig
         if (pcssConfig.configspec is not None):
             self.validateConfig(pcssConfig)
-        self.internalConfig = configobj.ConfigObj(pcssConfig["internal_config_file"], configspec=pcssConfig["internal_config_spec_file"])
+
+        internalConfigFile = os.path.join(self.pcssConfig["pcss_directory"], "data", "config", "internalConfigFile.txt")
+        internalConfigSpec = os.path.join(self.pcssConfig["pcss_directory"], "data", "config", "internalConfigSpec.txt")
+
+        self.internalConfig = configobj.ConfigObj(internalConfigFile, configspec=internalConfigSpec)
         self.validateConfig(self.internalConfig)
 
-        self.pdh = PcssDirectoryHandler(pcssConfig, self.internalConfig)
+        self.pdh = self.createDirectoryHandler(pcssConfig, self.internalConfig)
         self.pdh.createOutputDirectory()
 
         self.parser = PDB.PDBParser(QUIET=True)
-        self.pfa = pcssIO.PcssFileAttributes(pcssConfig)
+        self.readFileAttributes()
         self.peptideLength = None
         
-        logFileName = self.pdh.getFullOutputFile("%s.log" % self.pcssConfig["run_name"])
-        logging.basicConfig(filename=self.pdh.getFullOutputFile("%s.log" % self.pcssConfig["run_name"]), level=logging.DEBUG,
+        logging.basicConfig(filename=self.pdh.getFullOutputFile("%s.log" % self.getRunName()), level=logging.DEBUG,
                             filemode="w", format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
         self.initSubclass()
 
+    def createDirectoryHandler(self, pcssConfig, internalConfig):
+        return PcssDirectoryHandler(pcssConfig, internalConfig)
 
     def initSubclass(self):
         return
 
     def execute(self):
-
         try:
+            log.info("Beginning pcss run")
             self.checkForErrors()
             self.executePipeline()
-
+            log.info("Finished pcss run")
         except pcssErrors.PcssGlobalException as pge:
             self.handlePcssGlobalException(pge)
 
@@ -106,6 +109,10 @@ class PcssRunner:
         results = config.validate(validator, preserve_errors=True)
         if (results != True):
             self.handleConfigError(results)
+
+    def readFileAttributes(self):
+        return
+
             
     def checkForErrors(self):
         if (os.path.exists(self.pdh.getPcssErrorFile())):
@@ -205,12 +212,6 @@ class PcssRunner:
         self.reader = pcssIO.AnnotationFileReader(self)
         self.reader.readAnnotationFile(self.pcssConfig["input_annotation_file_name"])
         self.proteins = self.reader.getProteins()
-
-    def getSeqBatchDirectory(self):
-        directoryName = self.pdh.getFullOutputFile(self.internalConfig["seq_batch_directory"])
-        if (not os.path.exists(directoryName)):
-            os.mkdir(directoryName)
-        return directoryName
         
     def getModelUrl(self, modelId):
         modelUrlInitial = self.internalConfig["model_url"]
@@ -218,11 +219,8 @@ class PcssRunner:
         modelUrlFinal = modelUrlInitial.replace(wildCard, modelId)
         return modelUrlFinal
 
-    def getJobDirectory(self):
-        return self.pdh.getJobDirectory()
-
-    def setJobDirectory(self, directoryName):
-        self.pdh.setJobDirectory(directoryName)
+    def getRunName(self):
+        return self.pdh.getRunName()
 
     def readProteins(self):
 
@@ -296,24 +294,43 @@ class DisopredStandaloneRunner(PcssRunner):
         disopredRunner = pcssFeatureHandlers.SequenceFeatureRunner(disopredFileHandler)
 
         for protein in self.proteins:
-            log.debug("begin processing disopred for protein %s" % protein.modbaseSequenceId)
             protein.processDisopred(disopredReader, disopredRunner)
-            log.debug("done processing disopred for protein %s" % protein.modbaseSequenceId)
 
 class ModelRunner(PcssRunner):
     def initSubclass(self):
         self.modelHandler = PcssModelHandler(self.pcssConfig, self.pdh)
 
-class PrepareSvmApplicationClusterRunner(PcssRunner):
-    def executePipeline(self):
+class PrepareClusterRunner(PcssRunner):
+    def updateInputFileConfig(self):
+        self.pcssConfig["fasta_file"] = self.pdh.getFullOutputFile(self.internalConfig["server_input_fasta_file_name"])
+        self.pcssConfig["rules_file"] = self.pdh.getFullOutputFile(self.internalConfig["server_input_rules_file_name"])
 
+    def prepareDirectories(self, cfg):
         seqDivider = pcssCluster.SeqDivider(self)
         
         seqDivider.divideSeqsFromFasta()
         
-        seqDivider.makeFullSvmApplicationSgeScript()
+        cfg.setSeqDivider(seqDivider)
 
-class TrainingBenchmarkClusterRunner(PcssRunner):
+        cfg.generateConfigFiles()
+        
+        return seqDivider
+
+
+class PrepareSvmApplicationClusterRunner(PrepareClusterRunner):
+    def executePipeline(self):
+
+        cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
+        
+        seqDivider = self.prepareDirectories(cfg)
+        
+        csg = pcssCluster.SvmApplicationClusterScriptGenerator(self)
+
+        csg.setSeqDivider(seqDivider)
+
+        csg.writeFullSvmApplicationSgeScript()
+
+class PrepareTrainingBenchmarkClusterRunner(PcssRunner):
 
     def executePipeline(self):
         tcb =  pcssCluster.ClusterBenchmarker(self)
@@ -322,20 +339,66 @@ class TrainingBenchmarkClusterRunner(PcssRunner):
             
         tcb.makeFullTrainingBenchmarkScript()
         
-class TrainingAnnotationClusterRunner(PcssRunner):
+class PrepareTrainingAnnotationClusterRunner(PrepareClusterRunner):
     def executePipeline(self):
-        seqDivider = pcssCluster.SeqDivider(self)
-            
-        seqDivider.divideSeqsFromFasta()
-            
-        seqDivider.makeFullTrainingAnnotationSgeScript()
+        cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
+        
+        seqDivider = self.prepareDirectories(cfg)
+        
+        csg = pcssCluster.TrainingAnnotationClusterScriptGenerator(self)
+
+        csg.setSeqDivider(seqDivider)
+
+        csg.writeFullTrainingAnnotationSgeScript()
             
 class FinalizeApplicationClusterRunner(PcssRunner):
     def executePipeline(self):
         seqDivider = pcssCluster.SeqDivider(self)
 
         seqDivider.mergeSvmApplicationResults()
+
+    def readFileAttributes(self):
+        fileName = self.internalConfig["svm_application_cluster_attribute_file"]
+        self.pfa = pcssIO.PcssFileAttributes(fileName)
+
+
+class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunner):
+    def executePipeline(self):
+        cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
+
+        seqDivider = self.prepareDirectories(cfg)
+
+        csg = pcssCluster.SvmApplicationClusterScriptGenerator(self)
+
+        csg.setSeqDivider(seqDivider)
+
+        script = csg.makeBaseSvmApplicationSgeScript()
+
+        return script
+      
+class PrepareSvmApplicationServerRunner(PrepareSvmApplicationClusterRunner):
+    def executePipeline(self):
+        self.updateInputFileConfig()
+
+        cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
+
+        seqDivider = self.prepareDirectories(cfg)
+
+        csg = pcssCluster.SvmApplicationClusterScriptGenerator(self)
+
+        csg.setSeqDivider(seqDivider)
+
+        self.setClusterShellScript(csg.makeBaseSvmApplicationSgeScript())
+  
+    def setClusterShellScript(self, script):
+        self.clusterShellScript = script
         
+    def getClusterShellScript(self):
+        return self.clusterShellScript
+
+    def createDirectoryHandler(self, pcssConfig, internalConfig):
+        return PcssServerDirectoryHandler(pcssConfig, internalConfig)
+
 class SvmApplicationRunner(ModelRunner):
     def runSvm(self):
         self.appSvm = pcssSvm.ApplicationSvm(self)
@@ -344,6 +407,11 @@ class SvmApplicationRunner(ModelRunner):
         self.appSvm.classifySvm()
         self.appSvm.readResultFile()
         self.appSvm.addScoresToPeptides()
+
+    def readFileAttributes(self):
+        fileName = self.internalConfig["svm_application_attribute_file"]
+        self.pfa = pcssIO.PcssFileAttributes(fileName)
+
 
 class SvmApplicationInputRunner(SvmApplicationRunner):
 
@@ -381,6 +449,18 @@ class AnnotationRunner(ModelRunner):
         
         self.writeOutput()
 
+    def readFileAttributes(self):
+
+        fileName = self.internalConfig["annotation_attribute_file"]
+        self.pfa = pcssIO.PcssFileAttributes(fileName)
+
+class TrainingAnnotationRunner(AnnotationRunner):
+    def readFileAttributes(self):
+
+        fileName = self.internalConfig["training_attribute_file"]
+        self.pfa = pcssIO.PcssFileAttributes(fileName)
+    
+
 class CompleteSvmRunner(PcssRunner):
     def executePipeline(self):
         self.readAnnotationFile()
@@ -392,6 +472,11 @@ class CompleteSvmRunner(PcssRunner):
 
         generator.createSvmModel(getAllPeptides(self.reader.getProteins(), False))
 
+    def readFileAttributes(self):
+
+        fileName = self.internalConfig["training_attribute_file"]
+        self.pfa = pcssIO.PcssFileAttributes(fileName)
+    
 class LeaveOneOutBenchmarkRunner(PcssRunner):
     def executePipeline(self):
         self.readAnnotationFile()
@@ -408,7 +493,11 @@ class LeaveOneOutBenchmarkRunner(PcssRunner):
 
         benchmarker.processAllResults()
 
-    
+    def readFileAttributes(self):
+
+        fileName = self.internalConfig["training_attribute_file"]
+        self.pfa = pcssIO.PcssFileAttributes(fileName)
+        
 class TrainingBenchmarkRunner(PcssRunner):
     def executePipeline(self):
 
@@ -429,6 +518,12 @@ class TrainingBenchmarkRunner(PcssRunner):
 
         benchmarker.processAllResults()
 
+    def readFileAttributes(self):
+
+        fileName = self.internalConfig["training_attribute_file"]
+        self.pfa = pcssIO.PcssFileAttributes(fileName)
+    
+
 class PcssModelHandler:
 
     """Class for managing model PDB files, retrieving them from file servers as necessary"""
@@ -437,7 +532,6 @@ class PcssModelHandler:
         self.pcssConfig = pcssConfig
         self.pdh = pdh
         self.loadRunInfo()
-
 
     def loadRunInfo(self):
         """Load PcssModelRunInfo object which provide data specific to differen modpipe runs"""
@@ -458,7 +552,6 @@ class PcssModelHandler:
             self.retrieveModelFile(pcssModel)
         return fullModelFileName
 
-
     def retrieveModelFile(self, pcssModel):
         """Copy model file from modbase file server to local pcss directory"""
         modelRunInfo = self._runInfo[pcssModel.getRunName()]
@@ -470,7 +563,6 @@ class PcssModelHandler:
 
         self.pdh.copyFile(sourcePath, sourceModelFileZip, self.pdh.getStructureDirectory())
         self.pdh.unzipFile(os.path.join(self.pdh.getStructureDirectory(), sourceModelFileZip))
-
 
     def makeSourceModelZipFileName(self, model):
         return "%s.pdb.gz" % model.getId()
@@ -564,37 +656,26 @@ class PcssDirectoryHandler:
         where each variable specified in the parameter file. Thus if the user wants to run a program twice with different input, simply change
         the run_name parameter and nothing from previous runs will be overwritten
         """
-        if (not self.pcssConfig["using_web_server"]):  #consider changing to 'head_node'
-            outputDir = self.pcssConfig["run_directory"]
-            runName = self.pcssConfig["run_name"]
-            fullOutputDir = os.path.join(outputDir, runName)
-            self.fullOutputDir =  os.path.join(outputDir, runName)
-            if (not os.path.exists(self.fullOutputDir)):
-                os.mkdir(self.fullOutputDir)
-        else:
-            self.fullOutputDir = self.pcssConfig["job_directory"]
+        outputDir = self.pcssConfig["run_directory"]
+        runName = self.pcssConfig["run_name"]
+        fullOutputDir = os.path.join(outputDir, runName)
+        self.fullOutputDir =  os.path.join(outputDir, runName)
+        if (not os.path.exists(self.fullOutputDir)):
+            os.mkdir(self.fullOutputDir)
             
-    def getJobDirectory(self):
-        return self.jobDirectory
-
-    def setJobDirectory(self, directoryName):
-        self.jobDirectory = directoryName
-        if (not os.path.exists(directoryName)):
-            os.mkdir(directoryName)
-
+    def getFullClusterOutputFile(self, fileName):
+        return self.getFullOutputFile(fileName)
+    
     def getStructureDirectory(self):
         """Return full path of directory where models are stored and copied to"""
         if (not os.path.exists(self.getFullOutputFile("structures"))):
             os.mkdir(self.getFullOutputFile("structures"))
         return self.getFullOutputFile("structures")
-    #def getStructureDirectory(self):
-    #    return self.pcssConfig["model_directory"]
+
     def getFullOutputFile(self, fileName):
         """Return full path fileName where the path is the full run directory for this run"""
-        if (not self.pcssConfig["using_web_server"]):  #consider changing to 'head_node'
-            return os.path.join(self.fullOutputDir, fileName)
-        else:
-            return os.path.join(self.jobDirectory, fileName)
+        return os.path.join(self.fullOutputDir, fileName)
+
 
     def getFullModelFileFromId(self, modelId):
         """Return full path model file name for this modelId"""
@@ -684,8 +765,6 @@ class PcssDirectoryHandler:
     def getSvmTestSetFile(self):
         return self.getFullOutputFile(self.internalConfig["test_set_file_name"])
 
-
-
     def getSvmTrainingSetFile(self):
         return self.getFullOutputFile(self.internalConfig["training_set_file_name"])
 
@@ -696,20 +775,154 @@ class PcssDirectoryHandler:
         return self.getFullOutputFile(self.internalConfig["application_set_output_file_name"])
 
     def getFullBenchmarkResultFileName(self):
-        return self.getFullOutputFile("%s_%s" % (self.pcssConfig["run_name"], self.internalConfig["benchmark_result_file_suffix"]))
+        return self.getFullOutputFile("%s_%s" % (self.getRunName(), self.internalConfig["benchmark_result_file_suffix"]))
 
     def getFinalSvmApplicationResultFile(self):
         return self.getFullOutputFile
                       
     def getLeaveOneOutResultFileName(self):
-        return self.getFullOutputFile("%s_%s" % (self.pcssConfig["run_name"], self.internalConfig["loo_result_file_suffix"]))
+        return self.getFullOutputFile("%s_%s" % (self.getRunName(), self.internalConfig["loo_result_file_suffix"]))
 
     def getUserModelFileName(self):
-        return self.getFullOutputFile("%s_%s" % (self.pcssConfig["run_name"], self.internalConfig["user_model_suffix"]))
+        return self.getFullOutputFile("%s_%s" % (self.getRunName(), self.internalConfig["user_model_suffix"]))
 
     def getSvmTestOutputFile(self):
         return self.getFullOutputFile(self.internalConfig["test_set_output_file_name"])
    
+    def getRunName(self):
+        return self.pcssConfig["run_name"]
+        
+    def getSeqBatchDirectory(self):
+        directoryName = self.getFullOutputFile(self.internalConfig["seq_batch_directory"])
+        if (not os.path.exists(directoryName)):
+            os.mkdir(directoryName)
+        return directoryName
+
+    def getSeqBatchSubDirectoryName(self, i):
+        return os.path.join(self.getSeqBatchDirectory(), str(i))
+
+    def getClusterSeqBatchSubDirectoryName(self, i):
+        return getSeqBatchSubDirectoryName(i)
+
+    def getClusterSeqBatchDirectory(self):
+        return self.getSeqBatchDirectory()
+
+    def getSeqBatchFastaFileName(self, i):
+        subDirectoryName = self.getSeqBatchSubDirectoryName(i)
+        fileName = os.path.join(subDirectoryName, self.internalConfig["seq_batch_input_fasta_file_name"])
+        return fileName
+
+    def getClusterSeqBatchFastaFileName(self, i):
+        return self.getSeqBatchFastaFileName(i)
+
+    def getPcssClusterBaseDirectory(self):
+        return self.internalConfig["pcss_directory"]
+
+    def getFullBenchmarkModelFile(self, fileName):
+        return os.path.join(self.getPcssClusterBaseDirectory(), "data", "benchmark", fileName)
+
+    def getBenchmarkScoreFile(self):
+        return self.pcssConfig["svm_benchmark_file"]
+
+    def getModelFileName(self):
+        return self.pcssConfig["svm_model_file"]
+
+    def getClusterNodeConfig(self, i):
+        baseConfig = copy.deepcopy(self.pcssConfig)
+
+
+        baseConfig["pcss_directory"] = self.getPcssClusterBaseDirectory()
+        baseConfig["fasta_file"] =  self.getClusterSeqBatchFastaFileName(i)
+        
+        baseConfig["run_name"] = str(i)
+        baseConfig["run_directory"] = self.getFullClusterOutputFile(self.internalConfig["seq_batch_directory"])
+        baseConfig["using_web_server"] = False
+
+        return baseConfig
+
+
+
+class PcssServerDirectoryHandler(PcssDirectoryHandler):
+
+    def getClusterNodeConfig(self, i):
+        configFileName = self.internalConfig["server_svm_application_base_config"]
+
+        baseConfig = configobj.ConfigObj(configFileName)
+        baseConfig["pcss_directory"] = self.getPcssClusterBaseDirectory()
+        baseConfig["fasta_file"] =  self.getClusterSeqBatchFastaFileName(i)
+        baseConfig["svm_benchmark_file"] = self.getBenchmarkScoreFile()
+        baseConfig["svm_model_file"] = self.getModelFileName()
+        
+        baseConfig["run_name"] = str(i)
+        baseConfig["run_directory"] = self.getFullClusterOutputFile(self.internalConfig["seq_batch_directory"])
+        baseConfig["using_web_server"] = False
+
+        return baseConfig
+
+
+    def createOutputDirectory(self):
+        self.fullOutputDir = self.pcssConfig["job_directory"]
+        #has already been created by job class
+
+    def getClusterSeqBatchDirectory(self):
+        seqBatchDir = self.getFullClusterOutputFile(self.internalConfig["seq_batch_directory"])
+        return seqBatchDir
+
+    def getClusterSeqBatchFastaFileName(self, i):
+        return os.path.join(self.getClusterSeqBatchSubDirectoryName(i), self.internalConfig["seq_batch_input_fasta_file_name"])
+
+    def getClusterSeqBatchSubDirectoryName(self, i):
+        return os.path.join(self.getClusterSeqBatchDirectory(), str(i))
+
+    def getFullClusterOutputFile(self, fileName):
+
+        headNodeDir = self.getClusterRunDirectory()
+        runName = self.getRunName()
+        return os.path.join(headNodeDir, runName, fileName)
+
+    def getClusterRunDirectory(self):
+        return self.internalConfig["netapp_server_run_directory"] 
+
+    def getPcssClusterBaseDirectory(self):
+        return self.internalConfig["netapp_server_base_directory"]
+
+    def getBenchmarkScoreFile(self):
+        bmm = self.setupBenchmarkModelMap()
+        frontendName = self.pcssConfig["svm_application_model_name"]    
+        return bmm.getBenchmarkScoreFile(frontendName)
+
+    def getModelFileName(self):
+        bmm = self.setupBenchmarkModelMap()
+        frontendName = self.pcssConfig["svm_application_model_name"]    
+        return bmm.getModelFileName(frontendName)
+
+    def setupBenchmarkModelMap(self):
+        if "using_custom_model" in self.pcssConfig:
+            if (self.pcssConfig["using_custom_model"] == "False"):
+                bmm = BenchmarkModelMap(self)
+                return bmm
+
+class BenchmarkModelMap:
+    def __init__(self, pdh):
+        self.pdh = pdh
+        fileReader = PcssFileReader(self.pdh.internalConfig["benchmark_model_map_file_name"])
+        lines = fileReader.getLines()
+        self.ModelMapTuple = collections.namedtuple('modelMap', ['frontendName', 'benchmarkScoreName', 'modelFileName'])
+        self.modelMap = {}
+        for line in lines:
+            [frontendName, benchmarkScoreName, modelFileName] = line.split('\t')
+            mmt = self.ModelMapTuple(frontendName, benchmarkScoreName, modelFileName)
+            self.modelMap[frontendName] = mmt
+
+    def getBenchmarkScoreFile(self, frontendName):
+        benchmarkScoreFile = self.modelMap[frontendName].benchmarkScoreName
+        return self.pdh.getFullBenchmarkModelFile(benchmarkScoreFile)
+
+    def getModelFileName(self, frontendName):
+        modelFileName = self.modelMap[frontendName].modelFileName
+        return self.pdh.getFullBenchmarkModelFile(modelFileName)
+
+
 class PcssFileReader:
 
     """Essentially python file object that provides commonly used processing functionality"""

@@ -15,11 +15,9 @@ log = logging.getLogger("pcssPeptide")
 
 class SeqDivider:
     def __init__(self, pcssRunner):
-
-        self.pdh = pcssRunner.pdh
         self.pcssRunner = pcssRunner
+        self.pdh = pcssRunner.pdh
         self.subDirectories = []
-        self.csg = ClusterScriptGenerator(pcssRunner)
 
     def getFastaGroupList(self, fastaFile):
         fh = open(fastaFile, 'r')
@@ -32,6 +30,9 @@ class SeqDivider:
         self.seqBatchCount = len(seqGroupList)
         return seqGroupList
 
+    def getSeqBatchCount(self):
+        return self.seqBatchCount
+
     def getSequenceTaskListString(self):
         taskList = []
         for i in range(self.seqBatchCount):
@@ -43,10 +44,10 @@ class SeqDivider:
         fastaFile = self.pcssRunner.pcssConfig['fasta_file']
         seqGroupList = self.getFastaGroupList(fastaFile)
         print "merging application results"
-        seqBatchDirectory = self.pcssRunner.getSeqBatchDirectory()
+        seqBatchDirectory = self.pdh.getSeqBatchDirectory()
         allProteins = []
         for (i, nextGroup) in enumerate(seqGroupList):
-            subDirName = self.getSeqBatchSubDirectoryName(i)
+            subDirName = self.pdh.getSeqBatchSubDirectoryName(i)
             self.seqBatchErrorExists(subDirName)
             subOutputFile = os.path.join(subDirName, self.pcssRunner.internalConfig["annotation_output_file"])
             if (not os.path.exists(subOutputFile)):
@@ -68,16 +69,15 @@ class SeqDivider:
             errorInfo = pcssErrors.ErrorInfo(os.path.join(subDirName, self.pcssRunner.internalConfig["internal_error_output_file"]))
             raise InternalException("Got internal seq batch error %s\nin directory %s" % (errorInfo.msg, subDirName))
 
-
     def mergeTrainingAnnotationResults(self):
         
         fastaFile = self.pcssRunner.pcssConfig['fasta_file']
         seqGroupList = self.getFastaGroupList(fastaFile)
 
-        seqBatchDirectory = self.pcssRunner.getSeqBatchDirectory()
+        seqBatchDirectory = self.pdh.getSeqBatchDirectory()
         allProteins = []
         for (i, nextGroup) in enumerate(seqGroupList):
-            subDirName = self.getSeqBatchSubDirectoryName(i)
+            subDirName = self.pdh.getSeqBatchSubDirectoryName(i)
             subOutputFile = os.path.join(subDirName, self.pcssRunner.internalConfig["annotation_output_file"])
             reader = pcssIO.AnnotationFileReader(self.pcssRunner)
             reader.readAnnotationFile(subOutputFile)
@@ -87,68 +87,30 @@ class SeqDivider:
         afw = pcssIO.AnnotationFileWriter(self.pcssRunner)
         afw.writeAllOutput(allProteins)
 
-
     #when we get here, we have fasta file and unannotated sequences. 
     def divideSeqsFromFasta(self):
         fastaFile = self.pcssRunner.pcssConfig['fasta_file']
         seqGroupList = self.getFastaGroupList(fastaFile)
 
-        seqBatchDirectory = self.pcssRunner.getSeqBatchDirectory()
+        seqBatchDirectory = self.pdh.getSeqBatchDirectory()
         
         for (i, nextGroup) in enumerate(seqGroupList):
             self.createSequenceSubDirectory(i)
 
             self.makeSeqBatchFile(i, nextGroup)
         
-            self.makeConfigFile(i)
-
-    def makeConfigFile(self, i):
-        pcssCopy = copy.deepcopy(self.pcssRunner.pcssConfig)
-
-        if "run_name" in pcssCopy:
-            del pcssCopy["run_name"]
-        if "run_directory" in pcssCopy:
-            del pcssCopy["run_directory"]
-
-        pcssCopy["fasta_file"] =  self.getSeqBatchFileName(i)
-        pcssCopy["run_name"] = str(i)
-        pcssCopy["run_directory"] = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["seq_batch_directory"])
-        pcssCopy["using_web_server"] = False
-
-        subDirectoryName = self.getSeqBatchSubDirectoryName(i)
-        pcssCopy.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_node_config_file"])
-        pcssCopy.write()
-        
-    def getSeqBatchSubDirectoryName(self, index):
-        seqBatchDirectory = self.pcssRunner.internalConfig["seq_batch_directory"]
-        return self.pcssRunner.pdh.getFullOutputFile(os.path.join(seqBatchDirectory, str(index)))
-        
-    def getSeqBatchDirectory(self):
-        return self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["seq_batch_directory"])
-
     def createSequenceSubDirectory(self, i):
-        subDirectoryName = self.getSeqBatchSubDirectoryName(i)
+        subDirectoryName = self.pdh.getSeqBatchSubDirectoryName(i)
         if (not os.path.exists(subDirectoryName)):
             os.mkdir(subDirectoryName)
-
-    def getSeqBatchFileName(self, i):
-        subDirectoryName = self.getSeqBatchSubDirectoryName(i)
-        fileName = os.path.join(subDirectoryName, "%s" % self.pcssRunner.internalConfig["seq_batch_input_fasta_file_name"])
-        return fileName
         
     def makeSeqBatchFile(self, i, seqBatch):
-        fileName = self.getSeqBatchFileName(i)
+        fileName = self.pdh.getSeqBatchFastaFileName(i)
         fh = open(fileName, 'w')
         for seqRecord in seqBatch:
             fh.write(">%s\n" % seqRecord.id)
             fh.write("%s\n" % str(seqRecord.seq))
         fh.close()
-
-    def makeFullSvmApplicationSgeScript(self):
-        nodeScriptName = self.pcssRunner.internalConfig["svm_application_node_script"]
-        shellScriptName = self.pcssRunner.internalConfig["svm_application_shell_script"]
-        outputFileName = self.pcssRunner.internalConfig["svm_application_stdout_file"]
-        self.makeFullAnnotationSgeScript(nodeScriptName, shellScriptName, outputFileName)
 
     def makeRunDisopredSgeScript(self):
         nodeScriptName = self.pcssRunner.internalConfig["disopred_standalone_node_script"]
@@ -162,18 +124,35 @@ class SeqDivider:
         outputFileName = self.pcssRunner.internalConfig["training_annotation_stdout_file"]
         self.makeFullAnnotationSgeScript(nodeScriptName, shellScriptName, outputFileName)       
 
-    def makeFullAnnotationSgeScript(self, nodeScriptName, shellScriptName, outputFileName):
-        script = self.csg.makeClusterHeaderCommands(self.seqBatchCount)
-        script += self.csg.makeBaseAnnotationSgeScript(self.getSequenceTaskListString(), self.getSeqBatchDirectory(), nodeScriptName, outputFileName)
+class ConfigFileGenerator:
+
+    def __init__(self, pcssRunner):
+        self.pcssRunner = pcssRunner
+        self.pdh = pcssRunner.pdh
+
+    def setSeqDivider(self, seqDivider):
+        self.seqDivider = seqDivider
+
+class SvmApplicationConfigFileGenerator(ConfigFileGenerator):
+    def generateConfigFiles(self):
+        for i in range(self.seqDivider.getSeqBatchCount()):
+            pcssConfig = self.pdh.getClusterNodeConfig(i)
+
+            subDirectoryName = self.pdh.getSeqBatchSubDirectoryName(i)
+            pcssConfig.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_node_config_file"])
+            pcssConfig.write()
+    
+class ClusterScriptGenerator:
+    def __init__(self, pcssRunner):
+        self.pcssRunner = pcssRunner
+        self.pdh = self.pcssRunner.pdh
+
+    def writeScript(self, script, shellScriptName):
         scriptOutputFile = self.pcssRunner.pdh.getFullOutputFile(shellScriptName)
         scriptFh = open(scriptOutputFile, 'w')
         scriptFh.write(script)
         scriptFh.close()
-
-class ClusterScriptGenerator:
-    def __init__(self, pcssRunner):
-        self.pcssRunner = pcssRunner
-
+        
     def makeClusterHeaderCommands(self, taskCount):
 
         script = """
@@ -193,16 +172,16 @@ class ClusterScriptGenerator:
 """ %locals()
         return script
 
-    def makeBaseAnnotationSgeScript(self, taskListString, seqBatchDir, commandName, outputFileName):
+    def makeBaseAnnotationSgeScript(self, taskListString, commandName, outputFileName):
 
-        pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
-                
+        pcssClusterBaseDirectory = self.pdh.getPcssClusterBaseDirectory()
+        seqBatchDir = self.pdh.getClusterSeqBatchDirectory()
         configFileName = self.pcssRunner.internalConfig["seq_batch_node_config_file"]
         nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
         
         script = """
 
-set PCSS_BASE_DIRECTORY="%(pcssBaseDirectory)s"
+set PCSS_BASE_DIRECTORY="%(pcssClusterBaseDirectory)s"
 
 set MODEL_OUTPUT_FILE_NAME="%(outputFileName)s"
 
@@ -269,6 +248,23 @@ rm -r $NODE_HOME_DIR/
 
         return script
 
+class SvmApplicationClusterScriptGenerator(ClusterScriptGenerator):
+
+    def makeBaseSvmApplicationSgeScript(self):
+        taskListString = self.seqDivider.getSequenceTaskListString() 
+        nodeScriptName = self.pcssRunner.internalConfig["svm_application_node_script"]
+        outputFileName = self.pcssRunner.internalConfig["svm_application_stdout_file"]
+        return self.makeBaseAnnotationSgeScript(taskListString, nodeScriptName, outputFileName)
+
+    def writeFullSvmApplicationSgeScript(self):
+        script = self.makeClusterHeaderCommands(self.seqDivider.getSeqBatchCount())
+        script += self.makeBaseSvmApplicationSgeScript()
+        shellScriptName = self.pcssRunner.internalConfig["svm_application_shell_script"]
+        self.writeScript(script, shellScriptName)
+
+    def setSeqDivider(self, seqDivider):
+        self.seqDivider = seqDivider
+
 class ClusterBenchmarker:
 
     def __init__(self, pcssRunner):
@@ -297,4 +293,21 @@ class ClusterBenchmarker:
         scriptFh = open(scriptOutputFile, 'w')
         scriptFh.write(script)
         scriptFh.close()
+
+
+class TrainingAnnotationClusterScriptGenerator(ClusterScriptGenerator):
+
+    def makeBaseTrainingAnnotationSgeScript(self, taskListString):
+        nodeScriptName = self.pcssRunner.internalConfig["training_annotation_node_script"]
+        outputFileName = self.pcssRunner.internalConfig["training_annotation_stdout_file"]
+        return self.makeBaseAnnotationSgeScript(taskListString, nodeScriptName, outputFileName)
+
+    def writeFullTrainingAnnotationSgeScript(self):
+        script = self.makeClusterHeaderCommands(self.seqDivider.getSeqBatchCount())
+        script += self.makeBaseTrainingAnnotationSgeScript(self.seqDivider.getSequenceTaskListString())
+        shellScriptName = self.pcssRunner.internalConfig["training_annotation_shell_script"]
+        self.writeScript(script, shellScriptName)
+
+    def setSeqDivider(self, seqDivider):
+        self.seqDivider = seqDivider
 

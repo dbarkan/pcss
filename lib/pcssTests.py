@@ -75,7 +75,6 @@ class PcssTest(unittest.TestCase):
 
     def compareToExpectedOutput(self, observedFileName, shortExpectedFileName, sortLines=False, compareAlmostEqual=False):
         fullExpectedFileName = self.getFullExpectedOutputFile(shortExpectedFileName)
-        
         #self.createNewExpectedOutputFiles(observedFileName, shortExpectedFileName)
         if (compareAlmostEqual):
             self.compareFilesAlmostEqual(observedFileName, fullExpectedFileName, sortLines)

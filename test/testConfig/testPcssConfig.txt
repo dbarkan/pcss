@@ -15,7 +15,6 @@ model_directory = %(pcss_directory)s/data/features/dssp/
 model_run_info = %(pcss_directory)s/data/models/modelRunInfo.txt
 best_model_attribute = no35
 dssp_executable = %(pcss_directory)s/bin/dsspcmbi
-attribute_file_name = %(pcss_directory)s/data/context/annotationFileAttributes.txt
 svm_benchmark_file = %(pcss_directory)s/data/benchmark/grbBenchmarkScores.txt
 svm_model_file =  %(pcss_directory)s/data/benchmark/grbCreateModel_svmModelFile
 user_config_spec_file = %(pcss_directory)s/test/testConfig/testConfigSpec.txt
