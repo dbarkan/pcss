@@ -11,7 +11,7 @@ import pcssErrors
 import pcssFeatures
 import pcssFeatureHandlers
 import collections
-            
+import myCollections            
 
 class CompleteSvmGenerator:
     def __init__(self, pcssRunner):
@@ -267,7 +267,7 @@ class TrainingBenchmarkHandler:
 class ClassifySvm:
     def __init__(self, pcssRunner):
         self.pcssRunner = pcssRunner
-        self.PeptideScoreTuple = collections.namedtuple('peptideScore', ['peptide', 'score'])
+        self.PeptideScoreTuple = myCollections.namedtuple('peptideScore', ['peptide', 'score'])
         self.peptides = []        
         self.pstList = []
 
@@ -337,7 +337,7 @@ class TestSetResult:
         self.setupTuple()
 
     def setupTuple(self):
-        self.BenchmarkPeptideScoreTuple = collections.namedtuple('peptideScore', ['peptide', 'score', 'positiveCount', 'negativeCount', 'tpr', 'fpr'])
+        self.BenchmarkPeptideScoreTuple = myCollections.namedtuple('peptideScore', ['peptide', 'score', 'positiveCount', 'negativeCount', 'tpr', 'fpr'])
 
     def addPst(self, peptideScoreTuple):
 
@@ -400,7 +400,7 @@ class BenchmarkResults:
     
     def __init__(self):
         self._results = []
-        self.ScoreTuple = collections.namedtuple('svmScore', ['fpr', 'tpr', 'score'])
+        self.ScoreTuple = myCollections.namedtuple('svmScore', ['fpr', 'tpr', 'score'])
 
     def checkBoundaryLines(self, line, value):
         value = str(value)
@@ -444,7 +444,7 @@ class TestSetResultTracker:
 
     def __init__(self, runner):
         self.pcssRunner = runner
-        self.TestSetTprAveragesTuple = collections.namedtuple('singleTpr', ['tpr', 'fpr', 'score', 'fprStdev'])
+        self.TestSetTprAveragesTuple = myCollections.namedtuple('singleTpr', ['tpr', 'fpr', 'score', 'fprStdev'])
         self.allTestSetResults = []
         
     def addTestSetResult(self, pstList):

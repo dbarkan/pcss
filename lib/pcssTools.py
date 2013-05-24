@@ -4,6 +4,7 @@ import os
 import re
 from Bio import SeqIO
 import collections
+import myCollections
 import pcssIO
 import pcssCluster
 import tempfile
@@ -907,7 +908,7 @@ class BenchmarkModelMap:
         self.pdh = pdh
         fileReader = PcssFileReader(self.pdh.internalConfig["benchmark_model_map_file_name"])
         lines = fileReader.getLines()
-        self.ModelMapTuple = collections.namedtuple('modelMap', ['frontendName', 'benchmarkScoreName', 'modelFileName'])
+        self.ModelMapTuple = myCollections.namedtuple('modelMap', ['frontendName', 'benchmarkScoreName', 'modelFileName'])
         self.modelMap = {}
         for line in lines:
             [frontendName, benchmarkScoreName, modelFileName] = line.split('\t')

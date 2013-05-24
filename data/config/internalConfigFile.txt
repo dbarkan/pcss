@@ -25,7 +25,7 @@ make_random_test_set = 1
 model_url = http://salilab.org/modbase/search?modelID=TTT&displaymode=moddetail
 wild_card = TTT
 seq_batch_size = 5
-seq_batch_directory = sequenceBatches
+seq_batch_directory = seqBatchList
 seq_batch_prefix = seqBatch
 seq_batch_input_fasta_file_name = inputFastaFile.txt
 
