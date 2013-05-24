@@ -2,6 +2,6 @@ best_model_attribute = no35
 peptide_importer_type = scan
 peptide_length = 8
 using_custom_model = False
-svm_application_model_name = grb
+svm_application_model = grb
 pcss_directory = /trombone1/home/dbarkan/pcss/
 

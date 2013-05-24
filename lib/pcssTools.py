@@ -888,12 +888,12 @@ class PcssServerDirectoryHandler(PcssDirectoryHandler):
 
     def getBenchmarkScoreFile(self):
         bmm = self.setupBenchmarkModelMap()
-        frontendName = self.pcssConfig["svm_application_model_name"]    
+        frontendName = self.pcssConfig["svm_application_model"]    
         return bmm.getBenchmarkScoreFile(frontendName)
 
     def getModelFileName(self):
         bmm = self.setupBenchmarkModelMap()
-        frontendName = self.pcssConfig["svm_application_model_name"]    
+        frontendName = self.pcssConfig["svm_application_model"]    
         return bmm.getModelFileName(frontendName)
 
     def setupBenchmarkModelMap(self):
