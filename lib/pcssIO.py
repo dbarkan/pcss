@@ -510,18 +510,18 @@ class AnnotationFileWriter:
 
         return outputList
                 
-class FinishPcss:
-    def __init__(self):
-        e = None # works?
-        try:
-            doStuff() #exceptions all handled within call
-        except pcssErrors.PcssGlobalException, e:
-            print e.msg
-        finally:
-            if e is not None:
-                applicationFile.writeGlobalError
-            else:
-                applciationFile.output()
+#class FinishPcss:
+#    def __init__(self):
+#        e = None # works?
+#        try:
+#            doStuff() #exceptions all handled within call
+#        except pcssErrors.PcssGlobalException, e:
+#            print e.msg
+#        finally:
+#            if e is not None:
+#                applicationFile.writeGlobalError
+#            else:
+#                applciationFile.output()
         
         
 
