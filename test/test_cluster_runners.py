@@ -49,7 +49,7 @@ class TestClusterRunner(pcssTests.PcssTest):
         shutil.copy(os.path.join(sourceDirectory, "ffSequencesFasta.txt"), os.path.join(runDirectory, self.runner.internalConfig["server_input_fasta_file_name"]))
         shutil.copy(os.path.join(sourceDirectory, "peptideRulesFile"), os.path.join(runDirectory, self.runner.internalConfig["server_input_rules_file_name"]))
 
-    def dtest_prepare_svm_application_cluster_runner(self):
+    def test_prepare_svm_application_cluster_runner(self):
         self.pcssConfig["fasta_file"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "ffSequencesFasta.txt")
         self.runner = pcssTools.PrepareSvmApplicationClusterRunner(self.pcssConfig)
         self.clearErrorFiles()
@@ -61,7 +61,7 @@ class TestClusterRunner(pcssTests.PcssTest):
         self.compareToExpectedOutput(self.runner.pdh.getFullOutputFile("seqBatchList/0/inputFastaFile.txt"), "svmApplicationSeqBatchFasta")
         self.compareToExpectedOutput(self.runner.pdh.getFullOutputFile("seqBatchList/0/seqBatchNodeClusterConfig.txt"), "svmApplicationSeqBatchConfig")
     
-    def dtest_finalize_svm_application_cluster_runner(self):
+    def test_finalize_svm_application_cluster_runner(self):
         self.pcssConfig["fasta_file"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "ffSequencesFasta.txt")
         self.runner = pcssTools.FinalizeApplicationClusterRunner(self.pcssConfig)
         self.copySeqBatchToRunDir()
@@ -79,7 +79,7 @@ class TestClusterRunner(pcssTests.PcssTest):
         sourceDir = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "cluster", "seqBatchList")
         shutil.copytree(sourceDir, destinationDir)
 
-    def dtest_prepare_training_annotation_cluster_runner(self):
+    def test_prepare_training_annotation_cluster_runner(self):
         
         self.pcssConfig["peptide_importer_type"] = "defined"
         self.pcssConfig["fasta_file"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "ffDefinedInputFasta.txt")
@@ -92,7 +92,7 @@ class TestClusterRunner(pcssTests.PcssTest):
         self.compareToExpectedOutput(self.runner.pdh.getFullOutputFile("seqBatchList/0/inputFastaFile.txt"), "trainingAnnotationSeqBatchFasta")
         self.compareToExpectedOutput(self.runner.pdh.getFullOutputFile("seqBatchList/0/seqBatchNodeClusterConfig.txt"), "trainingAnnotationSeqBatchConfig")
         
-    def dtest_prepare_training_benchmark_cluster_runner(self):
+    def test_prepare_training_benchmark_cluster_runner(self):
 
         self.runner = pcssTools.PrepareTrainingBenchmarkClusterRunner(self.pcssConfig)
         self.clearErrorFiles()

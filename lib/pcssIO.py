@@ -515,7 +515,7 @@ class FinishPcss:
         e = None # works?
         try:
             doStuff() #exceptions all handled within call
-        except pcssErrors.PcssGlobalException as e:
+        except pcssErrors.PcssGlobalException, e:
             print e.msg
         finally:
             if e is not None:

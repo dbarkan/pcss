@@ -35,7 +35,7 @@ class TestSvm(pcssTests.PcssTest):
 
     def readTrainingAnnotationInputFile(self, fileName):
         self.setTrainingFileAttributes()
-        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
         self.reader = pcssIO.AnnotationFileReader(self.runner)
         self.reader.readAnnotationFile(fileName)
 
@@ -52,7 +52,7 @@ class TestSvm(pcssTests.PcssTest):
 
     def readSvmApplicationInputFile(self, fileName):
         self.setSvmApplicationFileAttributes()
-        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        self.runner = pcssTools.SvmApplicationInputRunner(self.pcssConfig)
         self.reader = pcssIO.AnnotationFileReader(self.runner)
         self.reader.readAnnotationFile(fileName)
 

@@ -81,10 +81,10 @@ class SequenceFeatureRunner:
 
         try:
             self.runSequenceSubprocess(pcssProtein, tempDirectory.tempDir)
-        except pcssErrors.ProteinException as e:
+        except pcssErrors.ProteinException, e:
             tempDirectory.changeBack()
             raise e
-        except pcssErrors.PcssGlobalException as e:
+        except pcssErrors.PcssGlobalException, e:
             tempDirectory.changeBack()
             raise e
         outputFile = self.getSequenceFeatureOutputFile(pcssProtein)

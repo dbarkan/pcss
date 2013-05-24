@@ -3,14 +3,34 @@ think I can install pcss into /netapp/sali/peptide/pcss
 try that
 
 
-quick scan through pcssTools and pcssCluster to take out extra code
-
 
 prepare server and finalize server in new init
 finalize run (state file, sge_options, task list)
 new init into pcss test
 
 process logic for user custom model
+
+
+issues with directory:
+essentially have six different places where things are run
+trombone
+trombone test
+netapp
+netapp test
+server
+server test
+
+1. expected output will break where trombone is hardcoded
+solution: have output be written as %(pcss_directory)s -- needs to be a config file somehow
+then have top level pcss_directory be read from somewhere else (maybe)
+
+2. uniprot is its own file, doesn't go in pcss directory structure
+could have it be set in a global config file (maybe -- don't like having too many globals)
+
+quick scan through pcssTools and pcssCluster to take out extra code
+
+
+
 
 
 things to look at:

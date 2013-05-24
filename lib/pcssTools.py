@@ -91,16 +91,16 @@ class PcssRunner:
             self.checkForErrors()
             self.executePipeline()
             log.info("Finished pcss run")
-        except pcssErrors.PcssGlobalException as pge:
+        except pcssErrors.PcssGlobalException, pge:
             self.handlePcssGlobalException(pge)
 
-        except pcssErrors.ErrorExistsException as eee:
+        except pcssErrors.ErrorExistsException, eee:
             self.handleErrorExistsException(eee)
 
-        except pcssErrors.InternalException as e:
+        except pcssErrors.InternalException, e:
             self.handleInternalException(e)
         
-        except Exception as e:
+        except Exception, e:
             self.handlePythonException(e)
 
 
@@ -123,7 +123,7 @@ class PcssRunner:
     def validatePeptideCodeStatus(self, status, peptideCode):
         try:
             return self.validatePeptideStatus(status)
-        except pcssErrors.PcssGlobalException as e:
+        except pcssErrors.PcssGlobalException, e:
             raise pcssErrors.PcssGlobalException("%s (peptide code: %s)" % (e.msg, peptideCode))
 
     def validatePeptideStatus(self, status):
@@ -699,7 +699,7 @@ class PcssDirectoryHandler:
         """Run a python shutil module command"""
         try:
             function(*args)
-        except IOError as e:
+        except IOError, e:
             raise pcssErrors.PcssShutilError(e, function, args)
 
     def copyFile(self, sourceDir, sourceFile, destinationDir):

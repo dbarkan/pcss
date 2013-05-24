@@ -101,7 +101,7 @@ class PcssProtein(object):
             return
         try:
             self.runDisopred(disopredReader, disopredRunner)
-        except pcssErrors.DisopredException as pe:
+        except pcssErrors.DisopredException, pe:
             print "caught exception %s" % pe.msg
             for nextPeptide in self.peptides.values():
                 print "next peptide %s process excpetion" % nextPeptide.startPosition
@@ -120,7 +120,7 @@ class PcssProtein(object):
         for nextPeptide in self.peptides.values():
             try:
                 nextPeptide.setDisopredResult(self.disopredProteinCalls)
-            except pcssErrors.DisopredException as pe:
+            except pcssErrors.DisopredException, pe:
                 nextPeptide.processException(pe)
 
     def processPsipred(self, psipredReader, psipredRunner):
@@ -129,7 +129,7 @@ class PcssProtein(object):
             return
         try:
             self.runPsipred(psipredReader, psipredRunner)
-        except pcssErrors.PsipredException as pe:
+        except pcssErrors.PsipredException, pe:
             for nextPeptide in self.peptides.values():
                 nextPeptide.processException(pe)
             log.error(pe.msg)
@@ -146,7 +146,7 @@ class PcssProtein(object):
         for nextPeptide in self.peptides.values():
             try:
                 nextPeptide.setPsipredResult(self.psipredProteinCalls)
-            except pcssErrors.PsipredException as pe:
+            except pcssErrors.PsipredException, pe:
                 nextPeptide.processException(pe)
 
     def loadProteinSequenceFeatures(self, sequenceReader, sequenceRunner):
@@ -187,7 +187,7 @@ class PcssProtein(object):
                 try:
                     #nextPeptide.setTemplate()
                     nextPeptide.processDssp()
-                except pcssErrors.StructureException as e:
+                except pcssErrors.StructureException, e:
                     nextPeptide.processException(e)
                     continue
             else:
@@ -326,7 +326,7 @@ class PcssPeptide:
         try:
             self.bestModel.loadDsspResults()
             self.createDsspFeatures()
-        except pcssErrors.StructureException as e:
+        except pcssErrors.StructureException, e:
             e.setPeptide(self)
             e.setModel(self.bestModel)
             raise e
@@ -346,7 +346,7 @@ class PcssPeptide:
                 nextCall = disorderProteinCalls.getSequenceFeatureCall(i+1)
                 disorderStringList.append(nextCall.call)
                 disorderScoreList.append(nextCall.score)
-            except pcssErrors.DisopredPeptideNotFoundException as e:
+            except pcssErrors.DisopredPeptideNotFoundException, e:
                 e.setPeptide(self)
                 raise e
                                 
@@ -365,7 +365,7 @@ class PcssPeptide:
                 nextCall = psipredProteinCalls.getSequenceFeatureCall(i+1)
                 psipredStringList.append(nextCall.call)
                 psipredScoreList.append(nextCall.score)
-            except pcssErrors.PsipredPeptideNotFoundException as e:
+            except pcssErrors.PsipredPeptideNotFoundException, e:
                 e.setPeptide(self)
                 raise e
                                 

@@ -41,48 +41,48 @@ class TestRunner(pcssTests.PcssTest):
         self.runner.execute()
         self.assertTrue(os.path.exists(self.runner.pdh.getInternalErrorFile()))
 
-    def dtest_annotation_pcss_error(self):
+    def test_annotation_pcss_error(self):
         self.runner = pcssTools.AnnotationRunner(self.pcssConfig)
         self.throwPcssException()
         self.checkErrorThrown("pcssError")
 
-    def dtest_svm_application_feature_pcss_error(self):
+    def test_svm_application_feature_pcss_error(self):
         self.runner = pcssTools.SvmApplicationFeatureRunner(self.pcssConfig)
         self.throwPcssException()
         self.checkErrorThrown("pcssError")
 
-    def dtest_svm_application_input_pcss_error(self):
+    def test_svm_application_input_pcss_error(self):
         self.pcssConfig["input_annotation_file_name"] = self.getErrorInputFile("missingColumnsFile.txt")
         self.runner = pcssTools.SvmApplicationInputRunner(self.pcssConfig)
         self.clearErrorFiles()
         self.runner.execute()
         self.checkErrorThrown("pcssError")
 
-    def dtest_svm_training_pcss_error(self):
+    def test_svm_training_pcss_error(self):
         self.pcssConfig["input_annotation_file_name"] = self.getErrorInputFile("missingColumnsFile.txt")
         self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
         self.clearErrorFiles()
         self.runner.execute()
         self.checkErrorThrown("pcssError")
         
-    def dtest_annotation_internal_error(self):
+    def test_annotation_internal_error(self):
         self.runner = pcssTools.AnnotationRunner(self.pcssConfig)
         self.throwInternalException()
         self.checkErrorThrown("internalError")
 
-    def dtest_svm_application_feature_internal_error(self):
+    def test_svm_application_feature_internal_error(self):
         self.runner = pcssTools.SvmApplicationFeatureRunner(self.pcssConfig)
         self.throwInternalException()
         self.checkErrorThrown("internalError")
 
-    def dtest_svm_application_input_internal_error(self):
+    def test_svm_application_input_internal_error(self):
         self.runner = pcssTools.SvmApplicationInputRunner(self.pcssConfig)
         self.pcssConfig['fasta_file'] = "fake"
         self.clearErrorFiles()
         self.runner.execute()
         self.checkErrorThrown("internalError")
 
-    def dtest_svm_training_input_internal_error(self):
+    def test_svm_training_input_internal_error(self):
         self.pcssConfig["input_annotation_file_name"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "svmTrainingAnnotationInput.txt")
         self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
         self.pcssConfig["jackknife_fraction"] = "fake"
@@ -90,7 +90,7 @@ class TestRunner(pcssTests.PcssTest):
         self.runner.execute()
         self.checkErrorThrown("internalError")        
 
-    def dtest_config_error(self):
+    def test_config_error(self):
         configFile = self.getErrorInputFile("pcssConfigMissingFile.txt")
         configSpecFile = "testConfig/testConfigSpec.txt"
         obj = configobj.ConfigObj(configFile, configspec=configSpecFile)
@@ -98,15 +98,15 @@ class TestRunner(pcssTests.PcssTest):
             pcssTools.SvmApplicationFeatureRunner(obj)
         self.handleTestException(pge)
 
-    def dtest_svm_application_features_runner(self):
+    def test_svm_application_features_runner(self):
         
         self.executeRunnerTest(self.getLargeFastaFile(), pcssTools.SvmApplicationFeatureRunner, "svmApplication")
 
-    def dtest_svm_application_input_runner(self):
+    def test_svm_application_input_runner(self):
         
         self.executeRunnerTest(self.getLargeFastaFile(), pcssTools.SvmApplicationInputRunner, "svmApplication")
 
-    def dtest_annotation_runner(self):
+    def test_annotation_runner(self):
         
         self.executeRunnerTest(self.getLargeFastaFile(), pcssTools.AnnotationRunner, "annotation")
 
@@ -114,7 +114,7 @@ class TestRunner(pcssTests.PcssTest):
         self.pcssConfig["peptide_importer_type"] = "defined"
         self.executeRunnerTest(self.getLargeDefinedFastaFile(), pcssTools.TrainingAnnotationRunner, "trainingAnnotation")
 
-    def dtest_create_model_runner(self):
+    def test_create_model_runner(self):
         self.runner = pcssTools.CompleteSvmRunner(self.pcssConfig)
         self.executeTrainingRunnerTest(self.runner.pdh.getUserModelFileName(), "userModel")
 
@@ -141,7 +141,7 @@ class TestRunner(pcssTests.PcssTest):
         self.assertFalse(os.path.exists(self.runner.pdh.getInternalErrorFile()))
         self.compareToExpectedOutput(observedOutputFile, runnerType, True)
 
-    def dtest_training_svm_runner(self):
+    def test_training_svm_runner(self):
         #self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.pcssConfig["input_annotation_file_name"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "svmTrainingAnnotationInput.txt")
         self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)

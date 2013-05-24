@@ -20,7 +20,7 @@ class TestModels(pcssTests.PcssTest):
         self.processFeatureException(peptide, "dssp_structure", exceptionCode, function)
 
     def setupSpecificTest(self):
-        self.runner = pcssTools.ModelRunner(self.pcssConfig)
+        self.runner = pcssTools.AnnotationRunner(self.pcssConfig)
         spi = pcssIO.ScanPeptideImporter(self.runner)
         self.proteins = spi.readInputFile(self.runner.pcssConfig['fasta_file'])
         currentModelFile = self.runner.pdh.getFullModelFileFromId("741bc8ce184702f143409644b7a6f690")
