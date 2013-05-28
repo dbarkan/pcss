@@ -54,8 +54,8 @@ server_input_fasta_file_name = inputSequences.fasta
 server_input_rules_file_name = peptideRulesFile
 
 server_svm_application_base_config = %(pcss_directory)s/data/config/server/svmApplicationConfig.txt
-netapp_server_base_directory = /netapp/sali/peptide/
-netapp_server_run_directory = %(netapp_server_base_directory)s/live/preprocess
+netapp_server_base_directory = /netapp/sali/peptide/pcss/
+netapp_server_run_directory =  /netapp/sali/peptide/pcss/test/preprocess
 
 svm_application_cluster_attribute_file = %(pcss_directory)s/data/context/svmApplicationClusterFileAttributes.txt
 svm_application_attribute_file = %(pcss_directory)s/data/context/svmApplicationFileAttributes.txt
