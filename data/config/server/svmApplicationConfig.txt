@@ -1,0 +1,12 @@
+pcss_directory = /trombone1/home/dbarkan/pcss/
+run_directory = %(pcss_directory)s/runs/
+root_disopred_dir = %(pcss_directory)s/data/features/disopredResults/
+root_psipred_dir = %(pcss_directory)s/data/features/psipredResults/
+run_disopred_command = %(pcss_directory)s/bin/runDisopred/rundisopred /trombone1/home/dbarkan/nr/uniprot90 /salilab/diva1/programs/x86_64linux/blast-2.2.13/bin %(pcss_directory)s/bin/runDisopred/bin %(pcss_directory)s/bin/runDisopred/data
+run_psipred_command = %(pcss_directory)s/bin/runPsipred/runpsipred /trombone1/home/dbarkan/nr/uniprot90 /salilab/diva1/programs/x86_64linux/blast-2.2.13/bin %(pcss_directory)s/bin/runPsipred/bin %(pcss_directory)s/bin/runPsipred/data
+model_table_column_file = %(pcss_directory)s/data/models/modelColumnOrder.txt
+model_table_file = %(pcss_directory)s/data/models/human2008ModelTableTruncated.txt
+model_directory = %(pcss_directory)s/data/features/dssp/
+model_run_info = %(pcss_directory)s/data/models/modelRunInfo.txt
+dssp_executable = %(pcss_directory)s/bin/dsspcmbi
+

@@ -1,8 +1,19 @@
+see if I can factor out some of the prepare training application / svm application / server / cluster runner stuff which all have similarities in their pipelines
+need to add training annotation config in server -- not there yet (see what svm application server needs and use that as basis)
+also trianing benchmark, and remove server config if possible)
+
+
 next:
 think I can install pcss into /netapp/sali/peptide/pcss
 try that
 
 
+< can I merge config files for cluster and server?
+< also see how much I can push from user config into internal config for everything
+39,41d32
+< maybe a general analysis about what I like about how I have set things up and what I don't like, either change what I don't like
+< or learn some lessons from it.
+<    also talk with Ben to get some ideas
 
 prepare server and finalize server in new init
 finalize run (state file, sge_options, task list)
