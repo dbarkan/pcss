@@ -315,19 +315,21 @@ class PrepareClusterRunner(PcssRunner):
 
         cfg.generateConfigFiles()
         
-        return seqDivider
+        self.seqDivider = seqDivider
 
+    def getTaskCount(self):
+        return self.seqDivider.getSeqBatchCount()
 
 class PrepareSvmApplicationClusterRunner(PrepareClusterRunner):
     def executePipeline(self):
 
         cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
         
-        seqDivider = self.prepareDirectories(cfg)
+        self.prepareDirectories(cfg)
         
         csg = pcssCluster.SvmApplicationClusterScriptGenerator(self)
 
-        csg.setSeqDivider(seqDivider)
+        csg.setSeqDivider(self.seqDivider)
 
         csg.writeFullSvmApplicationSgeScript()
 
@@ -344,11 +346,11 @@ class PrepareTrainingAnnotationClusterRunner(PrepareClusterRunner):
     def executePipeline(self):
         cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
         
-        seqDivider = self.prepareDirectories(cfg)
+        self.prepareDirectories(cfg)
         
         csg = pcssCluster.TrainingAnnotationClusterScriptGenerator(self)
 
-        csg.setSeqDivider(seqDivider)
+        csg.setSeqDivider(self.seqDivider)
 
         csg.writeFullTrainingAnnotationSgeScript()
             
@@ -367,11 +369,11 @@ class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunn
     def executePipeline(self):
         cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
 
-        seqDivider = self.prepareDirectories(cfg)
+        self.prepareDirectories(cfg)
 
         csg = pcssCluster.SvmApplicationClusterScriptGenerator(self)
 
-        csg.setSeqDivider(seqDivider)
+        csg.setSeqDivider(self.seqDivider)
 
         script = csg.makeBaseSvmApplicationSgeScript()
 
@@ -383,11 +385,11 @@ class PrepareSvmApplicationServerRunner(PrepareSvmApplicationClusterRunner):
 
         cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
 
-        seqDivider = self.prepareDirectories(cfg)
+        self.prepareDirectories(cfg)
 
         csg = pcssCluster.SvmApplicationClusterScriptGenerator(self)
 
-        csg.setSeqDivider(seqDivider)
+        csg.setSeqDivider(self.seqDivider)
 
         self.setClusterShellScript(csg.makeBaseSvmApplicationSgeScript())
   
