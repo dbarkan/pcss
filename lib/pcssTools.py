@@ -368,7 +368,15 @@ class FinalizeApplicationClusterRunner(PcssRunner):
 class FinalizeApplicationServerRunner(FinalizeApplicationClusterRunner):
     def createDirectoryHandler(self, pcssConfig, internalConfig):
         return PcssServerDirectoryHandler(pcssConfig, internalConfig)
-    
+
+    def executePipeline(self):
+        self.updateInputFileConfig()
+        seqDivider = pcssCluster.SeqDivider(self)
+        seqDivider.mergeSvmApplicationResults()
+    def updateInputFileConfig(self):
+        self.pcssConfig["fasta_file"] = self.pdh.getFullOutputFile(self.internalConfig["server_input_fasta_file_name"])
+        self.pcssConfig["rules_file"] = self.pdh.getFullOutputFile(self.internalConfig["server_input_rules_file_name"])
+
 
 class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunner):
     def executePipeline(self):
