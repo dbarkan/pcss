@@ -94,6 +94,12 @@ class DefinedPeptideImporter(PeptideImporter):
 
         log.info("Read %s proteins from input file" % len(pcssProteins))
         fh.close()
+        #tempFh = open("pcssDemoTraining.txt", "w")
+        #for pcssProtein in pcssProteins:
+        #    for peptide in pcssProtein.peptides.values():
+        #        outputList = [pcssProtein.uniprotId, peptide.startPosition, peptide.sequence, peptide.getAttributeOutputString("status")]
+        #        tempFh.write("%s\n" % '\t'.join(str(x) for x in outputList))
+            
         return pcssProteins
         
     def parseFastaHeader(self, seqRecord):

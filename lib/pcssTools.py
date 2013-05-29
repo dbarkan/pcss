@@ -391,6 +391,10 @@ class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunn
         script = csg.makeBaseTrainingAnnotationSgeScript()
 
         return script
+
+    def createDirectoryHandler(self, pcssConfig, internalConfig):
+        return PcssServerDirectoryHandler(pcssConfig, internalConfig)
+
       
 class PrepareSvmApplicationServerRunner(PrepareSvmApplicationClusterRunner):
     def executePipeline(self):
