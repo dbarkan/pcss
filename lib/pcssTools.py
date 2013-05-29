@@ -168,7 +168,7 @@ class PcssRunner:
         print tb
         log.error(message)
         log.error(tb)
-
+        errorFh.close()
     def handlePcssGlobalException(self, pge):
         errorFile = self.pdh.getPcssErrorFile()
         self.writeErrorFile(self.internalConfig["keyword_pcss_error"], "PCSS ERROR: " + pge.msg, errorFile)
@@ -969,7 +969,7 @@ class PcssFileReader:
             finalLines.append(line)
         self.finalLines = finalLines
         self.fileName = fileName
-
+        fileHandle.close()
     def skipLine(self, line, regex, skip):
         """Return True if this line should be skipped in processing"""
         testLine = regex.search(line)

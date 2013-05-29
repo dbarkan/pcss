@@ -86,7 +86,7 @@ class LeaveOneOutBenchmarker:
         resultFh.write("Critical True Positive Rate: %s\n" % str(round(self.criticalTpr, 3)))
         resultFh.write("Critical False Positive Rate: %s\n" % str(round(self.criticalFpr, 3)))
         resultFh.write("Score at critical point: %s\n" % str(round(self.criticalScore, 3)))
-
+        resultFh.close()
 
 class SvmBenchmarker:
     def __init__(self, pcssRunner):
@@ -516,7 +516,7 @@ class TestSetResultTracker:
         resultFh.write("Critical True Positive Rate: %s\n" % str(round(self.criticalTpr, 3)))
         resultFh.write("Critical False Positive Rate: %s\n" % str(round(self.criticalFpr, 3)))
         resultFh.write("Score at critical point: %s\n" % str(round(self.criticalScore, 3)))
-
+        resultFh.close()
 class ApplicationSvm(ClassifySvm):
 
     def addScoresToPeptides(self):

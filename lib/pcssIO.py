@@ -36,6 +36,7 @@ class PeptideImporter:
             pcssProteins.append(pcssProtein)
         
         log.info("PeptideImporter: read %s proteins from input file" % len(pcssProteins))
+        fh.close()
         return pcssProteins
 
 class ScanPeptideImporter(PeptideImporter):
@@ -92,6 +93,7 @@ class DefinedPeptideImporter(PeptideImporter):
             pcssProteins.append(pcssProtein)
 
         log.info("Read %s proteins from input file" % len(pcssProteins))
+        fh.close()
         return pcssProteins
         
     def parseFastaHeader(self, seqRecord):
@@ -177,6 +179,7 @@ class AnnotationFileReader:
         for protein in self.proteins.values():
             if (protein.proteinSequence is None):
                 raise pcssErrors.PcssGlobalException("Protein %s has no sequence set" % protein.modbaseSequenceId)
+        fh.close()
     def validateColumnLine(self, annotationFile, line):
         sortedAttributes = self.pcssRunner.pfa.getColumnSortedInputAttributes()
         firstAttribute = sortedAttributes[0]
