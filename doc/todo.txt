@@ -2,6 +2,10 @@ see if I can factor out some of the prepare training application / svm applicati
 need to add training annotation config in server -- not there yet (see what svm application server needs and use that as basis)
 also trianing benchmark, and remove server config if possible)
 
+pretty big issue -- right now svmApplicationConfig in config/server sets pcss_directory and run_directory
+BUT that should be dynamically set. The problem is that it also has %(pcss_directory)s already.
+could either move everything to internal config or come up with some other solution.
+for now have sub-optimal solution wher I am setting pcss_directory and run_directory again in svmApplicationConfig
 
 next:
 think I can install pcss into /netapp/sali/peptide/pcss

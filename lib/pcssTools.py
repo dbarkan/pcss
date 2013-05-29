@@ -848,9 +848,13 @@ class PcssDirectoryHandler:
 class PcssServerDirectoryHandler(PcssDirectoryHandler):
 
     def getClusterNodeConfig(self, i):
-        configFileName = self.internalConfig["server_svm_application_base_config"]
 
-        baseConfig = configobj.ConfigObj(configFileName)
+        baseConfig = copy.deepcopy(self.pcssConfig)
+
+        configFileName = self.internalConfig["server_svm_application_base_config"]
+        serverConfig  = configobj.ConfigObj(configFileName)
+        baseConfig.merge(serverConfig)
+
         baseConfig["pcss_directory"] = self.getPcssClusterBaseDirectory()
         baseConfig["fasta_file"] =  self.getClusterSeqBatchFastaFileName(i)
         baseConfig["svm_benchmark_file"] = self.getBenchmarkScoreFile()
