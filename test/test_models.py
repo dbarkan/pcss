@@ -21,6 +21,7 @@ class TestModels(pcssTests.PcssTest):
 
     def setupSpecificTest(self):
         self.runner = pcssTools.AnnotationRunner(self.pcssConfig)
+
         spi = pcssIO.ScanPeptideImporter(self.runner)
         self.proteins = spi.readInputFile(self.runner.pcssConfig['fasta_file'])
         currentModelFile = self.runner.pdh.getFullModelFileFromId("741bc8ce184702f143409644b7a6f690")
@@ -31,7 +32,7 @@ class TestModels(pcssTests.PcssTest):
         return pcssProtein
 
     def createTestProtein(self):
-        modelColumns = pcssModels.PcssModelTableColumns(self.pcssConfig)
+        modelColumns = pcssModels.PcssModelTableColumns(self.runner.internalConfig['model_table_column_file'])
         self.modelTable = pcssModels.PcssModelTable(self.runner, modelColumns)
         pcssProtein = self.getProtein("76c3a409540532138c6b44bde9e4d248MDDRDENQ", self.proteins)
         return pcssProtein
@@ -43,7 +44,7 @@ class TestModels(pcssTests.PcssTest):
         self.processModelException("peptide_error_no_source_model", pcssProtein.processDssp)
 
     def test_invalid_model_range(self):
-        self.pcssConfig['model_table_column_file'] = "testInput/dsspErrors/modelColumnOrderBadRange.txt"            
+        self.runner.internalConfig['model_table_column_file'] = "testInput/dsspErrors/modelColumnOrderBadRange.txt"            
         pcssProtein = self.createTestProtein()
         with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
             pcssProtein.addModels(self.modelTable)
@@ -51,7 +52,7 @@ class TestModels(pcssTests.PcssTest):
 
     def test_dssp_error(self):
         pcssProtein = self.addModelsToTestProtein()
-        self.pcssConfig['dssp_executable'] = "fake"
+        self.runner.internalConfig['dssp_executable'] = "fake"
         self.processModelException("peptide_error_dssp_error", pcssProtein.processDssp)
 
     def test_dssp_peptide_mismatch(self):
@@ -60,8 +61,8 @@ class TestModels(pcssTests.PcssTest):
         self.processModelException("peptide_error_dssp_mismatch", pcssProtein.processDssp)
 
     def test_column_count_mismatch(self):
-        self.pcssConfig['model_table_column_file'] = "testInput/dsspErrors/modelColumnOrderShort.txt"    
-        modelColumns = pcssModels.PcssModelTableColumns(self.pcssConfig)
+        self.runner.internalConfig['model_table_column_file'] = "testInput/dsspErrors/modelColumnOrderShort.txt"    
+        modelColumns = pcssModels.PcssModelTableColumns(self.runner.internalConfig['model_table_column_file'])
         with self.assertRaises(pcssErrors.PcssGlobalException) as pge:
             pcssModels.PcssModelTable(self.runner, modelColumns)
         self.handleTestException(pge)

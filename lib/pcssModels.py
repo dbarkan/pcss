@@ -19,8 +19,8 @@ class PcssModelTableColumns:
     
     """Class handling order of column names that are read in from the model table; helps provide controlled vocabulary for subsequent access"""
 
-    def __init__(self, pcssConfig):
-        reader = pcssTools.PcssFileReader(pcssConfig['model_table_column_file'])
+    def __init__(self, fileName):
+        reader = pcssTools.PcssFileReader(fileName)
         lines = reader.getLines()
         columnOrder = 0
         self._columnDict = {}
@@ -47,7 +47,7 @@ class PcssModelTable:
 
     def __init__(self, pcssRunner, modelTableColumns):
         """Read model table file and make one model for each line"""
-        reader = pcssTools.PcssFileReader(pcssRunner.pcssConfig['model_table_file'])
+        reader = pcssTools.PcssFileReader(pcssRunner.internalConfig['model_table_file'])
         lines = reader.getLines()
         self.pcssRunner = pcssRunner
         self._sequenceDict = {}
@@ -123,7 +123,7 @@ class PcssModel:
         """Run DSSP executable for this model"""
         if (self.dssp is None):
             dssp = PDB.DSSP(self.bioModel, self.pcssRunner.pdh.getFullModelFile(self), 
-                            self.pcssRunner.pcssConfig["dssp_executable"])
+                            self.pcssRunner.internalConfig["dssp_executable"])
             #Hard to get exact reason why DSSP didn't work since it's BioPython, but will set 
             #as feature exception rather than global exception
             if (dssp is None or len(dssp.keys()) < 1):

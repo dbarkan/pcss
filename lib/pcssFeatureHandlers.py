@@ -33,13 +33,13 @@ class DisopredFileHandler(SequenceFeatureFileHandler):
     """Class providing Disopred-specific data for running algorithm and processing results"""
     def __init__(self, pcssConfig, pdh):
         self.outputFileSuffix = "diso"
-        self.sequenceCmd = pcssConfig["run_disopred_command"]
         self.pdh = pdh
+        self.sequenceCmd = self.pdh.internalConfig["run_disopred_command"]
         self.pcssConfig = pcssConfig
         self.name = "disopred"
 
     def getRootDataDir(self):
-        return self.pcssConfig["root_disopred_dir"]
+        return self.pdh.internalConfig["root_disopred_dir"]
 
     def getName(self):
         return self.name
@@ -51,13 +51,13 @@ class PsipredFileHandler(SequenceFeatureFileHandler):
     """Class providing Psipred-specific data for running algorithm and processing results"""
     def __init__(self, pcssConfig, pdh):
         self.outputFileSuffix = "ss2"
-        self.sequenceCmd = pcssConfig["run_psipred_command"]
         self.pdh = pdh
+        self.sequenceCmd = self.pdh.internalConfig["run_psipred_command"]
         self.pcssConfig = pcssConfig
         self.name = "psipred"
 
     def getRootDataDir(self):
-        return self.pcssConfig["root_psipred_dir"]
+        return self.pdh.internalConfig["root_psipred_dir"]
                 
     def getName(self):
         return self.name

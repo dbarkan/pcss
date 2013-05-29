@@ -34,11 +34,11 @@ class TestDisopred(pcssTests.TestSequenceFeatures):
         return self.proteins[0].disorderProteinCalls.getSequenceFeatureCall
 
     def setBadCommandData(self):
-        self.pcssConfig["root_disopred_dir"] = os.path.join(self.getErrorInputFile("badCommand"), "disopredResults")
+        self.internalConfig["root_disopred_dir"] = os.path.join(self.getErrorInputFile("badCommand"), "disopredResults")
         self.fileHandler.sequenceCmd = os.path.join(self.getErrorInputFile("badCommand"), "runDisopred", "rundisopred")
 
     def setupLongRootDir(self):
-        self.pcssConfig["root_disopred_dir"] = "%(pcss_directory)s/test/testFileOutput/disopredResults/"
+        self.internalConfig["root_disopred_dir"] = "%(pcss_directory)s/test/testFileOutput/disopredResults/"
 
     def getCallString(self):
         return self.proteins[0].disopredProteinCalls.makeFullCallString()

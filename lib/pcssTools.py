@@ -62,8 +62,8 @@ class PcssRunner:
         if (pcssConfig.configspec is not None):
             self.validateConfig(pcssConfig)
 
-        internalConfigFile = os.path.join(self.pcssConfig["pcss_directory"], "data", "config", "internalConfigFile.txt")
-        internalConfigSpec = os.path.join(self.pcssConfig["pcss_directory"], "data", "config", "internalConfigSpec.txt")
+        internalConfigFile = os.path.join(self.pcssConfig["user_pcss_directory"], "data", "config", "internalConfigFile.txt")
+        internalConfigSpec = os.path.join(self.pcssConfig["user_pcss_directory"], "data", "config", "internalConfigSpec.txt")
 
         self.internalConfig = configobj.ConfigObj(internalConfigFile, configspec=internalConfigSpec)
         self.validateConfig(self.internalConfig)
@@ -248,7 +248,7 @@ class PcssRunner:
                 
     def addPeptideFeatures(self):
         
-        modelColumns = pcssModels.PcssModelTableColumns(self.pcssConfig)
+        modelColumns = pcssModels.PcssModelTableColumns(self.internalConfig['model_table_column_file'])
         modelTable = pcssModels.PcssModelTable(self, modelColumns)
 
         disopredFileHandler = pcssFeatureHandlers.DisopredFileHandler(self.pcssConfig, self.pdh)
@@ -525,7 +525,7 @@ class TrainingBenchmarkRunner(PcssRunner):
         
         benchmarker = pcssSvm.SvmBenchmarker(self)
  
-        for i in range(self.pcssConfig["training_iterations"]):
+        for i in range(int(self.pcssConfig["training_iterations"])):
             benchmarker.createTrainingAndTestSets(getAllPeptides(self.proteins, False))  #parition pepitdes, write training and test set files
 
             benchmarker.trainAndApplyModel() #call svm command line
@@ -553,7 +553,7 @@ class PcssModelHandler:
         """Load PcssModelRunInfo object which provide data specific to differen modpipe runs"""
         
         self._runInfo = {}
-        runInfoFile  = self.pcssConfig["model_run_info"]
+        runInfoFile  = self.pdh.internalConfig["model_run_info"]
         runInfoConfig = configobj.ConfigObj(runInfoFile)
         
         for runName, values in runInfoConfig.iteritems():
@@ -846,7 +846,6 @@ class PcssDirectoryHandler:
     def getClusterNodeConfig(self, i):
         baseConfig = copy.deepcopy(self.pcssConfig)
 
-
         baseConfig["pcss_directory"] = self.getPcssClusterBaseDirectory()
         baseConfig["fasta_file"] =  self.getClusterSeqBatchFastaFileName(i)
         
@@ -863,11 +862,7 @@ class PcssServerDirectoryHandler(PcssDirectoryHandler):
     def getClusterNodeConfig(self, i):
 
         baseConfig = copy.deepcopy(self.pcssConfig)
-
-        configFileName = self.internalConfig["server_svm_application_base_config"]
-        serverConfig  = configobj.ConfigObj(configFileName)
-        baseConfig.merge(serverConfig)
-
+        
         baseConfig["pcss_directory"] = self.getPcssClusterBaseDirectory()
         baseConfig["fasta_file"] =  self.getClusterSeqBatchFastaFileName(i)
         baseConfig["svm_benchmark_file"] = self.getBenchmarkScoreFile()

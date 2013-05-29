@@ -18,7 +18,8 @@ class PcssTest(unittest.TestCase):
     def setUp(self):
         configFile = "testConfig/testPcssConfig.txt"
         configSpecFile = "testConfig/testConfigSpec.txt"        
-        self.pcssConfig = configobj.ConfigObj(configFile, configspec=configSpecFile)
+        #self.pcssConfig = configobj.ConfigObj(configFile, configspec=configSpecFile)
+        self.pcssConfig = configobj.ConfigObj(configFile)
         oldRunDir = os.path.join(self.pcssConfig["home_test_directory"], "runs", self.pcssConfig["run_name"])
 
         if (os.path.exists(oldRunDir)):
@@ -37,18 +38,6 @@ class PcssTest(unittest.TestCase):
     def clearErrorFiles(self):
         self.runner.pdh.runSubprocess(["rm", self.runner.pdh.getPcssErrorFile()], False)
         self.runner.pdh.runSubprocess(["rm", self.runner.pdh.getInternalErrorFile()], False)
-
-    def setSvmApplicationClusterFileAttributes(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmApplicationClusterFileAttributes.txt")
-
-    def setSvmApplicationFileAttributes(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "svmApplicationFileAttributes.txt")
-
-    def setAnnotationFileAttributes(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "annotationFileAttributes.txt")
-
-    def setTrainingFileAttributes(self):
-        self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
 
     def getFullExpectedOutputFile(self, shortName):
         fullExpectedFileName = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "expectedOutput", 
@@ -111,13 +100,13 @@ class PcssTest(unittest.TestCase):
                     self.assertEqual(firstCol, secondCol)
 
     def getFullModelTableFile(self):
-        return os.path.join(self.pcssConfig["pcss_directory"], "data", "models", "human2008ModelTable.txt")
+        return os.path.join(self.runner.internalConfig["pcss_directory"], "data", "models", "human2008ModelTable.txt")
 
     def getLargeFastaFile(self):
-        return os.path.join(self.pcssConfig["pcss_directory"], "data", "inputSequences", "ffSequencesFasta.txt")
+        return os.path.join(self.pcssConfig["user_pcss_directory"], "data", "inputSequences", "ffSequencesFasta.txt")
 
     def getLargeDefinedFastaFile(self):
-        return os.path.join(self.pcssConfig["pcss_directory"], "data", "inputSequences", "ffDefinedInputFasta.txt")
+        return os.path.join(self.pcssConfig["user_pcss_directory"], "data", "inputSequences", "ffDefinedInputFasta.txt")
 
     def handleTestException(self, e):
         self.testExceptionOutputFh.write(e.exception.msg + "\n")
@@ -145,12 +134,10 @@ class PcssTest(unittest.TestCase):
 
 class TestSequenceFeatures(PcssTest):
 
-    def updateConfig(self, name, value):
-        self.pcssConfig['name'] = value
-
     def readProteins(self):
         
         self.runner = pcssTools.AnnotationRunner(self.pcssConfig)
+        self.internalConfig = self.runner.internalConfig
         spi = pcssIO.ScanPeptideImporter(self.runner)
         self.proteins = spi.readInputFile(self.runner.pcssConfig['fasta_file'])
 
@@ -207,12 +194,12 @@ class TestSequenceFeatures(PcssTest):
 
     def test_residue_mismatch(self):
         
-        self.pcssConfig["root_%s_dir" % self.name] = self.getErrorInputFile("residueMismatch")
+        self.internalConfig["root_%s_dir" % self.name] = self.getErrorInputFile("residueMismatch")
         self.processFeatureException(self.proteins[0].peptides.values()[0], self.getStringFeatureName(), self.getProteinMismatchCode(), self.processResultFile)
 
     def test_unexpected_call(self):
 
-        self.pcssConfig["root_%s_dir" % self.name] = self.getErrorInputFile("badCall")
+        self.internalConfig["root_%s_dir" % self.name] = self.getErrorInputFile("badCall")
         self.processFeatureException(self.proteins[0].peptides.values()[0], self.getStringFeatureName(), self.getBadCallCode(), self.processResultFile)
 
     def test_command_error(self):
@@ -222,7 +209,7 @@ class TestSequenceFeatures(PcssTest):
         self.assertEquals(os.getcwd(), initialCwd)
 
     def test_bad_line(self):
-        self.pcssConfig["root_%s_dir" % self.name] = self.getErrorInputFile("badLine")
+        self.internalConfig["root_%s_dir" % self.name] = self.getErrorInputFile("badLine")
         self.processFeatureException(self.proteins[0].peptides.values()[0], self.getStringFeatureName(), self.getBadLineCode(), self.processResultFile)
 
 

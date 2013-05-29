@@ -34,7 +34,7 @@ class TestSvm(pcssTests.PcssTest):
         return lastFeatureNumber
 
     def readTrainingAnnotationInputFile(self, fileName):
-        self.setTrainingFileAttributes()
+        #self.setTrainingFileAttributes()
         self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
         self.reader = pcssIO.AnnotationFileReader(self.runner)
         self.reader.readAnnotationFile(fileName)
@@ -51,7 +51,7 @@ class TestSvm(pcssTests.PcssTest):
         self.readSvmApplicationInputFile("testInput/svmApplicationAnnotationInput.txt")
 
     def readSvmApplicationInputFile(self, fileName):
-        self.setSvmApplicationFileAttributes()
+        #self.setSvmApplicationFileAttributes()
         self.runner = pcssTools.SvmApplicationInputRunner(self.pcssConfig)
         self.reader = pcssIO.AnnotationFileReader(self.runner)
         self.reader.readAnnotationFile(fileName)

@@ -124,8 +124,9 @@ class TestRunner(pcssTests.PcssTest):
 
     def executeRunnerTest(self, fastaFile, runnerClass, runnerType):
         self.pcssConfig['fasta_file'] = fastaFile
-        self.pcssConfig['model_table_file'] = self.getFullModelTableFile()
+
         self.runner = runnerClass(self.pcssConfig)
+        self.runner.internalConfig['model_table_file'] = self.getFullModelTableFile()
         self.clearErrorFiles()
         self.runner.execute()
         self.assertFalse(os.path.exists(self.runner.pdh.getPcssErrorFile()))

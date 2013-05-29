@@ -71,7 +71,7 @@ class TestReadInput(pcssTests.PcssTest):
 
     def test_write_normal_output(self):
         self.proteins = self.spi.readInputFile(self.runner.pcssConfig['fasta_file'])
-        modelColumns = pcssModels.PcssModelTableColumns(self.pcssConfig)
+        modelColumns = pcssModels.PcssModelTableColumns(self.runner.internalConfig['model_table_column_file'])
         self.modelTable = pcssModels.PcssModelTable(self.runner, modelColumns)
         pcssProtein = self.getProtein("76c3a409540532138c6b44bde9e4d248MDDRDENQ", self.proteins)
 

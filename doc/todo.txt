@@ -1,12 +1,19 @@
+goals of parameter refactoring:
+break up internal into sections and clean it
+try to get rid of extra config files lying around
+maybe try to clean up the disopred command involving uniprot and blast
+document where all config files are and how they work in different contexts
+possibly hard-code internal config file somewhere -- right now requring a user_pcss_directory which I would rather avoid (but maybe unavoidable?)
+think pdh getbenchmarkscorefile is ok for now but decide if I want to keep it that way (different parameter names depending on stand-alone vs server)
+
+
 Next:
 organize todo list
-fix tests on trombone
 training annotation
 traning benchmark
 user model
 massive parameter refactoring
-
-
+test disopred long on server
 
 
 see if I can factor out some of the prepare training application / svm application / server / cluster runner stuff which all have similarities in their pipelines
