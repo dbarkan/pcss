@@ -365,6 +365,11 @@ class FinalizeApplicationClusterRunner(PcssRunner):
         self.pfa = pcssIO.PcssFileAttributes(fileName)
 
 
+class FinalizeApplicationServerRunner(FinalizeApplicationClusterRunner):
+    def createDirectoryHandler(self, pcssConfig, internalConfig):
+        return PcssServerDirectoryHandler(pcssConfig, internalConfig)
+    
+
 class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunner):
     def executePipeline(self):
         cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
