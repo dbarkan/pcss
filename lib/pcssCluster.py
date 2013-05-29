@@ -298,6 +298,7 @@ class ClusterBenchmarker:
 class TrainingAnnotationClusterScriptGenerator(ClusterScriptGenerator):
 
     def makeBaseTrainingAnnotationSgeScript(self, taskListString):
+        taskListString = self.seqDivider.getSequenceTaskListString() 
         nodeScriptName = self.pcssRunner.internalConfig["training_annotation_node_script"]
         outputFileName = self.pcssRunner.internalConfig["training_annotation_stdout_file"]
         return self.makeBaseAnnotationSgeScript(taskListString, nodeScriptName, outputFileName)

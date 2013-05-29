@@ -384,11 +384,11 @@ class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunn
 
         self.prepareDirectories(cfg)
 
-        csg = pcssCluster.SvmApplicationClusterScriptGenerator(self)
+        csg = pcssCluster.TrainingAnnotationClusterScriptGenerator(self)
 
         csg.setSeqDivider(self.seqDivider)
 
-        script = csg.makeBaseSvmApplicationSgeScript()
+        script = csg.makeBaseTrainingAnnotationSgeScript()
 
         return script
       
