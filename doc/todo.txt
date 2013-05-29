@@ -1,3 +1,14 @@
+Next:
+organize todo list
+fix tests on trombone
+training annotation
+traning benchmark
+user model
+massive parameter refactoring
+
+
+
+
 see if I can factor out some of the prepare training application / svm application / server / cluster runner stuff which all have similarities in their pipelines
 need to add training annotation config in server -- not there yet (see what svm application server needs and use that as basis)
 also trianing benchmark, and remove server config if possible)

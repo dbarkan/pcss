@@ -150,7 +150,7 @@ class TestSequenceFeatures(PcssTest):
 
     def readProteins(self):
         
-        self.runner = pcssTools.PcssRunner(self.pcssConfig)
+        self.runner = pcssTools.AnnotationRunner(self.pcssConfig)
         spi = pcssIO.ScanPeptideImporter(self.runner)
         self.proteins = spi.readInputFile(self.runner.pcssConfig['fasta_file'])
 

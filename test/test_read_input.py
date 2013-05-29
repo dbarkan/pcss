@@ -15,7 +15,7 @@ import pcssTests
 class TestReadInput(pcssTests.PcssTest):
     def setupSpecificTest(self):
         
-        self.runner = pcssTools.ModelRunner(self.pcssConfig)
+        self.runner = pcssTools.AnnotationRunner(self.pcssConfig)
         self.spi = pcssIO.ScanPeptideImporter(self.runner)
         self.errorDirName = "ioErrors"
         self.testName = "io"
