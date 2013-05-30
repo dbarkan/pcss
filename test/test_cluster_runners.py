@@ -22,6 +22,24 @@ class TestClusterRunner(pcssTests.PcssTest):
     def getExpectedOutputFile(self, fileName):
         return os.path.join(self.pcssConfig["pcss_directory"], "test", "testInput", "expectedOutput", fileName)
 
+
+    def test_prepare_training_benchmark_runner(self):
+        userConfig = configobj.ConfigObj(os.path.join("testConfig", "testTrainingBenchmarkServerConfig.txt"))
+
+        jobDirectory = os.path.join("/trombone1/home/dbarkan/pcss/", "test", "runs", "develop")
+        if (not os.path.exists(jobDirectory)):
+            os.mkdir(jobDirectory)
+
+        userConfig["job_directory"] = jobDirectory #also set by job class -- self.directory
+        userConfig["run_name"] = "develop"         #equivalent to self.name
+        print "job directory: %s" % jobDirectory
+        self.runner = pcssTools.PrepareTrainingBenchmarkServerRunner(userConfig)
+        tempFh = open(self.runner.pdh.getFullOutputFile(self.runner.internalConfig["annotation_output_file"]), 'w')
+        tempFh.close()
+        self.runner.execute()
+        script = self.runner.getClusterShellScript()
+        print script
+
     def dtest_prepare_svm_application_server_runner(self):
         userConfig = configobj.ConfigObj(os.path.join("testConfig", "testSvmApplicationServerConfig.txt"))
 
@@ -49,7 +67,7 @@ class TestClusterRunner(pcssTests.PcssTest):
         shutil.copy(os.path.join(sourceDirectory, "ffSequencesFasta.txt"), os.path.join(runDirectory, self.runner.internalConfig["server_input_fasta_file_name"]))
         shutil.copy(os.path.join(sourceDirectory, "peptideRulesFile"), os.path.join(runDirectory, self.runner.internalConfig["server_input_rules_file_name"]))
 
-    def test_prepare_svm_application_cluster_runner(self):
+    def dtest_prepare_svm_application_cluster_runner(self):
         self.pcssConfig["fasta_file"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "ffSequencesFasta.txt")
         self.runner = pcssTools.PrepareSvmApplicationClusterRunner(self.pcssConfig)
         self.clearErrorFiles()

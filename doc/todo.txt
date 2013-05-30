@@ -5,6 +5,12 @@ maybe try to clean up the disopred command involving uniprot and blast
 document where all config files are and how they work in different contexts
 possibly hard-code internal config file somewhere -- right now requring a user_pcss_directory which I would rather avoid (but maybe unavoidable?)
 think pdh getbenchmarkscorefile is ok for now but decide if I want to keep it that way (different parameter names depending on stand-alone vs server)
+finalize cluster config files with minimum params required
+
+training benchmark:
+move svm_training_c and svm_training_gamma to internal
+
+there are a couple extra parameters on the cluster node config files that don't need to be there, e.g. job_directory, could clean that up
 
 
 Next:
@@ -15,7 +21,9 @@ user model
 massive parameter refactoring
 test disopred long on server
 
-
+have frontend mismatch keyword match backend (should be peptideSequenceMismatch, not mismatch)
+have server throw intentional error on the node and make sure it is properly picked up by FinalizeRunner
+definitely broke all cluster functionality, esp training benchmark -- put it back in
 see if I can factor out some of the prepare training application / svm application / server / cluster runner stuff which all have similarities in their pipelines
 need to add training annotation config in server -- not there yet (see what svm application server needs and use that as basis)
 also trianing benchmark, and remove server config if possible)

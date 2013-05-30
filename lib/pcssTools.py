@@ -343,12 +343,29 @@ class PrepareSvmApplicationClusterRunner(PrepareClusterRunner):
 class PrepareTrainingBenchmarkClusterRunner(PcssRunner):
 
     def executePipeline(self):
-        tcb =  pcssCluster.ClusterBenchmarker(self)
-            
-        tcb.prepareTrainingBenchmarkRun()
-            
-        tcb.makeFullTrainingBenchmarkScript()
+        cfg = pcssCluster.TrainingBenchmarkConfigFileGenerator(self)
         
+        cfg.generateConfigFiles()
+
+        csg = pcssCluster.TrainingBenchmarkClusterScriptGenerator(self)
+        
+        self.setClusterShellScript(csg.makeBaseTrainingBenchmarkSgeScript())
+
+    def setClusterShellScript(self, script):
+        self.clusterShellScript = script
+        
+    def getClusterShellScript(self):
+        return self.clusterShellScript
+
+    def getTaskCount(self):
+        return 1
+        
+class PrepareTrainingBenchmarkServerRunner(PrepareTrainingBenchmarkClusterRunner):
+    
+    def createDirectoryHandler(self, pcssConfig, internalConfig):
+        return PcssServerDirectoryHandler(pcssConfig, internalConfig)
+
+
 class PrepareTrainingAnnotationClusterRunner(PrepareClusterRunner):
     def executePipeline(self):
         cfg = pcssCluster.TrainingAnnotationConfigFileGenerator(self)
@@ -370,7 +387,6 @@ class FinalizeApplicationClusterRunner(PcssRunner):
     def readFileAttributes(self):
         fileName = self.internalConfig["svm_application_cluster_attribute_file"]
         self.pfa = pcssIO.PcssFileAttributes(fileName)
-
 
 class FinalizeApplicationServerRunner(FinalizeApplicationClusterRunner):
     def createDirectoryHandler(self, pcssConfig, internalConfig):
@@ -848,6 +864,9 @@ class PcssDirectoryHandler:
     def getModelFileName(self):
         return self.pcssConfig["svm_model_file"]
 
+
+                                       
+
     def getClusterNodeConfig(self, i):
         baseConfig = copy.deepcopy(self.pcssConfig)
 
@@ -863,6 +882,21 @@ class PcssDirectoryHandler:
 
 
 class PcssServerDirectoryHandler(PcssDirectoryHandler):
+    
+    def getTrainingBenchmarkConfig(self):
+        baseConfig = copy.deepcopy(self.pcssConfig)
+        baseConfig["pcss_directory"] = self.getPcssClusterBaseDirectory()
+        baseConfig["run_directory"] = self.getClusterRunDirectory()
+
+        inputAnnotationFileName = self.getFullOutputFile(self.internalConfig["annotation_output_file"])
+        if (not os.path.exists(inputAnnotationFileName)):
+            msg = "Did not find input annotation file name %s\n" % inputAnnotationFileName
+            msg += "Please make sure this is file is in the run directory for this training benchmark run"
+            raise pcssErrors.PcssGlobalException(msg)
+            
+        baseConfig["input_annotation_file_name"] = self.getFullClusterOutputFile(self.internalConfig["annotation_output_file"])
+
+        return baseConfig
 
     def getClusterNodeConfig(self, i):
 

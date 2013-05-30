@@ -144,6 +144,14 @@ class SvmApplicationConfigFileGenerator(ConfigFileGenerator):
             pcssConfig.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_node_config_file"])
             pcssConfig.write()
 
+class TrainingBenchmarkConfigFileGenerator(ConfigFileGenerator):
+    def generateConfigFiles(self):
+        pcssConfig = self.pdh.getTrainingBenchmarkConfig()
+        
+        pcssConfig.filename = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["training_benchmark_config_file"])
+        print "writing config file %s" % pcssConfig.filename
+        pcssConfig.write()
+
 class TrainingAnnotationConfigFileGenerator(ConfigFileGenerator):
     def generateConfigFiles(self):
         for i in range(self.seqDivider.getSeqBatchCount()):
@@ -222,14 +230,14 @@ rm -r $NODE_HOME_DIR/
 
     def makeBaseBenchmarkSgeScript(self):
 
-        pcssBaseDirectory = self.pcssRunner.pcssConfig["pcss_directory"]
+        pcssBaseDirectory = self.pdh.getPcssClusterBaseDirectory()
                 
-        configFileName = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["training_benchmark_config_file"])
-        modelOutputFileName = self.pcssRunner.internalConfig["training_benchmark_stdout_file"]
-        nodeHomeDirectory = self.pcssRunner.internalConfig["cluster_pipeline_directory"]
-        commandName = self.pcssRunner.internalConfig["training_benchmark_node_script"]
+        configFileName = self.pdh.getFullClusterOutputFile(self.pdh.internalConfig["training_benchmark_config_file"])
+        modelOutputFileName = self.pdh.internalConfig["training_benchmark_stdout_file"]
+        nodeHomeDirectory = self.pdh.internalConfig["cluster_pipeline_directory"]
+        commandName = self.pdh.internalConfig["training_benchmark_node_script"]
 
-        headNodeOutputDirectory = self.pcssRunner.pdh.getFullOutputFile("")
+        headNodeOutputDirectory = self.pdh.getFullClusterOutputFile("")
         
         script = """
 
@@ -260,6 +268,16 @@ rm -r $NODE_HOME_DIR/
 
         return script
 
+class TrainingBenchmarkClusterScriptGenerator(ClusterScriptGenerator):
+    def makeBaseTrainingBenchmarkSgeScript(self):
+        return self.makeBaseBenchmarkSgeScript()
+
+    def writeFullTrainingBenchmarkSgeScript(self):
+        script = self.makeClusterHeaderCommands(1)
+        script += self.makeBaseTrainingBenchmarkSgeScript()
+        scriptOutputFile = self.pcssRunner.internalConfig["training_benchmark_shell_script"]
+        self.writeScript(script, scriptOutputFile)
+
 class SvmApplicationClusterScriptGenerator(ClusterScriptGenerator):
 
     def makeBaseSvmApplicationSgeScript(self):
@@ -287,7 +305,6 @@ class ClusterBenchmarker:
     def prepareTrainingBenchmarkRun(self):
         pcssCopy = copy.deepcopy(self.pcssRunner.pcssConfig)
         print "running cluster with output file %s" % self.pcssRunner.pdh.getFullOutputFile("")
-        pcssCopy["using_web_server"] = False
         inputAnnotationFileName = self.pcssRunner.pdh.getFullOutputFile(self.pcssRunner.internalConfig["annotation_output_file"])
         if (not os.path.exists(inputAnnotationFileName)):
             msg = "Did not find input annotation file name %s\n" % inputAnnotationFileName
@@ -309,7 +326,7 @@ class ClusterBenchmarker:
 
 class TrainingAnnotationClusterScriptGenerator(ClusterScriptGenerator):
 
-    def makeBaseTrainingAnnotationSgeScript(self, taskListString):
+    def makeBaseTrainingAnnotationSgeScript(self):
         taskListString = self.seqDivider.getSequenceTaskListString() 
         nodeScriptName = self.pcssRunner.internalConfig["training_annotation_node_script"]
         outputFileName = self.pcssRunner.internalConfig["training_annotation_stdout_file"]
