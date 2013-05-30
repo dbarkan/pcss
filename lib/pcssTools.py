@@ -387,6 +387,8 @@ class FinalizeApplicationServerRunner(FinalizeApplicationClusterRunner):
 
 class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunner):
     def executePipeline(self):
+        self.updateInputFileConfig()
+
         cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
 
         self.prepareDirectories(cfg)
