@@ -397,7 +397,7 @@ class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunn
 
         csg.setSeqDivider(self.seqDivider)
 
-        self.setClusterShellScript(csg.makeBaseSvmApplicationSgeScript())
+        self.setClusterShellScript(csg.makeBaseTrainingAnnotationSgeScript())
 
     def createDirectoryHandler(self, pcssConfig, internalConfig):
         return PcssServerDirectoryHandler(pcssConfig, internalConfig)
