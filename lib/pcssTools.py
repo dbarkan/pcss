@@ -320,6 +320,13 @@ class PrepareClusterRunner(PcssRunner):
     def getTaskCount(self):
         return self.seqDivider.getSeqBatchCount()
 
+    def setClusterShellScript(self, script):
+        self.clusterShellScript = script
+        
+    def getClusterShellScript(self):
+        return self.clusterShellScript
+
+
 class PrepareSvmApplicationClusterRunner(PrepareClusterRunner):
     def executePipeline(self):
 
@@ -388,9 +395,7 @@ class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunn
 
         csg.setSeqDivider(self.seqDivider)
 
-        script = csg.makeBaseTrainingAnnotationSgeScript()
-
-        return script
+        self.setClusterShellScript(csg.makeBaseSvmApplicationSgeScript())
 
     def createDirectoryHandler(self, pcssConfig, internalConfig):
         return PcssServerDirectoryHandler(pcssConfig, internalConfig)
@@ -410,12 +415,6 @@ class PrepareSvmApplicationServerRunner(PrepareSvmApplicationClusterRunner):
 
         self.setClusterShellScript(csg.makeBaseSvmApplicationSgeScript())
   
-    def setClusterShellScript(self, script):
-        self.clusterShellScript = script
-        
-    def getClusterShellScript(self):
-        return self.clusterShellScript
-
     def createDirectoryHandler(self, pcssConfig, internalConfig):
         return PcssServerDirectoryHandler(pcssConfig, internalConfig)
 
