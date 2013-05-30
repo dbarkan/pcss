@@ -137,10 +137,22 @@ class SvmApplicationConfigFileGenerator(ConfigFileGenerator):
     def generateConfigFiles(self):
         for i in range(self.seqDivider.getSeqBatchCount()):
             pcssConfig = self.pdh.getClusterNodeConfig(i)
+            pcssConfig["svm_benchmark_file"] = self.pdh.getBenchmarkScoreFile()
+            pcssConfig["svm_model_file"] = self.pdh.getModelFileName()
 
             subDirectoryName = self.pdh.getSeqBatchSubDirectoryName(i)
             pcssConfig.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_node_config_file"])
             pcssConfig.write()
+
+class TrainingAnnotationConfigFileGenerator(ConfigFileGenerator):
+    def generateConfigFiles(self):
+        for i in range(self.seqDivider.getSeqBatchCount()):
+            pcssConfig = self.pdh.getClusterNodeConfig(i)
+
+            subDirectoryName = self.pdh.getSeqBatchSubDirectoryName(i)
+            pcssConfig.filename = os.path.join(subDirectoryName, self.pcssRunner.internalConfig["seq_batch_node_config_file"])
+            pcssConfig.write()
+
     
 class ClusterScriptGenerator:
     def __init__(self, pcssRunner):

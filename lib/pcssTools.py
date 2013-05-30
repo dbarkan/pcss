@@ -351,7 +351,7 @@ class PrepareTrainingBenchmarkClusterRunner(PcssRunner):
         
 class PrepareTrainingAnnotationClusterRunner(PrepareClusterRunner):
     def executePipeline(self):
-        cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
+        cfg = pcssCluster.TrainingAnnotationConfigFileGenerator(self)
         
         self.prepareDirectories(cfg)
         
@@ -870,8 +870,6 @@ class PcssServerDirectoryHandler(PcssDirectoryHandler):
         
         baseConfig["pcss_directory"] = self.getPcssClusterBaseDirectory()
         baseConfig["fasta_file"] =  self.getClusterSeqBatchFastaFileName(i)
-        baseConfig["svm_benchmark_file"] = self.getBenchmarkScoreFile()
-        baseConfig["svm_model_file"] = self.getModelFileName()
         
         baseConfig["run_name"] = str(i)
         baseConfig["run_directory"] = self.getFullClusterOutputFile(self.internalConfig["seq_batch_directory"])
