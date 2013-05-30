@@ -389,7 +389,7 @@ class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunn
     def executePipeline(self):
         self.updateInputFileConfig()
 
-        cfg = pcssCluster.SvmApplicationConfigFileGenerator(self)
+        cfg = pcssCluster.TrainingAnnotationConfigFileGenerator(self)
 
         self.prepareDirectories(cfg)
 
