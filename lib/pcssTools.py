@@ -377,8 +377,9 @@ class PrepareTrainingAnnotationClusterRunner(PrepareClusterRunner):
         csg.setSeqDivider(self.seqDivider)
 
         csg.writeFullTrainingAnnotationSgeScript()
+
             
-class FinalizeApplicationClusterRunner(PcssRunner):
+class FinalizeApplicationClusterRunner(PcssRunner):  #todo -- rename to finalize svm application clustr runner (and server runner below)
     def executePipeline(self):
         seqDivider = pcssCluster.SeqDivider(self)
 
@@ -399,6 +400,32 @@ class FinalizeApplicationServerRunner(FinalizeApplicationClusterRunner):
     def updateInputFileConfig(self):
         self.pcssConfig["fasta_file"] = self.pdh.getFullOutputFile(self.internalConfig["server_input_fasta_file_name"])
         self.pcssConfig["rules_file"] = self.pdh.getFullOutputFile(self.internalConfig["server_input_rules_file_name"])
+
+class FinalizeTrainingBenchmarkServerRunner(PcssRunner):
+    
+    def execute(self):
+        ump = UserModelPackage(self.pdh)
+
+        ump.createUserModelPackage()
+
+    def readFileAttributes(self):
+        fileName = self.internalConfig["training_attribute_file"]
+        self.pfa = pcssIO.PcssFileAttributes(fileName)
+
+    def createDirectoryHandler(self, pcssConfig, internalConfig):
+        return PcssServerDirectoryHandler(pcssConfig, internalConfig)
+    
+
+class FinalizeTrainingAnnotationServerRunner(FinalizeApplicationServerRunner):
+    
+    def readFileAttributes(self):
+        fileName = self.internalConfig["training_attribute_file"]
+        self.pfa = pcssIO.PcssFileAttributes(fileName)
+
+    def createDirectoryHandler(self, pcssConfig, internalConfig):
+        return PcssServerDirectoryHandler(pcssConfig, internalConfig)
+
+
 
 
 class PrepareTrainingAnnotationServerRunner(PrepareTrainingAnnotationClusterRunner):
@@ -911,7 +938,6 @@ class PcssServerDirectoryHandler(PcssDirectoryHandler):
 
         return baseConfig
 
-
     def createOutputDirectory(self):
         self.fullOutputDir = self.pcssConfig["job_directory"]
         #has already been created by job class
@@ -939,20 +965,21 @@ class PcssServerDirectoryHandler(PcssDirectoryHandler):
         return self.internalConfig["netapp_server_base_directory"]
 
     def getBenchmarkScoreFile(self):
-        bmm = self.setupBenchmarkModelMap()
-        frontendName = self.pcssConfig["svm_application_model"]    
-        return bmm.getBenchmarkScoreFile(frontendName)
+        bmm = self.prepareBenchmarkInfo()
+        return bmm.getBenchmarkScoreFile()
 
     def getModelFileName(self):
-        bmm = self.setupBenchmarkModelMap()
+        bmm = self.prepareBenchmarkInfo()
         frontendName = self.pcssConfig["svm_application_model"]    
-        return bmm.getModelFileName(frontendName)
+        return bmm.getModelFileName()
 
-    def setupBenchmarkModelMap(self):
-        if "using_custom_model" in self.pcssConfig:
-            if (self.pcssConfig["using_custom_model"] == "False"):
-                bmm = BenchmarkModelMap(self)
-                return bmm
+    def prepareBenchmarkInfo(self):
+        bmm = None
+        if (not self.pcssConfig["using_custom_model"] or self.pcssConfig["using_custom_model"] == "False"):
+            bmm = BenchmarkModelMap(self)
+        else:
+            bmm = UserBenchmarkModelMap(self)
+        return bmm
 
 class BenchmarkModelMap:
     def __init__(self, pdh):
@@ -965,15 +992,95 @@ class BenchmarkModelMap:
             [frontendName, benchmarkScoreName, modelFileName] = line.split('\t')
             mmt = self.ModelMapTuple(frontendName, benchmarkScoreName, modelFileName)
             self.modelMap[frontendName] = mmt
+        self.initSubclass()
 
-    def getBenchmarkScoreFile(self, frontendName):
+    def getBenchmarkScoreFile(self):
+        frontendName = self.pdh.pcssConfig["svm_application_model"]
         benchmarkScoreFile = self.modelMap[frontendName].benchmarkScoreName
         return self.pdh.getFullBenchmarkModelFile(benchmarkScoreFile)
 
-    def getModelFileName(self, frontendName):
+    def getModelFileName(self):
+        frontendName = self.pdh.pcssConfig["svm_application_model"]
         modelFileName = self.modelMap[frontendName].modelFileName
         return self.pdh.getFullBenchmarkModelFile(modelFileName)
 
+    def initSubclass(self):
+        return
+
+class UserBenchmarkModelMap(BenchmarkModelMap):
+
+    def initSubclass(self):
+        ump = UserModelPackage(self.pdh)
+        ump.divideUserModelPackage()
+        
+    def getBenchmarkScoreFile(self):
+        self.pdh.getLeaveOneOutResultFileName()
+
+    def getModelFileName(self):
+        return self.pdh.getUserModelFileName()
+
+class UserModelPackage:
+    def __init__(self, pdh):
+        self.pdh = pdh
+    
+    def createUserModelPackage(self):
+        userModelFile = self.pdh.getUserModelFileName()
+        looFile = self.pdh.getLeaveOneOutResultFileName()
+        peptideLength = self.pdh.pcssConfig["peptide_length"]
+
+        modelPackageSuffix = self.pdh.internalConfig["user_model_package_suffix"]
+        modelPackageFile = "%s_%s" % (self.pdh.pcssConfig["run_name"], modelPackageSuffix)
+        outputFile = self.pdh.getFullOutputFile(modelPackageFile)
+        separator = self.pdh.internalConfig["wild_card"]
+        outputFh = open(outputFile, "w")
+        
+        #user model
+        self.writeToFh(userModelFile, outputFh)
+        outputFh.write("%s\n" % separator)
+
+        #peptide length
+        outputFh.write("peptideLength %s\n" % peptideLength)
+
+        #leave one out file
+        outputFh.write("%s\n" % separator)
+        self.writeToFh(looFile, outputFh)
+        
+        outputFh.close()
+
+    def writeToFh(self, inputFile, outputFh):
+        reader = PcssFileReader(inputFile)
+        lines = reader.getLines()
+        for line in lines:
+            outputFh.write("%s\n" % line)
+
+    def divideUserModelPackage(self):
+        modelPackageFile = self.pdh.getFullOutputFile(self.pdh.internalConfig["user_model_package_suffix"]) #re-use this param for generic user uploaded file
+        reader = PcssFileReader(modelPackageFile)
+        packageLines = reader.getLines()
+        [userModelLines, peptideLengthLine, leaveOneOutLines] = self.splitPackage(packageLines)
+        self.pdh.pcssConfig["peptide_length"] = peptideLengthLine[0]
+        self.writePackageFile(userModelLines, self.pdh.getUserModelFileName())
+        self.writePackageFile(leaveOneOutLines, self.pdh.getLeaveOneOutResultFileName())
+        
+
+    def writePackageFile(self, lines, fileName):
+        fh = open(fileName, 'w')
+        for line in lines:
+            fh.write("%s\n" % line)
+        fh.close()
+
+    def splitPackage(self, packageLines):
+        packageList = []
+        separator = self.pdh.internalConfig["wild_card"]
+        currentPackageComponent = []
+        for line in packageLines:
+            if (line == separator):
+                packageList.append(currentPackageComponent)
+                currentPackageComponent = []
+            else:
+                currentPackageComponent.append(line)
+        packageList.append(currentPackageComponent)
+        return packageList
 
 class PcssFileReader:
 

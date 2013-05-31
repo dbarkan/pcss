@@ -11,7 +11,7 @@ training benchmark:
 move svm_training_c and svm_training_gamma to internal
 
 there are a couple extra parameters on the cluster node config files that don't need to be there, e.g. job_directory, could clean that up
-
+had really weird behavior where I accidentally ran server from live webpage but it output in test build
 
 Next:
 organize todo list

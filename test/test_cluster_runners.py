@@ -23,7 +23,7 @@ class TestClusterRunner(pcssTests.PcssTest):
         return os.path.join(self.pcssConfig["pcss_directory"], "test", "testInput", "expectedOutput", fileName)
 
 
-    def test_prepare_training_benchmark_runner(self):
+    def dtest_prepare_training_benchmark_runner(self):
         userConfig = configobj.ConfigObj(os.path.join("testConfig", "testTrainingBenchmarkServerConfig.txt"))
 
         jobDirectory = os.path.join("/trombone1/home/dbarkan/pcss/", "test", "runs", "develop")
@@ -39,6 +39,48 @@ class TestClusterRunner(pcssTests.PcssTest):
         self.runner.execute()
         script = self.runner.getClusterShellScript()
         print script
+
+    def dtest_finalize_training_benchmark_server_runner(self):
+        userConfig = configobj.ConfigObj(os.path.join("testConfig", "testFinalizeTrainingBenchmarkServerConfig.txt"))
+        jobDirectory = os.path.join("/trombone1/home/dbarkan/pcss/", "test", "runs", "develop")
+        if (not os.path.exists(jobDirectory)):
+            os.mkdir(jobDirectory)
+
+        userConfig["job_directory"] = jobDirectory #also set by job class -- self.directory
+        userConfig["run_name"] = "develop"         #equivalent to self.name
+        self.runner = pcssTools.FinalizeTrainingBenchmarkServerRunner(userConfig)
+        self.copyFinalizeTrainingBenchmarkInput(jobDirectory)
+        self.runner.execute()
+
+    def test_user_prepare_svm_application_server(self):
+        userConfig = configobj.ConfigObj(os.path.join("testConfig", "testSvmApplicationServerConfig.txt"))
+        userConfig["using_custom_model"] = True
+        
+        jobDirectory = os.path.join("/trombone1/home/dbarkan/pcss/", "test", "runs", "develop")
+        if (not os.path.exists(jobDirectory)):
+            os.mkdir(jobDirectory)
+
+        sourceDirectory = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "server")
+        shutil.copy(os.path.join(sourceDirectory, "userBenchmarkModel.txt"), jobDirectory)
+
+        userConfig["job_directory"] = jobDirectory #also set by job class -- self.directory
+        userConfig["run_name"] = "develop"         #equivalent to self.name
+        print "job directory: %s" % jobDirectory
+        self.runner = pcssTools.PrepareSvmApplicationServerRunner(userConfig)
+
+        self.copyAnnotationServerInput(jobDirectory)
+        self.runner.execute()
+        shellScript =  self.runner.getClusterShellScript()
+        outputFh = open(self.runner.pdh.getFullOutputFile("testShellScript"), "w")
+        outputFh.write(shellScript)
+        outputFh.close()
+
+        
+    def copyFinalizeTrainingBenchmarkInput(self, runDirectory):
+        sourceDirectory = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "server")
+        
+        shutil.copy(os.path.join(sourceDirectory, "develop_leaveOneOut.txt"), runDirectory)
+        shutil.copy(os.path.join(sourceDirectory, "develop_userCreatedModel.txt"), runDirectory)
 
     def dtest_prepare_svm_application_server_runner(self):
         userConfig = configobj.ConfigObj(os.path.join("testConfig", "testSvmApplicationServerConfig.txt"))

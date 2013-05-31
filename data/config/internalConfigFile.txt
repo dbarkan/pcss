@@ -21,6 +21,7 @@ application_set_output_file_name = svmApplicationResults
 benchmark_result_file_suffix = benchmarkScores.txt
 loo_result_file_suffix = leaveOneOut.txt
 user_model_suffix = userCreatedModel.txt
+user_model_package_suffix = userBenchmarkModel.txt
 test_set_output_file_name = svmTestResults
 pcss_error_output_file = pcssErrors.out
 internal_error_output_file = internalErrors.out
