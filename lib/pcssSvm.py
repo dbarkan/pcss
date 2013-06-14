@@ -355,7 +355,7 @@ class TestSetResult:
         return totalCount
 
     def finalize(self):
-        sortedPstList = sorted(self.pstList, key=lambda pst: pst.score)
+        sortedPstList = sorted(self.pstList, key=lambda pst: pst.score, reverse=True)
         self.benchmarkPstList = []
         print "have %s peptides" % len(sortedPstList)
         self.totalPositiveCount = self.getPeptideStatusCount(sortedPstList, self.pcssRunner.getPositiveKeyword())
