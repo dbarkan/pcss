@@ -35,7 +35,7 @@ keyword_application_status = application
 make_random_test_set = 1
 
 model_url = http://salilab.org/modbase/search?modelID=TTT&displaymode=moddetail
-wild_card = TTT
+wild_card = ***TTTTT***
 seq_batch_size = 5
 seq_batch_directory = seqBatchList
 seq_batch_prefix = seqBatch
