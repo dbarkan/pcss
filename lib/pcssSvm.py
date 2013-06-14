@@ -413,7 +413,7 @@ class BenchmarkResults:
         cols = line.split('\t')
         return (self.checkBoundaryValue(cols[0], value) and self.checkBoundaryValue(cols[1], value))
 
-    def checkBondaryValue(self, fileValue, testValue):
+    def checkBoundaryValue(self, fileValue, testValue):
         return (testValue == fileValue or testValue == (fileValue + ".0"))
 
     def readBenchmarkFile(self, fileName):
