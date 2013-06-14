@@ -407,21 +407,23 @@ class BenchmarkResults:
         self.ScoreTuple = myCollections.namedtuple('svmScore', ['fpr', 'tpr', 'score'])
 
     def checkBoundaryLines(self, line, value):
+        
         value = str(value)
         line = line.rstrip()
         cols = line.split('\t')
-        if (cols[0] == value and cols[1] == value):
-            return True
-        return False
+        return (self.checkBoundaryValue(cols[0], value) and self.checkBoundaryValue(cols[1], value))
+
+    def checkBondaryValue(self, fileValue, testValue):
+        return (testValue == fileValue or testValue == (fileValue + ".0"))
 
     def readBenchmarkFile(self, fileName):
         reader = pcssTools.PcssFileReader(fileName)
         lines = reader.getLines()
         firstLine = lines[0]
         lastLine = lines[-1]
-        if (not self.checkBoundaryLines(firstLine, 0)):
+        if (not self.checkBoundaryLines(firstLine, "0")):
             raise pcssErrors.PcssGlobalException("Expected benchmark file %s to have first line of 0\t0")
-        if (not self.checkBoundaryLines(lastLine, 1)):
+        if (not self.checkBoundaryLines(lastLine, "1")):
             raise pcssErrors.PcssGlobalException("Expected benchmark file %s to have last line of 1\t1")
         
         for line in lines[1:len(lines) - 2]:
