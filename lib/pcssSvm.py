@@ -414,7 +414,7 @@ class BenchmarkResults:
         return (self.checkBoundaryValue(cols[0], value) and self.checkBoundaryValue(cols[1], value))
 
     def checkBoundaryValue(self, fileValue, testValue):
-        return (testValue == fileValue or testValue == (fileValue + ".0"))
+        return (testValue == fileValue or (testValue + ".0" == fileValue))
 
     def readBenchmarkFile(self, fileName):
         reader = pcssTools.PcssFileReader(fileName)
