@@ -359,7 +359,7 @@ class PrepareTrainingBenchmarkClusterRunner(PcssRunner):
 
     def getTaskCount(self):
         return 1
-        
+
 class PrepareTrainingBenchmarkServerRunner(PrepareTrainingBenchmarkClusterRunner):
     
     def createDirectoryHandler(self, pcssConfig, internalConfig):
@@ -414,7 +414,6 @@ class FinalizeTrainingBenchmarkServerRunner(PcssRunner):
 
     def createDirectoryHandler(self, pcssConfig, internalConfig):
         return PcssServerDirectoryHandler(pcssConfig, internalConfig)
-    
 
 class FinalizeTrainingAnnotationServerRunner(FinalizeApplicationServerRunner):
     
@@ -970,7 +969,6 @@ class PcssServerDirectoryHandler(PcssDirectoryHandler):
 
     def getModelFileName(self):
         bmm = self.prepareBenchmarkInfo()
-        frontendName = self.pcssConfig["svm_application_model"]    
         return bmm.getModelFileName()
 
     def prepareBenchmarkInfo(self):
@@ -1010,21 +1008,24 @@ class BenchmarkModelMap:
 class UserBenchmarkModelMap(BenchmarkModelMap):
 
     def initSubclass(self):
-        ump = UserModelPackage(self.pdh)
-        ump.divideUserModelPackage()
+        temp = 1
+        #ump = UserModelPackage(self.pdh)
+        #ump.divideUserModelPackage()
         
     def getBenchmarkScoreFile(self):
-        self.pdh.getLeaveOneOutResultFileName()
+        return self.pdh.getFullOutputFile("userCustomBenchmarkFile")
+        #self.pdh.getLeaveOneOutResultFileName()
 
     def getModelFileName(self):
-        return self.pdh.getUserModelFileName()
+        return self.pdh.getFullOutputFile("userCustomModelFile")
+        #return self.pdh.getUserModelFileName()
 
 class UserModelPackage:
     def __init__(self, pdh):
         self.pdh = pdh
     
     def createUserModelPackage(self):
-        userModelFile = self.pdh.getUserModelFileName()
+        userModelFile = self.pdh.getSvmNewModelFile()
         looFile = self.pdh.getLeaveOneOutResultFileName()
         peptideLength = self.pdh.pcssConfig["peptide_length"]
 

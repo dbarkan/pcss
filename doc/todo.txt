@@ -1,3 +1,23 @@
+next: 
+be sure that pcssTools is synched across servers
+figure out why svm classify thinks I'm using a different version
+
+
+
+need to fix process user model -- i wrote code to split it in the backend but realize the frontend does that and that's probably where it should happen
+for validation purposes...so make sure the output files from the frontend match the backend and delete the backend code.
+
+run psipred / disopred long on server to make sure that works.
+
+more benchmarking memory and time
+
+run server through some different cases
+
+switch it to live
+
+after that am done the bare minimum and can move to testing, refactoring, and documenting (including front-end)
+
+
 goals of parameter refactoring:
 break up internal into sections and clean it
 try to get rid of extra config files lying around

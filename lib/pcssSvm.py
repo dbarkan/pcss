@@ -22,6 +22,7 @@ class CompleteSvmGenerator:
         self.trainingSvm.setPeptides(peptides)
         modelFile = self.pcssRunner.pdh.getUserModelFileName()
         self.trainingSvm.writePeptidesToFile(modelFile)
+        self.trainingSvm.trainModel()
 
 class LeaveOneOutBenchmarker:
     def __init__(self, pcssRunner):
