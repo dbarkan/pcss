@@ -445,7 +445,7 @@ class BenchmarkResults:
         for st in self._results:
             if (float(score) >  st.score):
                 return st
-
+        return self._results[-1]
 class TestSetResultTracker:
 
     def __init__(self, runner):

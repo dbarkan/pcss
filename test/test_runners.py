@@ -102,6 +102,20 @@ class TestRunner(pcssTests.PcssTest):
         
         self.executeRunnerTest(self.getLargeFastaFile(), pcssTools.SvmApplicationFeatureRunner, "svmApplication")
 
+    def test_svm_application_features_ump(self):
+        self.pcssConfig['fasta_file'] = self.getLargeFastaFile()
+        self.pcssConfig['svm_model_file'] = os.path.join(self.pcssConfig['user_pcss_directory'], "data", "benchmark", "userCustomModelFile")
+        self.pcssConfig['svm_benchmark_file'] = os.path.join(self.pcssConfig['user_pcss_directory'], "data", "benchmark", "userCustomBenchmarkFile")
+        self.runner = pcssTools.SvmApplicationFeatureRunner(self.pcssConfig)
+        self.runner.internalConfig['model_table_file'] = self.getFullModelTableFile()
+        self.clearErrorFiles()
+        self.runner.execute()
+        self.assertFalse(os.path.exists(self.runner.pdh.getPcssErrorFile()))
+        self.assertFalse(os.path.exists(self.runner.pdh.getInternalErrorFile()))
+        self.compareToExpectedOutput(self.runner.pdh.getFullOutputFile(self.runner.internalConfig["annotation_output_file"]),
+                                     "svmApplication", False, True)
+
+
     def dtest_svm_application_input_runner(self):
         
         self.executeRunnerTest(self.getLargeFastaFile(), pcssTools.SvmApplicationInputRunner, "svmApplication")
@@ -142,7 +156,7 @@ class TestRunner(pcssTests.PcssTest):
         self.assertFalse(os.path.exists(self.runner.pdh.getInternalErrorFile()))
         self.compareToExpectedOutput(observedOutputFile, runnerType, True)
 
-    def test_training_svm_runner(self):
+    def dtest_training_svm_runner(self):
         #self.pcssConfig["attribute_file_name"] = os.path.join(self.pcssConfig["pcss_directory"], "data", "context", "trainingFileAttributes.txt")
         self.pcssConfig["input_annotation_file_name"] = os.path.join(self.pcssConfig["home_test_directory"], "testInput", "svmTrainingAnnotationInput.txt")
         self.runner = pcssTools.TrainingBenchmarkRunner(self.pcssConfig)
