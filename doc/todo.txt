@@ -6,6 +6,7 @@ figure out why svm classify thinks I'm using a different version
 refactor pcss Svm trainers so that it's easier to get training set files and model files. Right now the final model is getting the wrong file
 on which it's training. Also rename some of the files in the final directory, they are getting confusing.
 
+decide what to do with critical e values at the end of leave one out; right now they're not getting passed to user model package since they have a #
 
 need to fix process user model -- i wrote code to split it in the backend but realize the frontend does that and that's probably where it should happen
 for validation purposes...so make sure the output files from the frontend match the backend and delete the backend code.

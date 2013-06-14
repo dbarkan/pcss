@@ -410,7 +410,7 @@ class BenchmarkResults:
         value = str(value)
         line = line.rstrip()
         cols = line.split('\t')
-        if (cols[0] == value and cols[1] == value and len(cols) == 2):
+        if (cols[0] == value and cols[1] == value):
             return True
         return False
 
