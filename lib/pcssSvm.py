@@ -72,6 +72,9 @@ class LeaveOneOutBenchmarker:
         resultFh = open(resultFile, 'w')
         size = self.looTsr.getSize()
         foundCriticalPoint = False
+        initialOutputList = ["0", "0", "N/A", "N/A"]
+        finalOutputList = ["1", "1", "N/A", "N/A"]
+        resultFh.write("%s\n" % "\t".join(initialOutputList))
         for i in range(size):
             nextBpst = self.looTsr.getBenchmarkTuple(i)
             #add petpides start position and modbase seq id
@@ -84,9 +87,9 @@ class LeaveOneOutBenchmarker:
                 self.criticalFpr = nextBpst.fpr
                 self.criticalScore = nextBpst.score
                 foundCriticalPoint = True
-        resultFh.write("Critical True Positive Rate: %s\n" % str(round(self.criticalTpr, 3)))
-        resultFh.write("Critical False Positive Rate: %s\n" % str(round(self.criticalFpr, 3)))
-        resultFh.write("Score at critical point: %s\n" % str(round(self.criticalScore, 3)))
+        resultFh.write("#Critical True Positive Rate: %s\n" % str(round(self.criticalTpr, 3)))
+        resultFh.write("#Critical False Positive Rate: %s\n" % str(round(self.criticalFpr, 3)))
+        resultFh.write("#Score at critical point: %s\n" % str(round(self.criticalScore, 3)))
         resultFh.close()
 
 class SvmBenchmarker:

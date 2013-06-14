@@ -1043,7 +1043,6 @@ class UserModelPackage:
         outputFh.write("peptideLength %s\n" % peptideLength)
 
         #leave one out file
-        outputFh.write("%s\n" % separator)
         self.writeToFh(looFile, outputFh)
         
         outputFh.close()
